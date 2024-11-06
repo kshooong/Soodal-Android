@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import kr.ilf.kshoong.ui.SwimCalendarView
 import kr.ilf.kshoong.ui.theme.KshoongTheme
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun Preview() {
     KshoongTheme {
-        SwimCalendarView()
+        SwimCalendarView(Calendar.getInstance())
     }
 }
