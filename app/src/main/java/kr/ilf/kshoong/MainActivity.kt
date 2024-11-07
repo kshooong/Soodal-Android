@@ -21,12 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                SwimCalendarView()
             }
         }
     }
@@ -44,6 +39,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun Preview() {
     KshoongTheme {
-        SwimCalendarView(Calendar.getInstance())
+        SwimCalendarView()
     }
 }
