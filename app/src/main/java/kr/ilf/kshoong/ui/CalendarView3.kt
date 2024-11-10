@@ -6,7 +6,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
@@ -70,6 +71,7 @@ fun SwimCalendarView3() {
         Log.d("listState.isScrollInProgress = ", listState.isScrollInProgress.toString())
         if (!listState.isScrollInProgress) {
             centerItemIndex = snapshotFlow {
+                Log.d("listState.isScrollInProgress2 = ", listState.isScrollInProgress.toString())
                 calculateCenterDate(firstVisibleItemIndex, lastVisibleItemIndex)
             }.first()
         }
@@ -77,14 +79,18 @@ fun SwimCalendarView3() {
 
     val context = LocalContext.current
 
-    LaunchedEffect(
-        centerItemIndex) {
-        snapshotFlow { listState.isScrollInProgress }
+    LaunchedEffect(centerItemIndex) {
+        snapshotFlow {
+            Log.d("snapshotFlow", listState.isScrollInProgress.toString())
+            listState.isScrollInProgress
+        }
+            .distinctUntilChanged()
             .filter { !it } // isScrollInProgress가 false일 때만 필터링ㅠ
             .collect {
                 snapToNearestItem(context, listState)
             }
     }
+
 //    val flingBehavior = rememberSnapFlingBehavior(listState)
 
     LazyColumn(
@@ -135,15 +141,13 @@ private fun calculateCenterDate(
 
 // 아이템 스냅 함수
 private suspend fun snapToNearestItem(context: Context, listState: LazyListState) {
-    if (!listState.isScrollInProgress) {
-        val dp40ToPx = convertDPtoPX(context, 40)
-        val targetIndex = if (listState.firstVisibleItemScrollOffset < dp40ToPx) {
-            listState.firstVisibleItemIndex
-        } else {
-            listState.firstVisibleItemIndex + 1
-        }
-        listState.animateScrollToItem(targetIndex)
+    val dp40ToPx = convertDPtoPX(context, 40)
+    val targetIndex = if (listState.firstVisibleItemScrollOffset < dp40ToPx) {
+        listState.firstVisibleItemIndex
+    } else {
+        listState.firstVisibleItemIndex + 1
     }
+    listState.animateScrollToItem(targetIndex)
 }
 
 // WeekRow Composable 함수
