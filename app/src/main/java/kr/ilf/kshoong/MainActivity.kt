@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import kr.ilf.kshoong.data.SwimData
 import kr.ilf.kshoong.ui.SwimCalendarView
 import kr.ilf.kshoong.ui.SwimCalendarView3
+import kr.ilf.kshoong.ui.SwimCalendarView4
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                SwimCalendarView3()
+                SwimCalendarView4(data)
             }
         }
     }
