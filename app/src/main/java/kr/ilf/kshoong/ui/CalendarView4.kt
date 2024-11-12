@@ -219,7 +219,6 @@ private fun WeekRow(
                         }
                     }
                 }
-
         }
 
     Row(
@@ -256,9 +255,14 @@ private fun DayItem(
     val isCurrentMonth = currentYear == dayInfo[0].toInt() && currentMonth == dayInfo[1].toInt()
 
     val alpha: Float
-    val borderColor: Color
     val dateBorderColor: Color
     val dateBgColor: Color
+
+    val borderColor = if (selectedDay == data.date) {
+        ColorCalendarItemBorder
+    } else {
+        Color.Transparent
+    }
 
     if (isCurrentMonth) {
         alpha = 1f
@@ -271,16 +275,10 @@ private fun DayItem(
             dateBgColor = ColorCalendarDateBg
         }
 
-        borderColor = if (selectedDay == data.date) {
-            ColorCalendarItemBorder
-        } else {
-            Color.Transparent
-        }
     } else {
         alpha = 0.5f
         dateBorderColor = Color.Transparent
         dateBgColor = Color.Transparent
-        borderColor = Color.Transparent
     }
 
     Box(
