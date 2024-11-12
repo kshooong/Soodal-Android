@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,11 +45,16 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kr.ilf.kshoong.MainActivity
 import kr.ilf.kshoong.data.SwimData
+import kr.ilf.kshoong.ui.theme.ColorBackStroke
+import kr.ilf.kshoong.ui.theme.ColorBreastStroke
+import kr.ilf.kshoong.ui.theme.ColorButterfly
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
+import kr.ilf.kshoong.ui.theme.ColorCrawl
+import kr.ilf.kshoong.ui.theme.ColorKickBoard
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -69,6 +73,8 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
 
     val (currentYear, setCurrentYear) = remember { mutableIntStateOf(today[Calendar.YEAR]) }
     val (currentMonth, setCurrentMonth) = remember { mutableIntStateOf(today[Calendar.MONTH]) }
+
+    val (selectedDay, setSelectedDay) = remember { mutableStateOf(todayStr) }
 
     val lazyDataList = remember {
         val weekList = mutableListOf<List<SwimData>>()
@@ -147,11 +153,13 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
                 dateFormat = dateFormat,
                 currentYear = currentYear,
                 currentMonth = currentMonth,
+                selectedDay = selectedDay,
                 centerItemIndex = centerItemIndex,
                 onCenterDateChanged = onCenterDateChanged,
-                onClickDate = { year, month ->
+                onClickDate = { year, month, day ->
                     setCurrentYear(year)
                     setCurrentMonth(month)
+                    setSelectedDay(day)
                 }
             )
         }
@@ -192,9 +200,10 @@ private fun WeekRow(
     dateFormat: SimpleDateFormat,
     currentYear: Int,
     currentMonth: Int,
+    selectedDay: String,
     centerItemIndex: Int?,
     onCenterDateChanged: (Int, Int) -> Unit,
-    onClickDate: (Int, Int) -> Unit
+    onClickDate: (Int, Int, String) -> Unit
 ) {
     if (centerItemIndex == dataIndex)
         LaunchedEffect(centerItemIndex) {
@@ -226,6 +235,7 @@ private fun WeekRow(
                 todayStr = todayStr,
                 currentYear = currentYear,
                 currentMonth = currentMonth,
+                selectedDay = selectedDay,
                 onClickDate = onClickDate
             )
         }
@@ -239,29 +249,38 @@ private fun DayItem(
     todayStr: String,
     currentYear: Int,
     currentMonth: Int,
-    onClickDate: (Int, Int) -> Unit
+    selectedDay: String,
+    onClickDate: (Int, Int, String) -> Unit
 ) {
     val dayInfo = data.date.split("-") // YYYY-MM-DD-요일
     val isCurrentMonth = currentYear == dayInfo[0].toInt() && currentMonth == dayInfo[1].toInt()
 
     val alpha: Float
     val borderColor: Color
+    val dateBorderColor: Color
     val dateBgColor: Color
 
     if (isCurrentMonth) {
         alpha = 1f
 
         if (todayStr == data.date) {
-            borderColor = ColorCalendarItemBorder
+            dateBorderColor = ColorCalendarItemBorder
             dateBgColor = ColorCalendarOnDateBg
         } else {
-            borderColor = Color.Transparent
+            dateBorderColor = Color.Transparent
             dateBgColor = ColorCalendarDateBg
+        }
+
+        borderColor = if (selectedDay == data.date) {
+            ColorCalendarItemBorder
+        } else {
+            Color.Transparent
         }
     } else {
         alpha = 0.5f
-        borderColor = Color.Transparent
+        dateBorderColor = Color.Transparent
         dateBgColor = Color.Transparent
+        borderColor = Color.Transparent
     }
 
     Box(
@@ -275,19 +294,49 @@ private fun DayItem(
                         ColorCalendarItemBgStart,
                         ColorCalendarItemBgEnd
                     )
-                ), shape = RoundedCornerShape(10.dp)
+                ), shape = RoundedCornerShape(8.dp)
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { onClickDate(dayInfo[0].toInt(), dayInfo[1].toInt()) }
+                onClick = { onClickDate(dayInfo[0].toInt(), dayInfo[1].toInt(), data.date) }
             )
+            .border(1.5.dp, borderColor, RoundedCornerShape(8.dp))
             .padding(5.dp),
     ) {
 
         // 그래프 컬럼 (필요에 따라 추가)
         Column {
-            // ...
+            data.swimMeters.forEach {
+                val (swimType, meters) = it
+                val graphColor = when (swimType) {
+                    "freestyle" -> ColorCrawl
+                    "backStroke" -> ColorBackStroke
+                    "breastStroke" -> ColorBreastStroke
+                    "butterfly" -> ColorButterfly
+                    "kickBoard" -> ColorKickBoard
+                    else -> Color.Transparent
+                }
+
+                if (meters?.let { meter -> meter > 0 } == true) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(meters.toFloat() / 500)
+                            .height(10.dp)
+                            .padding(bottom = 1.dp)
+                            .background(color = graphColor, shape = RoundedCornerShape(3.dp))
+                    )
+                    if (meters > 500) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(meters.toFloat() / 500 - 1)
+                                .height(10.dp)
+                                .padding(bottom = 1.dp)
+                                .background(color = graphColor, shape = RoundedCornerShape(3.dp))
+                        )
+                    }
+                }
+            }
         }
 
         // 날짜 박스
@@ -295,7 +344,7 @@ private fun DayItem(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .size(15.dp)
-                .border(1.dp, borderColor, RoundedCornerShape(5.dp))
+                .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
                 .background(dateBgColor, RoundedCornerShape(5.dp))
         ) {
             Text(
