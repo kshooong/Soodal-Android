@@ -1,7 +1,6 @@
 package kr.ilf.kshoong.ui
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,10 +9,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -36,6 +38,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -72,7 +75,7 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
     val todayStr = remember { dateFormat.format(today.time) }
 
     val (currentYear, setCurrentYear) = remember { mutableIntStateOf(today[Calendar.YEAR]) }
-    val (currentMonth, setCurrentMonth) = remember { mutableIntStateOf(today[Calendar.MONTH]) }
+    val (currentMonth, setCurrentMonth) = remember { mutableIntStateOf(today[Calendar.MONTH] + 1) }
 
     val (selectedDay, setSelectedDay) = remember { mutableStateOf(todayStr) }
 
@@ -106,10 +109,8 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
     var centerItemIndex by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(listState.isScrollInProgress) {
-        Log.d("listState.isScrollInProgress = ", listState.isScrollInProgress.toString())
         if (!listState.isScrollInProgress) {
             centerItemIndex = snapshotFlow {
-                Log.d("listState.isScrollInProgress2 = ", listState.isScrollInProgress.toString())
                 calculateCenterDate(firstVisibleItemIndex, lastVisibleItemIndex)
             }.first()
         }
@@ -119,7 +120,6 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
 
     LaunchedEffect(centerItemIndex) {
         snapshotFlow {
-            Log.d("snapshotFlow", listState.isScrollInProgress.toString())
             listState.isScrollInProgress
         }
             .distinctUntilChanged()
@@ -130,38 +130,75 @@ fun SwimCalendarView4(data: HashMap<String, SwimData>) {
     }
 
 
-
-    LazyColumn(
-        state = listState,
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(430.dp)
-            .background(Color.White),
-        reverseLayout = true
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        val onCenterDateChanged = { year: Int, month: Int ->
-            setCurrentYear(year)
-            setCurrentMonth(month)
+        Box(
+            modifier = Modifier
+                .statusBarsPadding()
+                .fillMaxWidth()
+                .height(70.dp)
+        ) {
+            Text(
+                text = "${currentYear.toString()}년 ${currentMonth.toString()}월",
+                modifier = Modifier
+                    .padding(top = 10.dp)
+                    .align(Alignment.TopCenter),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(5.dp)
+                    .align(Alignment.BottomEnd),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Text(text = "일", color = Color.Red.copy(0.8f))
+                Text(text = "월", color = Color.Black.copy(0.8f))
+                Text(text = "화", color = Color.Black.copy(0.8f))
+                Text(text = "수", color = Color.Black.copy(0.8f))
+                Text(text = "목", color = Color.Black.copy(0.8f))
+                Text(text = "금", color = Color.Black.copy(0.8f))
+                Text(text = "토", color = Color.Blue.copy(0.8f))
+            }
         }
 
-        itemsIndexed(items = lazyDataList) { index, dateList ->
-            WeekRow(
-                dataIndex = index,
-                dateList = dateList,
-                listState = listState,
-                todayStr = todayStr,
-                dateFormat = dateFormat,
-                currentYear = currentYear,
-                currentMonth = currentMonth,
-                selectedDay = selectedDay,
-                centerItemIndex = centerItemIndex,
-                onCenterDateChanged = onCenterDateChanged,
-                onClickDate = { year, month, day ->
-                    setCurrentYear(year)
-                    setCurrentMonth(month)
-                    setSelectedDay(day)
-                }
-            )
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(428.dp)
+                .background(Color.White),
+            reverseLayout = true
+        ) {
+            val onCenterDateChanged = { year: Int, month: Int ->
+                setCurrentYear(year)
+                setCurrentMonth(month)
+            }
+
+            itemsIndexed(items = lazyDataList) { index, dateList ->
+                WeekRow(
+                    dataIndex = index,
+                    dateList = dateList,
+                    listState = listState,
+                    todayStr = todayStr,
+                    dateFormat = dateFormat,
+                    currentYear = currentYear,
+                    currentMonth = currentMonth,
+                    selectedDay = selectedDay,
+                    centerItemIndex = centerItemIndex,
+                    onCenterDateChanged = onCenterDateChanged,
+                    onClickDate = { year, month, day ->
+                        setCurrentYear(year)
+                        setCurrentMonth(month)
+                        setSelectedDay(day)
+                    }
+                )
+            }
         }
     }
 }
