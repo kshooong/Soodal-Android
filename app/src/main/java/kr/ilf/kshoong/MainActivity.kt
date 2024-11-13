@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import kotlinx.coroutines.delay
 import kr.ilf.kshoong.data.SwimData
-import kr.ilf.kshoong.ui.HealthConnectUtil
 import kr.ilf.kshoong.ui.SwimCalendarView4
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 
