@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kr.ilf.kshoong.data.SwimData
+import kr.ilf.kshoong.ui.HealthConnectUtil
 import kr.ilf.kshoong.ui.SwimCalendarView4
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 
@@ -65,8 +66,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
+        HealthConnectUtil(this, this)
     }
+
 
     fun setDummyData() {
         data["2024-10-01-화"] = SwimData("2024-10-01-화", 600, 200, 400, 200, 100)
