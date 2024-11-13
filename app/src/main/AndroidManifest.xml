@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" >
     <!-- 헬스 커넥트 Exercise -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" /> <!-- For check if Health Connect is installed -->
@@ -17,12 +17,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Kshoong"
-        tools:targetApi="31">
+        tools:targetApi="31" >
         <activity
             android:name=".PermissionsRationaleActivity"
             android:exported="false"
             android:label="@string/title_activity_permissions_rationale"
-            android:theme="@style/Theme.Kshoong">
+            android:theme="@style/Theme.Kshoong" >
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
@@ -35,7 +35,7 @@
             android:name=".ViewPermissionUsageActivity"
             android:exported="true"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
-            android:targetActivity=".PermissionsRationaleActivity">
+            android:targetActivity=".PermissionsRationaleActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
 
@@ -47,7 +47,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Kshoong">
+            android:theme="@style/Theme.Kshoong" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
