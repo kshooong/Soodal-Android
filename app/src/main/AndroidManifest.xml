@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--   헬스 커넥트 Exercise   -->
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -23,6 +27,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--   헬스커넥트 개인정보처리방침   -->
+<!--        <activity-alias-->
+<!--            android:name="ViewPermissionUsageActivity"-->
+<!--            android:exported="true"-->
+<!--            android:targetActivity=".PermissionsRationaleActivity"-->
+<!--            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />-->
+<!--                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />-->
+<!--            </intent-filter>-->
+<!--        </activity-alias>-->
     </application>
+
+    <!-- For check if Health Connect is installed -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 
 </manifest>
