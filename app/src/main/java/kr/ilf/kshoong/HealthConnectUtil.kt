@@ -1,6 +1,5 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.kshoong
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,13 +9,11 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
-import androidx.health.connect.client.records.HeartRateRecord
-import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kr.ilf.kshoong.MainActivity
 import java.time.Instant
 
 class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
@@ -44,7 +41,7 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
     init {
         val isInit = initHealthConnectClient()
         if (isInit) {
-            GlobalScope.launch { checkPermissionsAndRun(healthConnectClient!!) }
+            CoroutineScope(Dispatchers.Main).launch { checkPermissionsAndRun(healthConnectClient!!) }
         }
     }
 
