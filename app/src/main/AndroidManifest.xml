@@ -3,7 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools" >
     <!-- 헬스 커넥트 Exercise -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
-    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" /> <!-- For check if Health Connect is installed -->
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
+    <uses-permission android:name="android.permission.health.WRITE_DISTANCE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_SPEED" />
+    <uses-permission android:name="android.permission.health.WRITE_SPEED" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="  android.permission.health.WRITE_TOTAL_CALORIES_BURNED" />
+
+    <!-- For check if Health Connect is installed -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
     </queries>

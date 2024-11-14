@@ -22,6 +22,14 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
         setOf(
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),
             HealthPermission.getWritePermission(ExerciseSessionRecord::class),
+            HealthPermission.getReadPermission(SpeedRecord::class),
+            HealthPermission.getWritePermission(SpeedRecord::class),
+            HealthPermission.getReadPermission(DistanceRecord::class),
+            HealthPermission.getWritePermission(DistanceRecord::class),
+            HealthPermission.getReadPermission(HeartRateRecord::class),
+            HealthPermission.getWritePermission(HeartRateRecord::class),
+            HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+            HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
         )
 
     private var healthConnectClient: HealthConnectClient? = null
