@@ -5,18 +5,37 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.records.ExerciseSessionRecord
+import kotlinx.coroutines.delay
 import kr.ilf.kshoong.data.SwimData
-import kr.ilf.kshoong.ui.SwimCalendarView
 import kr.ilf.kshoong.ui.SwimCalendarView4
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 
 class MainActivity : ComponentActivity() {
     companion object {
         val data = HashMap<String, SwimData>()
+        lateinit var realData: List<ExerciseSessionRecord>
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,10 +50,26 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                SwimCalendarView4(data)
+                val (isLoading, setIsLoading) = remember {
+                    mutableStateOf(true)
+                }
+
+                LaunchedEffect(Unit) {
+                    delay(1000)
+                    setIsLoading(false)
+                }
+
+                if (isLoading) {
+                    LoadingVIew()
+                } else {
+                    SwimCalendarView4(data)
+                }
             }
         }
+
+        HealthConnectUtil(this, this)
     }
+
 
     fun setDummyData() {
         data["2024-10-01-화"] = SwimData("2024-10-01-화", 600, 200, 400, 200, 100)
@@ -79,17 +114,39 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun LoadingVIew() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "KSHOONG!", style = MaterialTheme.typography.titleLarge)
+            Image(
+                painter = painterResource(id = R.drawable.logo_loading),
+                contentDescription = "logo",
+                modifier = Modifier.size(300.dp)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun Preview() {
+    val isLoading = true
     KshoongTheme {
-        SwimCalendarView()
+        if (isLoading) {
+            LoadingVIew()
+        } else {
+            SwimCalendarView4(MainActivity.data)
+        }
     }
 }
