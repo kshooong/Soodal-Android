@@ -60,7 +60,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.connect.client)
     implementation(libs.androidx.core.ktx)
