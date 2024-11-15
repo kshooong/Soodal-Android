@@ -8,7 +8,11 @@ import androidx.activity.ComponentActivity
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.SpeedRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import kotlinx.coroutines.CoroutineScope
@@ -16,9 +20,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
 
-class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
+class HealthConnectManager(val context: Context, val activity: ComponentActivity) {
 
-    private val PERMISSIONS =
+    private val healthPermissions =
         setOf(
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),
             HealthPermission.getWritePermission(ExerciseSessionRecord::class),
@@ -37,7 +41,7 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
         PermissionController.createRequestPermissionResultContract()
     private val requestPermissions =
         activity.registerForActivityResult(requestPermissionActivityContract) { granted ->
-            if (granted.containsAll(PERMISSIONS)) {
+            if (granted.containsAll(healthPermissions)) {
                 // Permissions successfully granted
                 Log.d("HealthConnectUtil", "Permissions successfully granted")
             } else {
@@ -55,15 +59,13 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
 
     private suspend fun checkPermissionsAndRun(healthConnectClient: HealthConnectClient) {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        if (granted.containsAll(PERMISSIONS)) {
+        if (granted.containsAll(healthPermissions)) {
             // Permissions already granted; proceed with inserting or reading data
-            MainActivity.realData = readExerciseSessions(Instant.now().minusSeconds(60 * 60 * 24 * 7), Instant.now())
-            MainActivity.realData.forEach {
-                Log.d("HealthConnectUtil out", it.toString())
-            }
+            val record =
+                readExerciseSession(Instant.now().minusSeconds(60 * 60 * 24 * 7), Instant.now())
 
         } else {
-            requestPermissions.launch(PERMISSIONS)
+            requestPermissions.launch(healthPermissions)
         }
     }
 
@@ -102,6 +104,46 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
     ): List<ExerciseSessionRecord> {
         val request = ReadRecordsRequest(
             recordType = ExerciseSessionRecord::class,
+            timeRangeFilter = TimeRangeFilter.between(start, end)
+        )
+        val response = healthConnectClient!!.readRecords(request)
+        return response.records
+    }
+
+    private suspend fun readExerciseSession(
+        start: Instant,
+        end: Instant
+    ): ExerciseSessionRecord {
+        val request = ReadRecordsRequest(
+            recordType = ExerciseSessionRecord::class,
+            timeRangeFilter = TimeRangeFilter.between(start, end)
+        )
+//        val response = healthConnectClient!!.readRecords(request)
+        val response = healthConnectClient!!.readRecord(
+            ExerciseSessionRecord::class,
+            "3822865f-a1a9-4e9b-a3a6-98da6c2a872d"
+        )
+        return response.record
+    }
+
+    private suspend fun readSpeedRecords(
+        start: Instant,
+        end: Instant
+    ): List<SpeedRecord> {
+        val request = ReadRecordsRequest(
+            recordType = SpeedRecord::class,
+            timeRangeFilter = TimeRangeFilter.between(start, end)
+        )
+        val response = healthConnectClient!!.readRecords(request)
+        return response.records
+    }
+
+    private suspend fun readHeartRateRecords(
+        start: Instant,
+        end: Instant
+    ): List<HeartRateRecord> {
+        val request = ReadRecordsRequest(
+            recordType = HeartRateRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end)
         )
         val response = healthConnectClient!!.readRecords(request)

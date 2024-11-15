@@ -27,6 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.SpeedRecord
 import kotlinx.coroutines.delay
 import kr.ilf.kshoong.data.SwimData
 import kr.ilf.kshoong.ui.SwimCalendarView4
@@ -35,7 +37,6 @@ import kr.ilf.kshoong.ui.theme.KshoongTheme
 class MainActivity : ComponentActivity() {
     companion object {
         val data = HashMap<String, SwimData>()
-        lateinit var realData: List<ExerciseSessionRecord>
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +68,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        HealthConnectUtil(this, this)
+        HealthConnectManager(this, this)
     }
 
 
