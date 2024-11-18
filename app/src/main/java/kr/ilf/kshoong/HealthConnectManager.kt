@@ -3,72 +3,39 @@ package kr.ilf.kshoong
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
-import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
-import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.Record
+import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.metadata.DataOrigin
+import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.response.ReadRecordResponse
 import androidx.health.connect.client.time.TimeRangeFilter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.time.Instant
+import kr.ilf.kshoong.data.ExerciseSessionData
 
-class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
+class HealthConnectManager(private val context: Context) {
 
-    private val PERMISSIONS =
-        setOf(
-            HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-            HealthPermission.getWritePermission(ExerciseSessionRecord::class),
-            HealthPermission.getReadPermission(SpeedRecord::class),
-            HealthPermission.getWritePermission(SpeedRecord::class),
-            HealthPermission.getReadPermission(DistanceRecord::class),
-            HealthPermission.getWritePermission(DistanceRecord::class),
-            HealthPermission.getReadPermission(HeartRateRecord::class),
-            HealthPermission.getWritePermission(HeartRateRecord::class),
-            HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
-            HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
-        )
-
-    private var healthConnectClient: HealthConnectClient? = null
+    private val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
     private val requestPermissionActivityContract =
         PermissionController.createRequestPermissionResultContract()
-    private val requestPermissions =
-        activity.registerForActivityResult(requestPermissionActivityContract) { granted ->
-            if (granted.containsAll(PERMISSIONS)) {
-                // Permissions successfully granted
-                Log.d("HealthConnectUtil", "Permissions successfully granted")
-            } else {
-                // Lack of required permissions
-                Log.d("HealthConnectUtil", "Permissions not granted")
-            }
-        }
+    var availability = mutableStateOf(false)
+        private set
 
     init {
-        val isInit = initHealthConnectClient()
-        if (isInit) {
-            CoroutineScope(Dispatchers.Main).launch { checkPermissionsAndRun(healthConnectClient!!) }
-        }
+        availability.value = checkHealthConnectClient()
     }
 
-    private suspend fun checkPermissionsAndRun(healthConnectClient: HealthConnectClient) {
+    suspend fun checkPermissions(permissions: Set<String>): Boolean {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        if (granted.containsAll(PERMISSIONS)) {
-            // Permissions already granted; proceed with inserting or reading data
-            MainActivity.realData = readExerciseSessions(Instant.now().minusSeconds(60 * 60 * 24 * 7), Instant.now())
-            MainActivity.realData.forEach {
-                Log.d("HealthConnectUtil out", it.toString())
-            }
-
-        } else {
-            requestPermissions.launch(PERMISSIONS)
-        }
+        return granted.containsAll(permissions)
     }
 
-
-    private fun initHealthConnectClient(): Boolean {
+    private fun checkHealthConnectClient(): Boolean {
         val providerPackageName = "google.android.apps.healthdata"
         val availabilityStatus = HealthConnectClient.getSdkStatus(context, providerPackageName)
 
@@ -91,20 +58,65 @@ class HealthConnectUtil(val context: Context, val activity: ComponentActivity) {
             return false
         }
 
-        healthConnectClient = HealthConnectClient.getOrCreate(context)
-
         return true
     }
 
-    private suspend fun readExerciseSessions(
-        start: Instant,
-        end: Instant
-    ): List<ExerciseSessionRecord> {
+    private suspend inline fun <reified T : Record> readRecords(
+        timeRangeFilter: TimeRangeFilter,
+        dataOriginFilter: Set<DataOrigin>
+    ): List<T> {
         val request = ReadRecordsRequest(
-            recordType = ExerciseSessionRecord::class,
-            timeRangeFilter = TimeRangeFilter.between(start, end)
+            recordType = T::class,
+            timeRangeFilter = timeRangeFilter,
+            dataOriginFilter = dataOriginFilter
         )
-        val response = healthConnectClient!!.readRecords(request)
-        return response.records
+
+        return healthConnectClient!!.readRecords(request).records
+    }
+
+    private suspend inline fun <reified T : Record> readRecord(uid: String): ReadRecordResponse<T> {
+        val response = healthConnectClient!!.readRecord(T::class, uid)
+
+        return response
+    }
+
+    suspend fun readAssociatedSessionData(
+        uid: String,
+    ): ExerciseSessionData {
+        val exerciseSession = readRecord<ExerciseSessionRecord>(uid)
+        // Use the start time and end time from the session, for reading raw and aggregate data.
+        val timeRangeFilter = TimeRangeFilter.between(
+            startTime = exerciseSession.record.startTime,
+            endTime = exerciseSession.record.endTime
+        )
+        val aggregateDataTypes = setOf(
+            ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
+            StepsRecord.COUNT_TOTAL,
+            TotalCaloriesBurnedRecord.ENERGY_TOTAL,
+            HeartRateRecord.BPM_AVG,
+            HeartRateRecord.BPM_MAX,
+            HeartRateRecord.BPM_MIN,
+        )
+        // Limit the data read to just the application that wrote the session. This may or may not
+        // be desirable depending on the use case: In some cases, it may be useful to combine with
+        // data written by other apps.
+        val dataOriginFilter = setOf(exerciseSession.record.metadata.dataOrigin)
+        val aggregateRequest = AggregateRequest(
+            metrics = aggregateDataTypes,
+            timeRangeFilter = timeRangeFilter,
+            dataOriginFilter = dataOriginFilter
+        )
+        val aggregateData = healthConnectClient!!.aggregate(aggregateRequest)
+        val heartRateData = readRecords<HeartRateRecord>(timeRangeFilter, dataOriginFilter)
+
+        return ExerciseSessionData(
+            uid = uid,
+            totalActiveTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL],
+            totalEnergyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL],
+            minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
+            maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],
+            avgHeartRate = aggregateData[HeartRateRecord.BPM_AVG],
+            heartRateSeries = heartRateData,
+        )
     }
 }
