@@ -3,10 +3,12 @@ package kr.ilf.kshoong
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,9 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,16 +31,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.health.connect.client.records.ExerciseSessionRecord
-import kotlinx.coroutines.delay
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kr.ilf.kshoong.data.SwimData
 import kr.ilf.kshoong.ui.SwimCalendarView4
 import kr.ilf.kshoong.ui.theme.KshoongTheme
+import kr.ilf.kshoong.viewmodel.SwimDataViewModel
+import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
 
 class MainActivity : ComponentActivity() {
+
+    val healthConnectManager by lazy { HealthConnectManager(this) }
+
     companion object {
         val data = HashMap<String, SwimData>()
-        lateinit var realData: List<ExerciseSessionRecord>
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,28 +58,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                val (isLoading, setIsLoading) = remember {
+                val isLoading = remember {
                     mutableStateOf(true)
                 }
 
-                LaunchedEffect(Unit) {
-                    delay(1000)
-                    setIsLoading(false)
-                }
-
-                if (isLoading) {
-                    LoadingVIew()
+                if (isLoading.value) {
+                    LoadingVIew(isLoading, healthConnectManager)
                 } else {
                     SwimCalendarView4(data)
                 }
             }
         }
-
-        HealthConnectUtil(this, this)
     }
 
 
-    fun setDummyData() {
+    private fun setDummyData() {
         data["2024-10-01-화"] = SwimData("2024-10-01-화", 600, 200, 400, 200, 100)
         data["2024-10-02-수"] = SwimData("2024-10-02-수", 625, 0, 450, 150, 150)
         data["2024-10-03-목"] = SwimData("2024-10-03-목", 500, 300, 0, 225, 100)
@@ -114,7 +115,24 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoadingVIew() {
+fun LoadingVIew(isLoading: MutableState<Boolean>, healthConnectManager: HealthConnectManager) {
+    val availability by healthConnectManager.availability
+    val viewModel: SwimDataViewModel =
+        viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+    val permissions = viewModel.healthPermissions
+    val permissionsLauncher =
+        rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
+            // Handle permission result
+            viewModel.getSwimData()
+            isLoading.value = false
+        }
+
+    if (availability) {
+        LaunchedEffect(Unit) {
+            permissionsLauncher.launch(permissions)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -136,17 +154,18 @@ fun LoadingVIew() {
             )
         }
     }
+
 }
 
 @Preview(showBackground = true)
 @Composable
 fun Preview() {
-    val isLoading = true
-    KshoongTheme {
-        if (isLoading) {
-            LoadingVIew()
-        } else {
-            SwimCalendarView4(MainActivity.data)
-        }
-    }
+//    val isLoading = true
+//    KshoongTheme {
+//        if (isLoading) {
+//            LoadingVIew()
+//        } else {
+    SwimCalendarView4(MainActivity.data)
+//        }
+//    }
 }
