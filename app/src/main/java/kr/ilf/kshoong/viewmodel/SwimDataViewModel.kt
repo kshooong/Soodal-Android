@@ -1,6 +1,6 @@
 package kr.ilf.kshoong.viewmodel
 
-import androidx.health.connect.client.PermissionController
+import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
