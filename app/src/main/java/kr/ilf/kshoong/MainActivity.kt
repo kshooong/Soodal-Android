@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +38,7 @@ import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    val healthConnectManager by lazy { HealthConnectManager(this) }
+    private val healthConnectManager by lazy { HealthConnectManager(this) }
 
     companion object {
         val data = HashMap<String, SwimData>()
@@ -63,7 +61,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (isLoading.value) {
-                    LoadingVIew(isLoading, healthConnectManager)
+                    LoadingView(isLoading, healthConnectManager)
                 } else {
                     SwimCalendarView4(data)
                 }
@@ -115,23 +113,30 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoadingVIew(isLoading: MutableState<Boolean>, healthConnectManager: HealthConnectManager) {
+fun LoadingView(isLoading: MutableState<Boolean>, healthConnectManager: HealthConnectManager) {
     val availability by healthConnectManager.availability
     val viewModel: SwimDataViewModel =
         viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
-    val permissions = viewModel.healthPermissions
-    val permissionsLauncher =
-        rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
-            // Handle permission result
-            viewModel.getSwimData()
-            isLoading.value = false
-        }
 
-    if (availability) {
+    if (availability && viewModel.hasAllPermissions.value.not()) {
+        val permissions = viewModel.healthPermissions
+        val permissionsLauncher =
+            rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
+                // Handle permission result
+                viewModel.getSwimData()
+                isLoading.value = false
+            }
+
         LaunchedEffect(Unit) {
             permissionsLauncher.launch(permissions)
         }
+    } else {
+        viewModel.getSwimData()
+        LaunchedEffect(Unit) {
+            isLoading.value = false
+        }
     }
+
 
     Box(
         modifier = Modifier
