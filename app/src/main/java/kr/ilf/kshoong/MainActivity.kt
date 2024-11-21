@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 if (isLoading.value) {
                     LoadingView(isLoading, healthConnectManager)
                 } else {
-                    SwimCalendarView4(data)
+                    SwimCalendarView4(data, healthConnectManager)
                 }
             }
         }
@@ -123,7 +123,7 @@ fun LoadingView(isLoading: MutableState<Boolean>, healthConnectManager: HealthCo
         val permissionsLauncher =
             rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
                 // Handle permission result
-                viewModel.getSwimData()
+                viewModel.initSwimData()
                 isLoading.value = false
             }
 
@@ -131,7 +131,7 @@ fun LoadingView(isLoading: MutableState<Boolean>, healthConnectManager: HealthCo
             permissionsLauncher.launch(permissions)
         }
     } else {
-        viewModel.getSwimData()
+        viewModel.initSwimData()
         LaunchedEffect(Unit) {
             isLoading.value = false
         }
@@ -170,7 +170,8 @@ fun Preview() {
 //        if (isLoading) {
 //            LoadingVIew()
 //        } else {
-    SwimCalendarView4(MainActivity.data)
+//    SwimCalendarView4(MainActivity.data)
+
 //        }
 //    }
 }
