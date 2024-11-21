@@ -21,7 +21,7 @@ import kr.ilf.kshoong.data.ExerciseSessionData
 
 class HealthConnectManager(private val context: Context) {
 
-    private val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
+    val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
 
     var availability = mutableStateOf(false)
         private set
@@ -66,6 +66,17 @@ class HealthConnectManager(private val context: Context) {
         return true
     }
 
+    suspend fun readExerciseSessions(
+        timeRangeFilter: TimeRangeFilter
+    ): List<ExerciseSessionRecord> {
+        val request = ReadRecordsRequest(
+            recordType = ExerciseSessionRecord::class,
+            timeRangeFilter = timeRangeFilter
+        )
+
+        return healthConnectClient.readRecords(request).records
+    }
+
     private suspend inline fun <reified T : Record> readRecords(
         timeRangeFilter: TimeRangeFilter,
         dataOriginFilter: Set<DataOrigin>
@@ -96,7 +107,6 @@ class HealthConnectManager(private val context: Context) {
         )
         val aggregateDataTypes = setOf(
             ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
-            StepsRecord.COUNT_TOTAL,
             TotalCaloriesBurnedRecord.ENERGY_TOTAL,
             HeartRateRecord.BPM_AVG,
             HeartRateRecord.BPM_MAX,
@@ -111,7 +121,7 @@ class HealthConnectManager(private val context: Context) {
             timeRangeFilter = timeRangeFilter,
             dataOriginFilter = dataOriginFilter
         )
-        val aggregateData = healthConnectClient!!.aggregate(aggregateRequest)
+        val aggregateData = healthConnectClient.aggregate(aggregateRequest)
         val heartRateData = readRecords<HeartRateRecord>(timeRangeFilter, dataOriginFilter)
 
         return ExerciseSessionData(

@@ -1,6 +1,7 @@
 package kr.ilf.kshoong.ui
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,10 +45,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kr.ilf.kshoong.MainActivity
+import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.data.SwimData
 import kr.ilf.kshoong.ui.theme.ColorBackStroke
 import kr.ilf.kshoong.ui.theme.ColorBreastStroke
@@ -58,6 +61,8 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
 import kr.ilf.kshoong.ui.theme.ColorCrawl
 import kr.ilf.kshoong.ui.theme.ColorKickBoard
+import kr.ilf.kshoong.viewmodel.SwimDataViewModel
+import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -69,7 +74,12 @@ private fun convertDPtoPX(context: Context, dp: Int): Int {
 }
 
 @Composable
-fun SwimCalendarView4(data: HashMap<String, SwimData>) {
+fun SwimCalendarView4(data: HashMap<String, SwimData>, healthConnectManager: HealthConnectManager) {
+    val viewModel: SwimDataViewModel = viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+    val swimData by viewModel.swimDataFlow.collectAsState()
+
+    LaunchedEffect(swimData) {Log.d("Data Test", swimData.toString())}
+
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd-E", Locale.getDefault()) }
     val today = remember { Calendar.getInstance() }
     val todayStr = remember { dateFormat.format(today.time) }
@@ -398,5 +408,5 @@ private fun DayItem(
 @Preview
 @Composable
 fun SwimCalendarView4Preview() {
-    SwimCalendarView4(MainActivity.data)
+//    SwimCalendarView4(MainActivity.data)
 }
