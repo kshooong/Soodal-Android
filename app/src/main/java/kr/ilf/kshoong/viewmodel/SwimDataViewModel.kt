@@ -38,9 +38,20 @@ class SwimDataViewModel(
     val swimDataFlow
         get() = _swimDataFlow.asStateFlow()
 
+    val hasAllPermissions = mutableStateOf(false)
+
+    init {
+        viewModelScope.launch {
+            hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)
+        }
+    }
+
     fun getSwimData() {
         viewModelScope.launch {
+            val hasPermissions = healthConnectManager.checkPermissions(healthPermissions)
+            if (hasPermissions) {
 
+            }
         }
     }
 }
