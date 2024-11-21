@@ -3,6 +3,7 @@ package kr.ilf.kshoong
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
@@ -21,8 +22,7 @@ import kr.ilf.kshoong.data.ExerciseSessionData
 class HealthConnectManager(private val context: Context) {
 
     private val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
-    private val requestPermissionActivityContract =
-        PermissionController.createRequestPermissionResultContract()
+
     var availability = mutableStateOf(false)
         private set
 
@@ -34,6 +34,11 @@ class HealthConnectManager(private val context: Context) {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
         return granted.containsAll(permissions)
     }
+
+    fun requestPermissionActivityContract(): ActivityResultContract<Set<String>, Set<String>> {
+        return PermissionController.createRequestPermissionResultContract()
+    }
+
 
     private fun checkHealthConnectClient(): Boolean {
         val providerPackageName = "google.android.apps.healthdata"
@@ -71,11 +76,11 @@ class HealthConnectManager(private val context: Context) {
             dataOriginFilter = dataOriginFilter
         )
 
-        return healthConnectClient!!.readRecords(request).records
+        return healthConnectClient.readRecords(request).records
     }
 
     private suspend inline fun <reified T : Record> readRecord(uid: String): ReadRecordResponse<T> {
-        val response = healthConnectClient!!.readRecord(T::class, uid)
+        val response = healthConnectClient.readRecord(T::class, uid)
 
         return response
     }

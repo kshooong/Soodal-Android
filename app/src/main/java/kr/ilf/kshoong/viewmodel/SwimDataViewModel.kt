@@ -34,7 +34,7 @@ class SwimDataViewModel(
             HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
         )
     private val _swimDataFlow = MutableStateFlow<Map<String, SwimData>>(emptyMap())
-    val permissionsContract = PermissionController.createRequestPermissionResultContract()
+    val permissionsContract = healthConnectManager.requestPermissionActivityContract()
     val swimDataFlow
         get() = _swimDataFlow.asStateFlow()
 
