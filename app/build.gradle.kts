@@ -21,6 +21,17 @@ android {
         }
     }
 
+    signingConfigs {
+        create("debugKey") {
+            storeFile = file("${System.getenv("HOME")}/keystore/debugKey.jks")
+            storePassword = "12110202"
+            keyAlias = "debugKey"
+            keyPassword = "12110202"
+            enableV1Signing = true
+//            enableV2Signing = true // 디버그용에서는 2차 서명까지는 필요 없을 수 있습니다.
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -36,6 +47,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debugKey")
         }
 
     }
