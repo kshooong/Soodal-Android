@@ -30,42 +30,6 @@ class HealthConnectManager(private val context: Context) {
         availability.value = checkHealthConnectClient()
     }
 
-    suspend fun checkPermissions(permissions: Set<String>): Boolean {
-        val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        return granted.containsAll(permissions)
-    }
-
-    fun requestPermissionActivityContract(): ActivityResultContract<Set<String>, Set<String>> {
-        return PermissionController.createRequestPermissionResultContract()
-    }
-
-
-    private fun checkHealthConnectClient(): Boolean {
-        val providerPackageName = "google.android.apps.healthdata"
-        val availabilityStatus = HealthConnectClient.getSdkStatus(context, providerPackageName)
-
-        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE) {
-            return false // early return as there is no viable integration
-        }
-
-        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
-            // Optionally redirect to package installer to find a provider, for example:
-            val uriString =
-                "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW).apply {
-                    setPackage("com.android.vending")
-                    data = Uri.parse(uriString)
-                    putExtra("overlay", true)
-                    putExtra("callerId", context.packageName)
-                }
-            )
-            return false
-        }
-
-        return true
-    }
-
     suspend fun readExerciseSessions(
         timeRangeFilter: TimeRangeFilter
     ): List<ExerciseSessionRecord> {
@@ -75,25 +39,6 @@ class HealthConnectManager(private val context: Context) {
         )
 
         return healthConnectClient.readRecords(request).records
-    }
-
-    private suspend inline fun <reified T : Record> readRecords(
-        timeRangeFilter: TimeRangeFilter,
-        dataOriginFilter: Set<DataOrigin>
-    ): List<T> {
-        val request = ReadRecordsRequest(
-            recordType = T::class,
-            timeRangeFilter = timeRangeFilter,
-            dataOriginFilter = dataOriginFilter
-        )
-
-        return healthConnectClient.readRecords(request).records
-    }
-
-    private suspend inline fun <reified T : Record> readRecord(uid: String): ReadRecordResponse<T> {
-        val response = healthConnectClient.readRecord(T::class, uid)
-
-        return response
     }
 
     suspend fun readAssociatedSessionData(
@@ -135,5 +80,60 @@ class HealthConnectManager(private val context: Context) {
             avgHeartRate = aggregateData[HeartRateRecord.BPM_AVG],
             heartRateSeries = heartRateData,
         )
+    }
+
+    suspend fun checkPermissions(permissions: Set<String>): Boolean {
+        val granted = healthConnectClient.permissionController.getGrantedPermissions()
+        return granted.containsAll(permissions)
+    }
+
+
+    fun requestPermissionActivityContract(): ActivityResultContract<Set<String>, Set<String>> {
+        return PermissionController.createRequestPermissionResultContract()
+    }
+
+    private fun checkHealthConnectClient(): Boolean {
+        val providerPackageName = "google.android.apps.healthdata"
+        val availabilityStatus = HealthConnectClient.getSdkStatus(context, providerPackageName)
+
+        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE) {
+            return false // early return as there is no viable integration
+        }
+
+        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
+            // Optionally redirect to package installer to find a provider, for example:
+            val uriString =
+                "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    setPackage("com.android.vending")
+                    data = Uri.parse(uriString)
+                    putExtra("overlay", true)
+                    putExtra("callerId", context.packageName)
+                }
+            )
+            return false
+        }
+
+        return true
+    }
+
+    private suspend inline fun <reified T : Record> readRecords(
+        timeRangeFilter: TimeRangeFilter,
+        dataOriginFilter: Set<DataOrigin>
+    ): List<T> {
+        val request = ReadRecordsRequest(
+            recordType = T::class,
+            timeRangeFilter = timeRangeFilter,
+            dataOriginFilter = dataOriginFilter
+        )
+
+        return healthConnectClient.readRecords(request).records
+    }
+
+    private suspend inline fun <reified T : Record> readRecord(uid: String): ReadRecordResponse<T> {
+        val response = healthConnectClient.readRecord(T::class, uid)
+
+        return response
     }
 }
