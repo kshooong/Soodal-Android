@@ -24,6 +24,10 @@ class SwimDataViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
+    enum class UiState{
+        Loading, Complete
+    }
+    val uiState = mutableStateOf(UiState.Loading)
     val healthPermissions =
         setOf(
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),
@@ -63,6 +67,8 @@ class SwimDataViewModel(
                     _swimDataFlow.value[date] = healthConnectManager.readAssociatedSessionData(uid)
                 }
             }
+
+            uiState.value = UiState.Complete
         }
     }
 
