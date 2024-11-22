@@ -56,12 +56,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                val isLoading = remember {
-                    mutableStateOf(true)
-                }
+                val viewModel: SwimDataViewModel =
+                    viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+                val uiState by viewModel.uiState
+                val isLoading = remember(uiState) { uiState == SwimDataViewModel.UiState.Loading }
 
-                if (isLoading.value) {
-                    LoadingView(isLoading, healthConnectManager)
+                if (isLoading) {
+                    LoadingView(healthConnectManager, viewModel)
                 } else {
                     SwimCalendarView4(data, healthConnectManager)
                 }
@@ -113,18 +114,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoadingView(isLoading: MutableState<Boolean>, healthConnectManager: HealthConnectManager) {
+fun LoadingView(healthConnectManager: HealthConnectManager, viewModel: SwimDataViewModel) {
     val availability by healthConnectManager.availability
-    val viewModel: SwimDataViewModel =
-        viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
-
     if (availability && viewModel.hasAllPermissions.value.not()) {
         val permissions = viewModel.healthPermissions
         val permissionsLauncher =
             rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
                 // Handle permission result
                 viewModel.initSwimData()
-                isLoading.value = false
             }
 
         LaunchedEffect(Unit) {
@@ -132,9 +129,6 @@ fun LoadingView(isLoading: MutableState<Boolean>, healthConnectManager: HealthCo
         }
     } else {
         viewModel.initSwimData()
-        LaunchedEffect(Unit) {
-            isLoading.value = false
-        }
     }
 
 
