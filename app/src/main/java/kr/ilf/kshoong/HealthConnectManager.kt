@@ -7,10 +7,10 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
-import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.AggregateRequest
@@ -21,7 +21,7 @@ import kr.ilf.kshoong.data.ExerciseSessionData
 
 class HealthConnectManager(private val context: Context) {
 
-    val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
+    private val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
 
     var availability = mutableStateOf(false)
         private set
@@ -107,6 +107,7 @@ class HealthConnectManager(private val context: Context) {
         )
         val aggregateDataTypes = setOf(
             ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
+            DistanceRecord.DISTANCE_TOTAL,
             TotalCaloriesBurnedRecord.ENERGY_TOTAL,
             HeartRateRecord.BPM_AVG,
             HeartRateRecord.BPM_MAX,
@@ -127,6 +128,7 @@ class HealthConnectManager(private val context: Context) {
         return ExerciseSessionData(
             uid = uid,
             totalActiveTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL],
+            totalDistance = aggregateData[DistanceRecord.DISTANCE_TOTAL],
             totalEnergyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL],
             minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
             maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],
