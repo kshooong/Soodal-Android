@@ -24,9 +24,10 @@ class SwimDataViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
-    enum class UiState{
+    enum class UiState {
         Loading, Complete
     }
+
     val uiState = mutableStateOf(UiState.Loading)
     val healthPermissions =
         setOf(
@@ -43,7 +44,8 @@ class SwimDataViewModel(
         )
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
 
-    private val _swimDataFlow = MutableStateFlow<MutableMap<String, ExerciseSessionData>>(mutableMapOf())
+    private val _swimDataFlow =
+        MutableStateFlow<MutableMap<String, ExerciseSessionData>>(mutableMapOf())
     val swimDataFlow
         get() = _swimDataFlow.asStateFlow()
 
@@ -61,10 +63,12 @@ class SwimDataViewModel(
             if (hasPermissions) {
                 val exerciseSessions = readExerciseRecords()
                 exerciseSessions.forEach { exerciseSessionRecord ->
-                    val uid = exerciseSessionRecord.metadata.id
-                    val date = exerciseSessionRecord.startTime.truncatedTo(ChronoUnit.DAYS).toString()
+                    if (exerciseSessionRecord.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL) {
+                        val uid = exerciseSessionRecord.metadata.id
+                        val date = exerciseSessionRecord.startTime.plus(9L, ChronoUnit.HOURS).toString()
 
-                    _swimDataFlow.value[date] = healthConnectManager.readAssociatedSessionData(uid)
+                        _swimDataFlow.value[date] = healthConnectManager.readAssociatedSessionData(uid)
+                    }
                 }
             }
 
