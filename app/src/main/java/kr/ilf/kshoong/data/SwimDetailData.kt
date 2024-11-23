@@ -7,7 +7,7 @@ import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Velocity
 import java.time.Duration
 
-data class ExerciseSessionData(
+data class SwimDetailData(
     val uid: String,
     val totalActiveTime: Duration? = null,
     val totalDistance: Length? = null,
