@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.data.ExerciseSessionData
+import kr.ilf.kshoong.data.SwimDetailData
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -45,7 +45,7 @@ class SwimDataViewModel(
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
 
     private val _swimDataFlow =
-        MutableStateFlow<MutableMap<String, ExerciseSessionData>>(mutableMapOf())
+        MutableStateFlow<MutableMap<String, SwimDetailData>>(mutableMapOf())
     val swimDataFlow
         get() = _swimDataFlow.asStateFlow()
 
