@@ -73,6 +73,11 @@ private fun convertDPtoPX(context: Context, dp: Int): Int {
     return (dp.toFloat() * density).roundToInt()
 }
 
+private fun convertPXtoDP(context: Context, px: Int): Int {
+    val density = context.resources.displayMetrics.density
+    return (px.toFloat() / density).roundToInt()
+}
+
 @Composable
 fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: HealthConnectManager) {
     val viewModel: SwimDataViewModel = viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
