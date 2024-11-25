@@ -25,7 +25,7 @@ class SwimDataViewModel(
 ) : ViewModel() {
 
     enum class UiState {
-        Loading, Complete
+        Loading, Complete, Scrolling
     }
 
     val uiState = mutableStateOf(UiState.Loading)
