@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kr.ilf.kshoong.data.SwimData
-import kr.ilf.kshoong.ui.SwimCalendarView4
+import kr.ilf.kshoong.ui.SwimCalendarView5
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 import kr.ilf.kshoong.viewmodel.SwimDataViewModel
 import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 if (isLoading) {
                     LoadingView(healthConnectManager, viewModel)
                 } else {
-                    SwimCalendarView4(data, healthConnectManager)
+                    SwimCalendarView5(healthConnectManager, viewModel)
                 }
             }
         }
