@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,14 +31,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kr.ilf.kshoong.data.SwimData
-import kr.ilf.kshoong.ui.SwimCalendarView4
+import kr.ilf.kshoong.ui.SwimCalendarView5
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 import kr.ilf.kshoong.viewmodel.SwimDataViewModel
 import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    val healthConnectManager by lazy { HealthConnectManager(this) }
+    private val healthConnectManager by lazy { HealthConnectManager(this) }
 
     companion object {
         val data = HashMap<String, SwimData>()
@@ -58,14 +56,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
-                val isLoading = remember {
-                    mutableStateOf(true)
-                }
+                val viewModel: SwimDataViewModel =
+                    viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+                val uiState by viewModel.uiState
+                val isLoading = remember(uiState) { uiState == SwimDataViewModel.UiState.Loading }
 
-                if (isLoading.value) {
-                    LoadingVIew(isLoading, healthConnectManager)
+                if (isLoading) {
+                    LoadingView(healthConnectManager, viewModel)
                 } else {
-                    SwimCalendarView4(data)
+                    SwimCalendarView5(healthConnectManager, viewModel)
                 }
             }
         }
@@ -115,23 +114,23 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoadingVIew(isLoading: MutableState<Boolean>, healthConnectManager: HealthConnectManager) {
+fun LoadingView(healthConnectManager: HealthConnectManager, viewModel: SwimDataViewModel) {
     val availability by healthConnectManager.availability
-    val viewModel: SwimDataViewModel =
-        viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
-    val permissions = viewModel.healthPermissions
-    val permissionsLauncher =
-        rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
-            // Handle permission result
-            viewModel.getSwimData()
-            isLoading.value = false
-        }
+    if (availability && viewModel.hasAllPermissions.value.not()) {
+        val permissions = viewModel.healthPermissions
+        val permissionsLauncher =
+            rememberLauncherForActivityResult(contract = viewModel.permissionsContract) {
+                // Handle permission result
+                viewModel.initSwimData()
+            }
 
-    if (availability) {
         LaunchedEffect(Unit) {
             permissionsLauncher.launch(permissions)
         }
+    } else {
+        viewModel.initSwimData()
     }
+
 
     Box(
         modifier = Modifier
@@ -165,7 +164,8 @@ fun Preview() {
 //        if (isLoading) {
 //            LoadingVIew()
 //        } else {
-    SwimCalendarView4(MainActivity.data)
+//    SwimCalendarView4(MainActivity.data)
+
 //        }
 //    }
 }

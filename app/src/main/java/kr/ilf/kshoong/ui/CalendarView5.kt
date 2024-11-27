@@ -73,8 +73,13 @@ private fun convertDPtoPX(context: Context, dp: Int): Int {
     return (dp.toFloat() * density).roundToInt()
 }
 
+private fun convertPXtoDP(context: Context, px: Int): Int {
+    val density = context.resources.displayMetrics.density
+    return (px.toFloat() / density).roundToInt()
+}
+
 @Composable
-fun SwimCalendarView4(data: HashMap<String, SwimData>, healthConnectManager: HealthConnectManager) {
+fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: HealthConnectManager) {
     val viewModel: SwimDataViewModel = viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
     val swimData by viewModel.swimDataFlow.collectAsState()
 
@@ -407,6 +412,6 @@ private fun DayItem(
 
 @Preview
 @Composable
-fun SwimCalendarView4Preview() {
-//    SwimCalendarView4(MainActivity.data)
+fun SwimCalendarView5Preview() {
+//    SwimCalendarView5(MainActivity.data)
 }
