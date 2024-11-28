@@ -11,6 +11,7 @@ lifecycleViewmodelCompose = "2.8.3"
 activityCompose = "1.8.0"
 composeBom = "2024.04.01"
 roomRersion = "2.6.1"
+navVersion = "2.8.4"
 
 [libraries]
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
@@ -32,6 +33,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-room-runtime = {group = "androidx.room", name = "room-runtime", version.ref="roomRersion"}
 androidx-room-compiler = {group = "androidx.room", name = "room-compiler", version.ref="roomRersion"}
 androidx-room-ktx = {group = "androidx.room", name = "room-ktx", version.ref="roomRersion"}
+androidx-navigation-compose = {group = "androidx.navigation", name = "navigation-compose", version.ref="navVersion"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
