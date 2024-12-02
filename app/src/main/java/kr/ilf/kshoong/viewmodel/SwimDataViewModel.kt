@@ -8,6 +8,8 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.Energy
+import androidx.health.connect.client.units.Length
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,9 +17,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kr.ilf.kshoong.HealthConnectManager
+import kr.ilf.kshoong.data.DailySwimData
 import kr.ilf.kshoong.data.SwimDetailData
+import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 class SwimDataViewModel(
@@ -44,10 +51,30 @@ class SwimDataViewModel(
         )
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
 
+    private val _dailySwimDataFlow = MutableStateFlow<DailySwimData?>(null)
+    val dailySwimDataFlow
+        get() = _dailySwimDataFlow.asStateFlow()
+
+
     private val _swimDataFlow =
         MutableStateFlow<MutableMap<String, SwimDetailData>>(mutableMapOf())
     val swimDataFlow
         get() = _swimDataFlow.asStateFlow()
+
+    private val _exerciseSessionsFlow =
+        MutableStateFlow<MutableList<ExerciseSessionRecord>>(mutableListOf())
+    val exerciseSessionsFlow
+        get() = _exerciseSessionsFlow.asStateFlow()
+
+    private val _currentSwimDataFlow2 =
+        MutableStateFlow<MutableMap<Instant, DailySwimData>>(mutableMapOf())
+    val currentSwimDataFlow2
+        get() = _currentSwimDataFlow2.asStateFlow()
+
+    private val _swimDataFlow2 =
+        MutableStateFlow<MutableMap<Instant, DailySwimData>>(mutableMapOf())
+    val swimDataFlow2
+        get() = _swimDataFlow2.asStateFlow()
 
     val hasAllPermissions = mutableStateOf(false)
 
@@ -57,27 +84,96 @@ class SwimDataViewModel(
         }
     }
 
+
+    fun deleteCurrentSwimData() {
+        _currentSwimDataFlow2.value.clear()
+    }
+    fun updateCurrentSwimData(date: String) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-E")
+        val localDateTime = LocalDate.parse(date, formatter)
+        val instant = localDateTime.atStartOfDay().toInstant(ZoneOffset.UTC)
+
+        val data = _swimDataFlow2.value[instant]
+
+        data?.let { _currentSwimDataFlow2.value.put(instant, it) }
+    }
+
     fun initSwimData() {
         viewModelScope.launch {
             val hasPermissions = healthConnectManager.checkPermissions(healthPermissions)
             if (hasPermissions) {
                 val exerciseSessions = readExerciseRecords()
-                exerciseSessions.forEach { exerciseSessionRecord ->
-                    if (exerciseSessionRecord.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL) {
-                        val uid = exerciseSessionRecord.metadata.id
-                        val date = exerciseSessionRecord.startTime.plus(9L, ChronoUnit.HOURS).toString()
+                _exerciseSessionsFlow.value = exerciseSessions as MutableList<ExerciseSessionRecord>
+                dailySwimmingData()
 
-                        _swimDataFlow.value[date] = healthConnectManager.readAssociatedSessionData(uid)
-                    }
-                }
+//                exerciseSessions.forEach { exerciseSessionRecord ->
+//                    if (exerciseSessionRecord.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL) {
+//                        val uid = exerciseSessionRecord.metadata.id
+//                        val date =
+//                            exerciseSessionRecord.startTime.plus(9L, ChronoUnit.HOURS).toString()
+//
+//                        _swimDataFlow.value[date] =
+//                            healthConnectManager.readAssociatedSessionData(uid)
+//                    }
+//                }
             }
 
             uiState.value = UiState.Complete
         }
     }
 
+    suspend fun readDailySwimData(date: String) {
+        viewModelScope.launch {
+            val hasPermissions = healthConnectManager.checkPermissions(healthPermissions)
+            if (hasPermissions) {
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-E")
+                val localDateTime = LocalDate.parse(date, formatter)
+                val instant = localDateTime.atStartOfDay().toInstant(ZonedDateTime.now().offset)
+
+//                _dailySwimDataFlow.value = healthConnectManager.readDailySwimData(instant)
+
+            }
+        }
+    }
+
+    private suspend fun dailySwimmingData() {
+//        viewModelScope.launch {
+        _swimDataFlow2.value =
+            _exerciseSessionsFlow.value
+                .filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
+                .groupBy { it.startTime.truncatedTo(ChronoUnit.DAYS) }
+                .mapValues { (date, records) ->
+                    var totalDistance = 0.0
+                    var totalCalories = 0.0
+                    var totalActiveTime = Duration.ZERO
+
+                    records.forEach { session ->
+                        val dailySwimDataResponse =
+                            healthConnectManager.readDailySwimData(
+                                session.startTime,
+                                session.endTime
+                            )
+
+                        totalDistance += dailySwimDataResponse.totalDistance?.inMeters ?: 0.0
+                        totalCalories += dailySwimDataResponse.totalEnergyBurned?.inKilocalories
+                            ?: 0.0
+                        totalActiveTime += dailySwimDataResponse.totalActiveTime
+                            ?: Duration.ZERO
+                    }
+
+                    DailySwimData(
+                        date = date,
+                        totalActiveTime = totalActiveTime,
+                        totalDistance = Length.meters(totalDistance),
+                        totalEnergyBurned = Energy.kilocalories(totalCalories),
+                        sessionRecordList = records
+                    )
+                } as MutableMap<Instant, DailySwimData>
+//        }
+    }
+
     private suspend fun readExerciseRecords(): List<ExerciseSessionRecord> {
-        val startOfDay = ZonedDateTime.now().minusWeeks(1L).truncatedTo(ChronoUnit.DAYS)
+        val startOfDay = ZonedDateTime.now().minusDays(30L).truncatedTo(ChronoUnit.DAYS)
         val now = Instant.now()
         val timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), now)
 
