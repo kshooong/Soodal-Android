@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,24 +47,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.data.SwimData
-import kr.ilf.kshoong.ui.theme.ColorBackStroke
-import kr.ilf.kshoong.ui.theme.ColorBreastStroke
-import kr.ilf.kshoong.ui.theme.ColorButterfly
+import kr.ilf.kshoong.data.DailySwimData
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
-import kr.ilf.kshoong.ui.theme.ColorCrawl
-import kr.ilf.kshoong.ui.theme.ColorKickBoard
 import kr.ilf.kshoong.viewmodel.SwimDataViewModel
 import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -79,12 +80,7 @@ private fun convertPXtoDP(context: Context, px: Int): Int {
 }
 
 @Composable
-fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: HealthConnectManager) {
-    val viewModel: SwimDataViewModel = viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
-    val swimData by viewModel.swimDataFlow.collectAsState()
-
-    LaunchedEffect(swimData) {Log.d("Data Test", swimData.toString())}
-
+fun SwimCalendarView5(healthConnectManager: HealthConnectManager, viewModel: SwimDataViewModel) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd-E", Locale.getDefault()) }
     val today = remember { Calendar.getInstance() }
     val todayStr = remember { dateFormat.format(today.time) }
@@ -95,18 +91,17 @@ fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: Hea
     val (selectedDay, setSelectedDay) = remember { mutableStateOf(todayStr) }
 
     val lazyDataList = remember {
-        val weekList = mutableListOf<List<SwimData>>()
+        val weekList = mutableListOf<List<String>>()
         val listCalendar = Calendar.getInstance()
         val dayOffset = 7 - listCalendar[Calendar.DAY_OF_WEEK]
         listCalendar.add(Calendar.DATE, dayOffset)
 
         for (week in 0 until 150) {
-            val dateList = mutableListOf<SwimData>()
+            val dateList = mutableListOf<String>()
 
             for (day in 0 until 7) {
                 val date = dateFormat.format(listCalendar.time)
-                val swimData = data[date] ?: SwimData(date, 0, 0, 0, 0, 0)
-                dateList.add(swimData)
+                dateList.add(date)
                 listCalendar.add(Calendar.DATE, -1)
             }
 
@@ -129,6 +124,22 @@ fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: Hea
                 calculateCenterDate(firstVisibleItemIndex, lastVisibleItemIndex)
             }.first()
         }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }.distinctUntilChanged().debounce(300)
+            .collect { visibleItems ->
+                if (!listState.isScrollInProgress && visibleItems.isNotEmpty()) {
+                    viewModel.deleteCurrentSwimData()
+                    for (i in 0..4) {
+                        lazyDataList[visibleItems.first().index + i].forEach {
+                            viewModel.updateCurrentSwimData(it)
+                        }
+                    }
+
+
+                }
+            }
     }
 
     val context = LocalContext.current
@@ -199,6 +210,8 @@ fun SwimCalendarView5(data: HashMap<String, SwimData>, healthConnectManager: Hea
                 WeekRow(
                     dataIndex = index,
                     dateList = dateList,
+                    viewModel = viewModel,
+                    healthConnectManager = healthConnectManager,
                     listState = listState,
                     todayStr = todayStr,
                     dateFormat = dateFormat,
@@ -246,7 +259,9 @@ private suspend fun snapToNearestItem(context: Context, listState: LazyListState
 @Composable
 private fun WeekRow(
     dataIndex: Int,
-    dateList: List<SwimData>,
+    healthConnectManager: HealthConnectManager,
+    dateList: List<String>,
+    viewModel: SwimDataViewModel,
     listState: LazyListState,
     todayStr: String,
     dateFormat: SimpleDateFormat,
@@ -263,7 +278,7 @@ private fun WeekRow(
                 .distinctUntilChanged()
                 .filter { !it }
                 .collect {
-                    dateList.first().date.split("-").let {
+                    dateList.first().split("-").let {
                         it[1].toInt().let { month ->
                             if (month != currentMonth) {
                                 onCenterDateChanged(it[0].toInt(), month)
@@ -279,14 +294,17 @@ private fun WeekRow(
             .padding(horizontal = 5.dp, vertical = 2.5.dp),
         horizontalArrangement = Arrangement.Start
     ) {
-        dateList.reversed().forEach { data ->
+        dateList.reversed().forEach { date ->
             DayItem(
                 modifier = Modifier.weight(1f),
-                data = data,
+                healthConnectManager = healthConnectManager,
+                viewModel = viewModel,
+                date = date,
                 todayStr = todayStr,
                 currentYear = currentYear,
                 currentMonth = currentMonth,
                 selectedDay = selectedDay,
+                listState = listState,
                 onClickDate = onClickDate
             )
         }
@@ -296,21 +314,24 @@ private fun WeekRow(
 @Composable
 private fun DayItem(
     modifier: Modifier,
-    data: SwimData,
+    healthConnectManager: HealthConnectManager,
+    viewModel: SwimDataViewModel,
+    date: String,
     todayStr: String,
     currentYear: Int,
     currentMonth: Int,
     selectedDay: String,
+    listState: LazyListState,
     onClickDate: (Int, Int, String) -> Unit
 ) {
-    val dayInfo = data.date.split("-") // YYYY-MM-DD-요일
+    val dayInfo = date.split("-") // YYYY-MM-DD-요일
     val isCurrentMonth = currentYear == dayInfo[0].toInt() && currentMonth == dayInfo[1].toInt()
 
     val alpha: Float
     val dateBorderColor: Color
     val dateBgColor: Color
 
-    val borderColor = if (selectedDay == data.date) {
+    val borderColor = if (selectedDay == date) {
         ColorCalendarItemBorder
     } else {
         Color.Transparent
@@ -319,7 +340,7 @@ private fun DayItem(
     if (isCurrentMonth) {
         alpha = 1f
 
-        if (todayStr == data.date) {
+        if (todayStr == date) {
             dateBorderColor = ColorCalendarItemBorder
             dateBgColor = ColorCalendarOnDateBg
         } else {
@@ -349,45 +370,52 @@ private fun DayItem(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { onClickDate(dayInfo[0].toInt(), dayInfo[1].toInt(), data.date) }
+                onClick = { onClickDate(dayInfo[0].toInt(), dayInfo[1].toInt(), date) }
             )
             .border(1.5.dp, borderColor, RoundedCornerShape(8.dp))
             .padding(5.dp),
     ) {
 
         // 그래프 컬럼 (필요에 따라 추가)
-        Column {
-            data.swimMeters.forEach {
-                val (swimType, meters) = it
-                val graphColor = when (swimType) {
-                    "freestyle" -> ColorCrawl
-                    "backStroke" -> ColorBackStroke
-                    "breastStroke" -> ColorBreastStroke
-                    "butterfly" -> ColorButterfly
-                    "kickBoard" -> ColorKickBoard
-                    else -> Color.Transparent
-                }
 
-                if (meters?.let { meter -> meter > 0 } == true) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(meters.toFloat() / 500)
-                            .height(10.dp)
-                            .padding(bottom = 1.dp)
-                            .background(color = graphColor, shape = RoundedCornerShape(3.dp))
-                    )
-                    if (meters > 500) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(meters.toFloat() / 500 - 1)
-                                .height(10.dp)
-                                .padding(bottom = 1.dp)
-                                .background(color = graphColor, shape = RoundedCornerShape(3.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+//                val viewModel: SwimDataViewModel =
+//                    viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+//                val dailySwimData by viewModel.dailySwimDataFlow.collectAsState()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-E")
+            val localDateTime = LocalDate.parse(date, formatter)
+//                val instant = localDateTime.atStartOfDay().toInstant(ZonedDateTime.now().offset)
+            val instant = localDateTime.atStartOfDay().toInstant(ZoneOffset.UTC)
+
+            val dailySwimDatas by viewModel.currentSwimDataFlow2.collectAsState()
+            val dailySwimData = dailySwimDatas[instant]
+
+            dailySwimData?.let {
+                var parentWidth by remember { mutableIntStateOf(0) }
+                val distance = dailySwimData.totalDistance?.inMeters ?: 0.0
+
+                val f = distance.toString().toFloat() / 2000f
+                val dp = convertPXtoDP(LocalContext.current, parentWidth)
+                val width = f * dp
+
+                Box(
+                    modifier
+                        .size(15.dp)
+
+
+                        .background(
+                            Color.Blue,
+                            shape = androidx.compose.foundation.shape.CircleShape
                         )
-                    }
-                }
+                ) {}
             }
         }
+
 
         // 날짜 박스
         Box(
@@ -413,5 +441,8 @@ private fun DayItem(
 @Preview
 @Composable
 fun SwimCalendarView5Preview() {
-//    SwimCalendarView5(MainActivity.data)
+//    val healthConnectManager = HealthConnectManager(LocalContext.current)
+//    val viewModel: SwimDataViewModel =
+//        viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
+//    SwimCalendarView5(healthConnectManager, viewModel)
 }

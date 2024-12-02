@@ -1,6 +1,6 @@
 package kr.ilf.kshoong.data
 
-import android.health.connect.datatypes.ExerciseSessionRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import java.time.Duration

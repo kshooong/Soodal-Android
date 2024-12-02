@@ -24,7 +24,7 @@ import java.time.temporal.ChronoUnit
 
 class HealthConnectManager(private val context: Context) {
 
-    private val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
+    val healthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
 
     var availability = mutableStateOf(false)
         private set
@@ -46,11 +46,12 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun readDailySwimData(
         startTime: Instant,
+        endTime: Instant
     ): DailySwimData {
         // Use the start time and end time from the session, for reading raw and aggregate data.
         val timeRangeFilter = TimeRangeFilter.between(
             startTime = startTime,
-            endTime = startTime.plus(1L, ChronoUnit.DAYS)
+            endTime = endTime
         )
         val aggregateDataTypes = setOf(
             ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
@@ -167,6 +168,18 @@ class HealthConnectManager(private val context: Context) {
             recordType = T::class,
             timeRangeFilter = timeRangeFilter,
             dataOriginFilter = dataOriginFilter
+        )
+
+        return healthConnectClient.readRecords(request).records
+    }
+
+    suspend inline fun <reified T : Record> readRecords(
+        timeRangeFilter: TimeRangeFilter
+    ): List<T> {
+        val request = ReadRecordsRequest(
+            recordType = T::class,
+            timeRangeFilter = timeRangeFilter,
+            ascendingOrder = true // 시간 순으로 정렬
         )
 
         return healthConnectClient.readRecords(request).records
