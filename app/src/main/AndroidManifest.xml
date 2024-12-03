@@ -27,7 +27,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Kshoong"
-        tools:targetApi="31" >
+        tools:targetApi="34" >
         <activity
             android:name=".PermissionsRationaleActivity"
             android:exported="false"
@@ -57,7 +57,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Kshoong" >
+            android:theme="@style/Theme.Kshoong.Splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
