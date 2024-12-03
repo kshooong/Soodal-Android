@@ -2,4 +2,13 @@
 <resources>
 
     <style name="Theme.Kshoong" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Kshoong.Splash" parent="Theme.SplashScreen">
+        <item name="android:actionBarStyle">@style/Theme.Kshoong</item>
+        <item name="windowSplashScreenBackground">#FFFFFFFF</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_loading</item>
+        <item name="android:windowBackground">#FFFFFFFF</item>
+        <item name="postSplashScreenTheme">@style/Theme.Kshoong</item>
+    </style>
+
 </resources>
