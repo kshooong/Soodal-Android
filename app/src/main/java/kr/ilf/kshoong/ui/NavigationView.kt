@@ -51,7 +51,7 @@ fun NavigationView(
         startDestination = Destinations.DESTINATION_LOADING,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }) {
-        composable(Destinations.DESTINATION_LOADING) {
+        composable(Destination.Loading.route) {
             LoadingView(
                 context = context,
                 healthConnectManager = healthConnectManager,
@@ -64,7 +64,7 @@ fun NavigationView(
                     }
                 })
         }
-        composable(Destinations.DESTINATION_SYNC, enterTransition = {
+        composable(Destination.Sync.route, enterTransition = {
             fadeIn(
                 animationSpec = tween(
                     300, easing = LinearEasing
@@ -75,8 +75,8 @@ fun NavigationView(
                 context = context,
                 viewModel = viewModel,
                 onSyncComplete = {
-                    navController.navigate(Destinations.DESTINATION_CALENDAR) {
-                        popUpTo(Destinations.DESTINATION_SYNC) {
+                    navController.navigate(Destination.Home.route) {
+                        popUpTo(Destination.Sync.route) {
                             inclusive = true
                         }
 
@@ -85,7 +85,8 @@ fun NavigationView(
                 }
             )
         }
-        composable(Destinations.DESTINATION_CALENDAR, enterTransition = {
+
+        composable(Destination.Home.route, enterTransition = {
             fadeIn(
                 animationSpec = tween(
                     300, easing = LinearEasing
