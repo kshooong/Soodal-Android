@@ -46,16 +46,31 @@ fun NavigationView(
                 context = context,
                 healthConnectManager = healthConnectManager,
                 viewModel = viewModel,
-                onLoadingComplete = { navController.navigate(Destinations.DESTINATION_SYNC) })
+                onLoadingComplete = {
+                    navController.navigate(Destinations.DESTINATION_SYNC) {
+                        popUpTo(Destinations.DESTINATION_LOADING) {
+                            inclusive = true
+                        }
+                    }
+                })
         }
         composable(Destinations.DESTINATION_SYNC) {
             SyncView(
                 context = context,
-                viewModel = viewModel
+                viewModel = viewModel,
+                onSyncComplete = {
+                    navController.navigate(Destinations.DESTINATION_CALENDAR) {
+                        popUpTo(Destinations.DESTINATION_SYNC) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
         composable(Destinations.DESTINATION_CALENDAR) {
-
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Calendar")
+            }
         }
     }
 }
@@ -126,9 +141,13 @@ fun LoadingView(
 fun SyncView(
     context: Context,
     viewModel: SwimmingViewModel,
-//    onLoadingComplete: () -> Unit
+    onSyncComplete: () -> Unit
 ) {
-    LaunchedEffect(Unit) { viewModel.initSwimmingData() }
+    LaunchedEffect(Unit) {
+        delay(1000)
+        viewModel.initSwimmingData()
+        onSyncComplete()
+    }
 
     Box(
         modifier = Modifier
