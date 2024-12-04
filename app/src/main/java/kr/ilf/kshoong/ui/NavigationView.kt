@@ -49,7 +49,10 @@ fun NavigationView(
                 onLoadingComplete = { navController.navigate(Destinations.DESTINATION_SYNC) })
         }
         composable(Destinations.DESTINATION_SYNC) {
-            SyncView()
+            SyncView(
+                context = context,
+                viewModel = viewModel
+            )
         }
         composable(Destinations.DESTINATION_CALENDAR) {
 
@@ -121,11 +124,12 @@ fun LoadingView(
 
 @Composable
 fun SyncView(
-//    context: Context,
-//    healthConnectManager: HealthConnectManager,
-//    viewModel: SwimmingViewModel,
+    context: Context,
+    viewModel: SwimmingViewModel,
 //    onLoadingComplete: () -> Unit
 ) {
+    LaunchedEffect(Unit) { viewModel.initSwimmingData() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
