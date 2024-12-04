@@ -1,7 +1,5 @@
 package kr.ilf.kshoong
 
-import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -22,26 +20,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kr.ilf.kshoong.data.SwimData
 import kr.ilf.kshoong.ui.NavigationView
-import kr.ilf.kshoong.ui.SwimCalendarView5
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 import kr.ilf.kshoong.viewmodel.SwimDataViewModel
-import kr.ilf.kshoong.viewmodel.SwimDataViewModelFactory
+import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -55,9 +47,11 @@ class MainActivity : ComponentActivity() {
                 finish()
             }
         })
+
         enableEdgeToEdge()
         setContent {
             KshoongTheme {
+
 //                val viewModel: SwimDataViewModel =
 //                    viewModel(factory = SwimDataViewModelFactory(healthConnectManager))
 //                val uiState by viewModel.uiState
@@ -69,8 +63,10 @@ class MainActivity : ComponentActivity() {
 //                    SwimCalendarView5(healthConnectManager, viewModel)
 //                }
                 /////////////////////////////////////////////////////////////////////////
+                val viewModel: SwimmingViewModel =
+                    viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
-                NavigationView(navController, healthConnectManager)
+                NavigationView(navController, healthConnectManager, viewModel)
             }
         }
     }

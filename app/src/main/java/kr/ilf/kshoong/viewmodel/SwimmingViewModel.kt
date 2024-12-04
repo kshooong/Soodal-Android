@@ -1,5 +1,7 @@
 package kr.ilf.kshoong.viewmodel
 
+import android.app.Application
+import android.content.Context.MODE_PRIVATE
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
@@ -16,6 +18,7 @@ import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.database.entity.DailyRecord
 
 class SwimmingViewModel(
+    private val application: Application,
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -61,12 +64,14 @@ class SwimmingViewModel(
 }
 
 class SwimmingViewModelFactory(
+    private val application: Application,
     private val healthConnectManager: HealthConnectManager,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SwimmingViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return SwimmingViewModel(
+                application = application,
                 healthConnectManager = healthConnectManager
             ) as T
         }
