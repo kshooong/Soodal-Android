@@ -3,6 +3,7 @@ package kr.ilf.kshoong.database.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -34,12 +35,12 @@ interface SwimmingRecordDao {
     * DailyRecord
     */
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} WHERE date = :date")
-    fun getDailyRecordWithDetailRecord(date: Instant)
+    fun getDailyRecordWithDetailRecord(date: Instant): DailyRecordWithDetailRecord
 
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} WHERE date = :date")
     fun getDailyRecord(date: Instant): DailyRecord?
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertDailyRecord(dailyRecord: DailyRecord)
 
     @Insert
