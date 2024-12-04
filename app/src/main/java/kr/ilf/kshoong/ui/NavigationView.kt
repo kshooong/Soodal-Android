@@ -23,23 +23,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kr.ilf.kshoong.Destinations
 import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.LoadingView
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
-import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
 
 @Composable
-fun NavigationView(navController: NavHostController, healthConnectManager: HealthConnectManager) {
+fun NavigationView(
+    navController: NavHostController,
+    healthConnectManager: HealthConnectManager,
+    viewModel: SwimmingViewModel
+) {
     val context = LocalContext.current
-    val viewModel: SwimmingViewModel =
-        viewModel(factory = SwimmingViewModelFactory(healthConnectManager))
 
     NavHost(navController = navController, startDestination = Destinations.DESTINATION_LOADING) {
         composable(Destinations.DESTINATION_LOADING) {
@@ -112,9 +111,9 @@ fun LoadingView(
         ) {
             Text(text = "KSHOONG!", style = MaterialTheme.typography.titleLarge)
             Image(
-                painter = painterResource(id = R.drawable.logo_loading),
+                painter = painterResource(id = R.drawable.logo_loading_img),
                 contentDescription = "logo",
-                modifier = Modifier.size(300.dp)
+                modifier = Modifier.size(108.dp)
             )
         }
     }
@@ -142,9 +141,9 @@ fun SyncView(
         ) {
             Text(text = "Synchronizing", style = MaterialTheme.typography.titleLarge)
             Image(
-                painter = painterResource(id = R.drawable.logo_loading),
+                painter = painterResource(id = R.drawable.logo_loading_img),
                 contentDescription = "logo",
-                modifier = Modifier.size(300.dp)
+                modifier = Modifier.size(108.dp)
             )
         }
     }
