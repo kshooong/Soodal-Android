@@ -3,6 +3,11 @@ package kr.ilf.kshoong.ui
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +45,10 @@ fun NavigationView(
 ) {
     val context = LocalContext.current
 
-    NavHost(navController = navController, startDestination = Destinations.DESTINATION_LOADING) {
+    NavHost(navController = navController,
+        startDestination = Destinations.DESTINATION_LOADING,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None }) {
         composable(Destinations.DESTINATION_LOADING) {
             LoadingView(
                 context = context,
@@ -54,7 +62,13 @@ fun NavigationView(
                     }
                 })
         }
-        composable(Destinations.DESTINATION_SYNC) {
+        composable(Destinations.DESTINATION_SYNC, enterTransition = {
+            fadeIn(
+                animationSpec = tween(
+                    300, easing = LinearEasing
+                )
+            )
+        }) {
             SyncView(
                 context = context,
                 viewModel = viewModel,
@@ -63,11 +77,13 @@ fun NavigationView(
                         popUpTo(Destinations.DESTINATION_SYNC) {
                             inclusive = true
                         }
+
+                        anim { }
                     }
                 }
             )
         }
-        composable(Destinations.DESTINATION_CALENDAR) {
+        composable(Destinations.DESTINATION_CALENDAR, enterTransition = null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "Calendar")
             }
