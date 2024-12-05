@@ -91,7 +91,7 @@ fun NavigationView(
                     300, easing = LinearEasing
                 )
             ) + slideIntoContainer(
-                animationSpec = tween(500, easing =  CubicBezierEasing(0.34f, 1.20f, 0.64f, 1f)),
+                animationSpec = tween(700, easing =  CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
                 towards = AnimatedContentTransitionScope.SlideDirection.Up
             )
         }) {
