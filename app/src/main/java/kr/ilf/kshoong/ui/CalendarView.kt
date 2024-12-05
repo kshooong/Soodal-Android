@@ -50,7 +50,7 @@ fun CalendarView() {
 
     HorizontalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxSize(),
         reverseLayout = true
     ) { pager ->
         val month = currentMonth.minusMonths(pager.toLong())

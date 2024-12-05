@@ -3,8 +3,10 @@ package kr.ilf.kshoong.ui
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -83,7 +85,16 @@ fun NavigationView(
                 }
             )
         }
-        composable(Destinations.DESTINATION_CALENDAR, enterTransition = null) {
+        composable(Destinations.DESTINATION_CALENDAR, enterTransition = {
+            fadeIn(
+                animationSpec = tween(
+                    300, easing = LinearEasing
+                )
+            ) + slideIntoContainer(
+                animationSpec = tween(500, easing =  CubicBezierEasing(0.34f, 1.20f, 0.64f, 1f)),
+                towards = AnimatedContentTransitionScope.SlideDirection.Up
+            )
+        }) {
             CalendarView()
         }
     }
