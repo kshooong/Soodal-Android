@@ -84,9 +84,7 @@ fun NavigationView(
             )
         }
         composable(Destinations.DESTINATION_CALENDAR, enterTransition = null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Calendar")
-            }
+            CalendarView()
         }
     }
 }
