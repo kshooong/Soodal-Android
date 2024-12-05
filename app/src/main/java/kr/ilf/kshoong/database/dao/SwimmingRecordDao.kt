@@ -84,4 +84,7 @@ interface SwimmingRecordDao {
 
     @Delete
     fun deleteDetailRecords(detailRecord: List<DetailRecord>)
+
+    @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} daily WHERE date BETWEEN :start AND :end")
+    fun findAllByMonth(start: Instant, end: Instant): List<DailyRecord>
 }
