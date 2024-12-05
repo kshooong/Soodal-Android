@@ -11,12 +11,12 @@ import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
-import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.response.ChangesResponse
 import androidx.health.connect.client.time.TimeRangeFilter
 import kr.ilf.kshoong.database.entity.DetailRecord
 import java.time.Instant
@@ -36,14 +36,14 @@ class HealthConnectManager(private val context: Context) {
         val request = ChangesTokenRequest(
             setOf(
                 ExerciseSessionRecord::class,
-                SpeedRecord::class,
-                DistanceRecord::class,
-                HeartRateRecord::class,
-                TotalCaloriesBurnedRecord::class
             )
         )
 
         return healthConnectClient.getChangesToken(request)
+    }
+
+    suspend fun getChanges(token: String): ChangesResponse {
+        return healthConnectClient.getChanges(token)
     }
 
     suspend fun readExerciseSessions(
