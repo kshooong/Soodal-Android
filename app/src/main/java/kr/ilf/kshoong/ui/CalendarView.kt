@@ -1,112 +1,156 @@
 package kr.ilf.kshoong.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
-import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
+import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 @Composable
-fun SwimCalendarView() {
+fun CalendarView(viewModel: SwimmingViewModel, onClickDate: (String) -> Unit) {
     val calendar = remember { Calendar.getInstance() }
-    val currentYear = remember { mutableIntStateOf(calendar.get(Calendar.YEAR)) }
-    val currentMonth = remember { mutableIntStateOf(calendar.get(Calendar.MONTH)) }
-    val currentDate = remember { mutableIntStateOf(calendar.get(Calendar.DATE)) }
-    val currentDayOfWeek = remember { mutableIntStateOf(calendar.get(Calendar.DAY_OF_WEEK)) }
+    val (currentYear, setCurrentYear) = remember { mutableIntStateOf(calendar[Calendar.YEAR]) }
+    val (currentMonth, setCurrentMonth) = remember { mutableIntStateOf(calendar[Calendar.MONTH] + 1) }
+    val (currentDate, setCurrentDate) = remember { mutableIntStateOf(calendar[Calendar.DATE]) }
 
 
-    val (selectedDateIndex, setSelectedDateIndex) = remember { mutableIntStateOf(currentDate.intValue) }
+}
 
-    // 당월 일수 , 당월 첫날의 요일, 전월 일수
-    val (daysInMonth, firstDayOfWeekInMonth, preDaysInMonth) = remember(currentYear, currentMonth) {
-        with(Calendar.getInstance()) {
-            set(currentYear.intValue, currentMonth.intValue, 1)
+@Composable
+fun CalendarView() {
+    var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    val pagerState = rememberPagerState(0, pageCount = { 12 })
 
-            return@with Triple(
-                getActualMaximum(Calendar.DAY_OF_MONTH),
-                get(Calendar.DAY_OF_WEEK),
-                let {
-                    set(currentYear.intValue, currentMonth.intValue - 1, 1)
-                    getActualMaximum(Calendar.DAY_OF_MONTH)
-                })
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize(),
+        reverseLayout = true
+    ) { pager ->
+        val month = currentMonth.minusMonths(pager.toLong())
+        MonthView(month) { newMonth ->
+            currentMonth = newMonth
+
         }
     }
+}
 
-    Box(
+@Composable
+fun MonthView(month: LocalDate, onMonthChange: (LocalDate) -> Unit) {
+    val daysInMonth = month.lengthOfMonth()
+    val firstDayOfMonth = month.withDayOfMonth(1)
+    val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
+    val daysInPreviousMonth = firstDayOfWeek
+    val prevMonth = month.minusMonths(1)
+    val daysInPrevMonth = prevMonth.lengthOfMonth()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
+
+    Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+            .width(screenWidth)
+            .padding(16.dp)
+            .background(Color.LightGray)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .statusBarsPadding()
-                .navigationBarsPadding()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
+        Text(
+            text = month.format(monthFormatter),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 8.dp),
+            textAlign = TextAlign.Center
+        )
+        // 요일 헤더
+        Row {
+            listOf("일", "월", "화", "수", "목", "금", "토").forEach {
                 Text(
-                    text = "${currentMonth.intValue.toString()}월",
-                    modifier = Modifier.align(Alignment.Center),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    text = it,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
                 )
             }
+        }
 
-            for (week in 1..4) {
-                Row(Modifier.padding(horizontal = 5.dp, vertical = 2.5.dp)) {
-                    for (dayOfWeek in 1..7) {
-//                    val dateIndex = (week - 1) * 7 + dayOfWeek + currentDate.intValue - currentDayOfWeek.intValue // 이번 주부터
-//                    val dateIndex = (week - 1) * 7 + dayOfWeek - firstDayOfWeekInMonth + 1 // 이번 달 1일부터
-                        val dateIndex =
-                            (week - 1 - 3) * 7 + dayOfWeek + currentDate.intValue - currentDayOfWeek.intValue  // 이번 주까지
+        // 날짜 표시
+        var dayCounter = 1
 
-
-                        SwimCalendarItem(
-                            Modifier.weight(1f),
-                            dateIndex,
-                            currentDate.intValue,
-                            currentMonth.intValue,
-                            preDaysInMonth,
-                            daysInMonth,
-                            selectedDateIndex
-                        ) {
-                            setSelectedDateIndex(dateIndex)
+        // 주 단위로 날짜를 표시
+        for (week in 0..5) { // 최대 6주까지 표시
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for (day in 0..6) {
+                    if (week == 0 && day < daysInPreviousMonth) {
+                        // 이전 달 날짜 표시
+                        val prevDay = daysInPrevMonth - daysInPreviousMonth + day + 1
+                        Text(
+                            text = prevDay.toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(Color.LightGray)
+                                .padding(8.dp),
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    } else if (dayCounter > daysInMonth) {
+                        // 다음 달 날짜 표시
+                        Text(
+                            text = (dayCounter - daysInMonth).toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(Color.LightGray)
+                                .padding(8.dp),
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                        dayCounter++
+                    } else {
+                        // 이번 달 날짜 표시
+                        if (week > 0 || day >= firstDayOfWeek) {
+                            Text(
+                                text = dayCounter.toString(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        onMonthChange(month)
+                                    }
+                                    .background(Color.White)
+                                    .padding(8.dp),
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                            dayCounter++
+                        } else {
+                            // 빈 공간
+                            Text(
+                                text = "",
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
@@ -115,94 +159,12 @@ fun SwimCalendarView() {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun SwimCalendarItem(
-    modifier: Modifier,
-    dateIndex: Int,
-    currentDate: Int,
-    currentMonth: Int,
-    preDaysInMonth: Int,
-    daysInMonth: Int,
-    selectedDateIndex: Int,
-    onClick: () -> Unit = {}
-) {
-// 날짜 계산
-    val date = when {
-        dateIndex < 1 -> preDaysInMonth + dateIndex
-        dateIndex in 1..daysInMonth -> dateIndex
-        else -> dateIndex - daysInMonth // dateIndex > daysInMonth
-    }
-
-    val borderColor = if (selectedDateIndex == dateIndex) {
-        ColorCalendarItemBorder
-    } else {
-        Color.Transparent
-    }
-
-    val dateBgColor = if (date == currentDate) {
-        ColorCalendarOnDateBg
-    } else if (dateIndex < 1 || dateIndex > daysInMonth) {
-        Color.Transparent
-    } else {
-        ColorCalendarDateBg
-    }
-
-    Box(
-        modifier = modifier
-            .alpha(if (dateIndex < 1 || dateIndex > daysInMonth) 0.7f else 1f)
-            .padding(horizontal = 2.5.dp)
-            .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
-            .height(80.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    listOf(
-                        ColorCalendarItemBgStart,
-                        ColorCalendarItemBgEnd
-                    )
-                ), shape = RoundedCornerShape(10.dp)
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClickLabel = "$date", onClick = onClick
-            )
-            .padding(5.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-
-        // 그래프 컬럼
-        Column {
-
-        }
-
-        // 날짜 박스
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .size(15.dp)
-                .border(
-                    1.dp,
-                    if (date == currentDate) ColorCalendarItemBorder else Color.Transparent,
-                    RoundedCornerShape(5.dp)
-                )
-                .background(dateBgColor, RoundedCornerShape(5.dp))
-        ) {
-            Text(
-                modifier = Modifier
-                    .alpha(if (dateIndex < 1 || dateIndex > daysInMonth) 0.4f else 1f)
-                    .wrapContentSize()
-                    .align(Alignment.Center),
-                text = date.toString(),
-                fontSize = 10.sp,
-                lineHeight = 10.sp,
-                textAlign = TextAlign.Center
-            )
+fun PreviewCalendar() {
+    MaterialTheme {
+        Surface {
+            CalendarView()
         }
     }
-}
-
-@Preview
-@Composable
-fun SwimCalendarViewPreView() {
-    SwimCalendarView()
 }
