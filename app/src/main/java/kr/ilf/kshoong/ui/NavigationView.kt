@@ -96,7 +96,7 @@ fun NavigationView(
                 towards = AnimatedContentTransitionScope.SlideDirection.Up
             )
         }) {
-            CalendarView()
+            CalendarView(viewModel,navController,{})
         }
     }
 }
