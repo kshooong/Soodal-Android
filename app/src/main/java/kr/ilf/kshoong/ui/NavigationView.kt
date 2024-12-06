@@ -16,9 +16,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
+import androidx.navigation.navigation
 import kotlinx.coroutines.delay
+import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.Destinations
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import java.time.Instant
 
 @Composable
 fun NavigationView(
@@ -92,13 +101,39 @@ fun NavigationView(
                     300, easing = LinearEasing
                 )
             ) + slideIntoContainer(
-                animationSpec = tween(700, easing =  CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
+                animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
                 towards = AnimatedContentTransitionScope.SlideDirection.Up
             )
         }) {
-            CalendarView(viewModel,navController,{})
+
+            navigation(startDestination = Destination.Calendar.route, route = Destination.Home.route) {
+                composable(Destination.Calendar.route){
+                    CalendarView(viewModel = viewModel, navController, onClickDate = {})
+                }
+
+                composable(Destination.Detail.route){
+                    CalendarDetailView(viewModel = viewModel, Instant.now())
+                }
+            }
+
+            NavigationBar(
+                Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(Color.LightGray)) {
+                Button(modifier = Modifier.size(30.dp), onClick = { navController.navigate(Destination.Calendar.route) }) {
+
+                }
+
+                Button(modifier = Modifier.size(30.dp),onClick = { navController.navigate(Destination.Detail.route) }) {
+
+                }
+            }
         }
+
     }
+//        }
+//    }
 }
 
 @Composable
