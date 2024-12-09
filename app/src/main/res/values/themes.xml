@@ -5,8 +5,8 @@
 
     <style name="Theme.Kshoong.Splash" parent="Theme.SplashScreen">
         <item name="android:actionBarStyle">@style/Theme.Kshoong</item>
-        <item name="windowSplashScreenBackground">#FFFFFFFF</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_loading</item>
+        <item name="windowSplashScreenBackground">#00FFFFFF</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
         <item name="android:windowBackground">#FFFFFFFF</item>
         <item name="postSplashScreenTheme">@style/Theme.Kshoong</item>
     </style>
