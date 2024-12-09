@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Kshoong" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Kshoong" parent="android:Theme.Material.Light.NoActionBar" >
+        <item name="android:statusBarColor">#00000000</item>"
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 
     <style name="Theme.Kshoong.Splash" parent="Theme.SplashScreen">
         <item name="android:actionBarStyle">@style/Theme.Kshoong</item>

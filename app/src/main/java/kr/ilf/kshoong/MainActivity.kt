@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
 
     private val healthConnectManager by lazy { HealthConnectManager(this) }
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
         onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
@@ -27,6 +27,10 @@ class MainActivity : ComponentActivity() {
                 finish()
             }
         })
+
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+          splashScreenView.remove()
+        }
 
         enableEdgeToEdge()
         setContent {
