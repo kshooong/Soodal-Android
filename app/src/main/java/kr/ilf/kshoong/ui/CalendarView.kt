@@ -29,7 +29,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun CalendarView(viewModel: SwimmingViewModel, navController: NavHostController, onClickDate: (String) -> Unit) {
+fun CalendarView(
+    viewModel: SwimmingViewModel,
+    navController: NavHostController,
+    onDateClick: (String) -> Unit
+) {
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val pagerState = rememberPagerState(0, pageCount = { 12 })
 
@@ -39,7 +43,7 @@ fun CalendarView(viewModel: SwimmingViewModel, navController: NavHostController,
         reverseLayout = true
     ) { pager ->
         val month = currentMonth.minusMonths(pager.toLong())
-        MonthView(month) { newMonth ->
+        MonthView(month, onDateClick) { newMonth ->
             currentMonth = newMonth
 
         }
@@ -47,7 +51,7 @@ fun CalendarView(viewModel: SwimmingViewModel, navController: NavHostController,
 }
 
 @Composable
-fun MonthView(month: LocalDate, onMonthChange: (LocalDate) -> Unit) {
+fun MonthView(month: LocalDate, onDateClick: (String) -> Unit, onMonthChange: (LocalDate) -> Unit) {
     val daysInMonth = month.lengthOfMonth()
     val firstDayOfMonth = month.withDayOfMonth(1)
     val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
@@ -122,7 +126,7 @@ fun MonthView(month: LocalDate, onMonthChange: (LocalDate) -> Unit) {
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable {
-                                        onMonthChange(month)
+                                        onDateClick("")
                                     }
                                     .background(Color.White)
                                     .padding(8.dp),
