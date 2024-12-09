@@ -146,20 +146,16 @@ fun LoadingView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "KSHOONG!", style = MaterialTheme.typography.titleLarge)
-            Image(
-                painter = painterResource(id = R.drawable.logo_loading_img),
-                contentDescription = "logo",
-                modifier = Modifier.size(108.dp)
-            )
-        }
+        Text(
+            text = "KSHOONG!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 288.dp + 30.dp)
+        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher),
+            contentDescription = "logo",
+            modifier = Modifier.size(288.dp)
+        )
     }
 }
 
@@ -181,19 +177,15 @@ fun SyncView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Synchronizing", style = MaterialTheme.typography.titleLarge)
-            Image(
-                painter = painterResource(id = R.drawable.logo_loading_img),
-                contentDescription = "logo",
-                modifier = Modifier.size(108.dp)
-            )
-        }
+        Text(
+            text = "Synchronizing!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 288.dp + 30.dp)
+        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher),
+            contentDescription = "logo",
+            modifier = Modifier.size(288.dp)
+        )
     }
 }
