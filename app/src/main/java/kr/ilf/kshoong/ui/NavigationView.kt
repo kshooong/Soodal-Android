@@ -12,12 +12,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -33,11 +31,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import kotlinx.coroutines.delay
-import kr.ilf.kshoong.Destinations
+import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import java.time.Instant
 
 @Composable
 fun NavigationView(
@@ -47,8 +47,9 @@ fun NavigationView(
 ) {
     val context = LocalContext.current
 
-    NavHost(navController = navController,
-        startDestination = Destinations.DESTINATION_LOADING,
+    NavHost(
+        navController = navController,
+        startDestination = Destination.Loading.route,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }) {
         composable(Destination.Loading.route) {
@@ -57,8 +58,8 @@ fun NavigationView(
                 healthConnectManager = healthConnectManager,
                 viewModel = viewModel,
                 onLoadingComplete = {
-                    navController.navigate(Destinations.DESTINATION_SYNC) {
-                        popUpTo(Destinations.DESTINATION_LOADING) {
+                    navController.navigate(Destination.Sync.route) {
+                        popUpTo(Destination.Loading.route) {
                             inclusive = true
                         }
                     }
@@ -86,17 +87,27 @@ fun NavigationView(
             )
         }
 
-        composable(Destination.Home.route, enterTransition = {
-            fadeIn(
-                animationSpec = tween(
-                    300, easing = LinearEasing
+        navigation(
+            startDestination = Destination.Calendar.route,
+            route = Destination.Home.route,
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideIntoContainer(
+                    animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up
                 )
-            ) + slideIntoContainer(
-                animationSpec = tween(700, easing =  CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
-                towards = AnimatedContentTransitionScope.SlideDirection.Up
-            )
-        }) {
-            CalendarView(viewModel,navController,{})
+            }) {
+            composable(Destination.Calendar.route) {
+                CalendarView(viewModel = viewModel, navController, onDateClick = {})
+            }
+
+            composable(Destination.Detail.route) {
+                CalendarDetailView(viewModel = viewModel, Instant.now())
+            }
+
         }
     }
 }

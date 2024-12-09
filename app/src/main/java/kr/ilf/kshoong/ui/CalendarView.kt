@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -150,5 +151,7 @@ fun MonthView(month: LocalDate, onDateClick: (String) -> Unit, onMonthChange: (L
 
 @Composable
 fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
+    Surface(Modifier.fillMaxSize().background(Color.Cyan)) {
 
+    }
 }
