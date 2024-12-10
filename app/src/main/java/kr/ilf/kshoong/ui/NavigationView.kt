@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -111,11 +110,19 @@ fun NavigationView(
 //                )
 //            }
         ) {
-            composable(Destination.Calendar.route) {
+            composable(
+                Destination.Calendar.route,
+                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+            ) {
                 CalendarView(viewModel = viewModel, navController, onDateClick = {})
             }
 
-            composable(Destination.Detail.route) {
+            composable(
+                Destination.Detail.route,
+                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+            ) {
                 CalendarDetailView(viewModel = viewModel, Instant.now())
             }
 
