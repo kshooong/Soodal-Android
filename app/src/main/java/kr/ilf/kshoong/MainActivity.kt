@@ -6,7 +6,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -72,7 +75,7 @@ class MainActivity : ComponentActivity() {
                             animationSpec = tween(
                                 300, easing = LinearEasing
                             )
-                        ) + slideInVertically(animationSpec = tween(700) ,initialOffsetY = { it }),
+                        ) + slideInVertically(animationSpec = tween(500, easing = FastOutSlowInEasing) ,initialOffsetY = { it }),
                         exit = fadeOut()
                     ) {
                         BottomBarView(
