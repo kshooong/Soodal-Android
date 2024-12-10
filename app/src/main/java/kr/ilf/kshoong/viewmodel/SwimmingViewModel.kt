@@ -34,6 +34,8 @@ class SwimmingViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
+    val isLoaded = mutableStateOf(false)
+
     val healthPermissions =
         setOf(
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),

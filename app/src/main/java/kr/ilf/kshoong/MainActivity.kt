@@ -5,6 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +55,7 @@ class MainActivity : ComponentActivity() {
                 val viewModel: SwimmingViewModel =
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     NavigationView(
                         Modifier
@@ -57,32 +64,44 @@ class MainActivity : ComponentActivity() {
                         healthConnectManager,
                         viewModel
                     )
-                    BottomBarView(
-                        modifier = Modifier
-                            .navigationBarsPadding()
-                            .height(100.dp)
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .background(Color.Transparent),
-                        {
-                            if (navController.currentDestination?.route != Destination.Calendar.route)
-                                navController.navigate(Destination.Calendar.route) {
-                                    launchSingleTop = true
-                                    popUpTo(Destination.Calendar.route) {
-                                        inclusive = true
+
+                    AnimatedVisibility(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        visible = viewModel.isLoaded.value,
+                        enter =  fadeIn(
+                            animationSpec = tween(
+                                300, easing = LinearEasing
+                            )
+                        ) + slideInVertically(animationSpec = tween(700) ,initialOffsetY = { it }),
+                        exit = fadeOut()
+                    ) {
+                        BottomBarView(
+                            modifier = Modifier
+                                .navigationBarsPadding()
+                                .height(100.dp)
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .background(Color.Transparent),
+                            {
+                                if (navController.currentDestination?.route != Destination.Calendar.route)
+                                    navController.navigate(Destination.Calendar.route) {
+                                        launchSingleTop = true
+                                        popUpTo(Destination.Calendar.route) {
+                                            inclusive = true
+                                        }
                                     }
-                                }
-                        },
-                        {
-                            if (navController.currentDestination?.route != Destination.Detail.route)
-                                navController.navigate(Destination.Detail.route) {
-                                    launchSingleTop = true
-                                    popUpTo(Destination.Detail.route) {
-                                        inclusive = true
+                            },
+                            {
+                                if (navController.currentDestination?.route != Destination.Detail.route)
+                                    navController.navigate(Destination.Detail.route) {
+                                        launchSingleTop = true
+                                        popUpTo(Destination.Detail.route) {
+                                            inclusive = true
+                                        }
                                     }
-                                }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
             }
         }

@@ -88,6 +88,8 @@ fun NavigationView(
 
                         anim { }
                     }
+
+                    viewModel.isLoaded.value = true
                 }
             )
         }
