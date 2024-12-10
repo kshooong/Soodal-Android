@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
-                                        popUpTo(Destination.Calendar.route) {
+                                        popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
                                     }
@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
                                 if (navController.currentDestination?.route != Destination.Detail.route)
                                     navController.navigate(Destination.Detail.route) {
                                         launchSingleTop = true
-                                        popUpTo(Destination.Detail.route) {
+                                        popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
                                     }
