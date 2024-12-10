@@ -87,13 +87,13 @@ fun MonthView(
 
     Column(
         modifier = Modifier
-            .width(screenWidth)
+            .fillMaxSize()
             .background(Color.White)
     ) {
         Text(
             text = month.format(monthFormatter),
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 8.dp),
+            modifier = Modifier.padding(10.dp),
             textAlign = TextAlign.Center
         )
         // 요일 헤더
