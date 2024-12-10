@@ -162,15 +162,16 @@ fun LoadingView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "KSHOONG!",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 288.dp + 30.dp)
-        )
         Image(
             painter = painterResource(id = R.drawable.ic_launcher),
             contentDescription = "logo",
             modifier = Modifier.size(288.dp)
+        )
+
+        Text(
+            text = "KSHOONG!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 270.dp)
         )
     }
 }
@@ -193,15 +194,16 @@ fun SyncView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Synchronizing!",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 288.dp + 30.dp)
-        )
         Image(
             painter = painterResource(id = R.drawable.ic_launcher),
             contentDescription = "logo",
             modifier = Modifier.size(288.dp)
+        )
+
+        Text(
+            text = "Synchronizing!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 270.dp)
         )
     }
 }
