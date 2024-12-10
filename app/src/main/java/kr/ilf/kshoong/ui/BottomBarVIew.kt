@@ -41,7 +41,7 @@ fun BottomBarView(modifier: Modifier, onCalenderClick: () -> Unit, onDetailClick
                 .height(100.dp)
                 .align(Alignment.BottomCenter)
                 .padding(top = 30.dp),
-            shadowElevation = 10.dp,
+            shadowElevation = 3.dp,
             color = Color.White,
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
         ) {
@@ -97,7 +97,7 @@ fun BottomBarView(modifier: Modifier, onCalenderClick: () -> Unit, onDetailClick
                 .align(Alignment.Center),
             shape = CircleShape,
             color = Color.White,
-            shadowElevation = 5.dp
+            shadowElevation = 3.dp
         ) {
             Button(
                 modifier = Modifier
