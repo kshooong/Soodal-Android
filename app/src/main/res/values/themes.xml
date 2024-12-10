@@ -2,8 +2,11 @@
 <resources>
 
     <style name="Theme.Kshoong" parent="android:Theme.Material.Light.NoActionBar" >
-        <item name="android:statusBarColor">#00000000</item>"
+        <item name="android:statusBarColor">#00000000</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">#FFFFFFFF</item>
+        <item name="android:navigationBarDividerColor">#F6F6F6</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <style name="Theme.Kshoong.Splash" parent="Theme.SplashScreen">
@@ -11,6 +14,9 @@
         <item name="windowSplashScreenBackground">#00FFFFFF</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
         <item name="android:windowBackground">#FFFFFFFF</item>
+        <item name="android:navigationBarColor">#FFFFFFFF</item>
+        <item name="android:navigationBarDividerColor">#F6F6F6</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="postSplashScreenTheme">@style/Theme.Kshoong</item>
     </style>
 

@@ -42,6 +42,7 @@ import java.time.Instant
 
 @Composable
 fun NavigationView(
+    modifier: Modifier,
     navController: NavHostController,
     healthConnectManager: HealthConnectManager,
     viewModel: SwimmingViewModel
@@ -49,6 +50,7 @@ fun NavigationView(
     val context = LocalContext.current
 
     NavHost(
+        modifier = modifier,
         navController = navController,
         startDestination = Destination.Loading.route,
         enterTransition = { EnterTransition.None },
