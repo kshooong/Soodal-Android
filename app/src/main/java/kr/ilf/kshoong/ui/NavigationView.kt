@@ -97,16 +97,20 @@ fun NavigationView(
         navigation(
             startDestination = Destination.Calendar.route,
             route = Destination.Home.route,
-            enterTransition = {
-                fadeIn(
-                    animationSpec = tween(
-                        300, easing = LinearEasing
-                    )
-                ) + slideIntoContainer(
-                    animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
-                    towards = AnimatedContentTransitionScope.SlideDirection.Up
-                )
-            }) {
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            // 달력 커스텀 애니메이션
+//            enterTransition = {
+//                fadeIn(
+//                    animationSpec = tween(
+//                        300, easing = LinearEasing
+//                    )
+//                ) + slideIntoContainer(
+//                    animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
+//                    towards = AnimatedContentTransitionScope.SlideDirection.Up
+//                )
+//            }
+        ) {
             composable(Destination.Calendar.route) {
                 CalendarView(viewModel = viewModel, navController, onDateClick = {})
             }
