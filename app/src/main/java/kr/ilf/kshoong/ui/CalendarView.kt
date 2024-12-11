@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -57,7 +58,7 @@ fun CalendarView(
 
     HorizontalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
+        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
         reverseLayout = true
     ) { pager ->
         val month = currentMonth.minusMonths(pager.toLong())
@@ -88,7 +89,7 @@ fun MonthView(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .wrapContentSize()
             .background(Color.White)
     ) {
         Text(

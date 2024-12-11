@@ -13,9 +13,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -115,7 +117,13 @@ fun NavigationView(
                 enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
                 exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
             ) {
-                CalendarView(viewModel = viewModel, navController, onDateClick = {})
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()) {
+                    CalendarView(viewModel = viewModel, navController, onDateClick = {})
+                    CalendarDetailView(viewModel = viewModel, Instant.now())
+                }
             }
 
             composable(
@@ -123,7 +131,7 @@ fun NavigationView(
                 enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
-                CalendarDetailView(viewModel = viewModel, Instant.now())
+
             }
 
         }
