@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
                     NavigationView(
                         Modifier
-                            .statusBarsPadding()
                             .fillMaxSize(),
                         navController,
                         healthConnectManager,
