@@ -18,6 +18,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.HealthConnectManager
@@ -54,9 +55,13 @@ class SwimmingViewModel(
 
     val changeToken = mutableStateOf<String?>(null)
 
-    private val _swimmingData = MutableStateFlow<MutableList<DailyRecord>>(mutableListOf())
-    val swimmingData
-        get() = _swimmingData
+    private val _dailyRecords = MutableStateFlow<MutableList<DailyRecord>>(mutableListOf())
+    val dailyRecords
+        get() = _dailyRecords.asStateFlow()
+
+    private val _currentDetailRecord = MutableStateFlow<List<DetailRecord?>>(mutableListOf())
+    val currentDetailRecord
+        get() = _currentDetailRecord.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -198,7 +203,7 @@ class SwimmingViewModel(
                             totalActiveTime = totalActiveTime.toString(),
                             totalEnergyBurned = totalCalories.toString()
                         )
-                        
+
                         CoroutineScope(Dispatchers.IO).launch {
                             // dailyRecord 없다면 insert, 있으면 update
                             if (dailyRecord == null) {
@@ -223,7 +228,7 @@ class SwimmingViewModel(
                         }
                     }
 
-               nextChangeToken = changeResponse.nextChangesToken
+                nextChangeToken = changeResponse.nextChangesToken
             }
 
             val edit = application.getSharedPreferences("changeToken", MODE_PRIVATE).edit()
@@ -231,6 +236,21 @@ class SwimmingViewModel(
             edit.apply()
 
             changeToken.value = nextChangeToken
+        }
+    }
+
+    fun findDetailRecord(date: Instant) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val dao = SwimmingRecordDatabase.getInstance(context = application)
+                    ?.dailyRecordDao()
+
+                val result = dao?.getDetailRecordsByDate(date)
+                result?.let {
+                    _currentDetailRecord.value = it
+                }
+
+            }
         }
     }
 
