@@ -151,28 +151,31 @@ fun MonthView(
                     .fillMaxWidth()
                     .padding(horizontal = 5.dp, vertical = 2.5.dp)
             ) {
+                val dayViewModifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.5.dp)
+                    .height(80.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                ColorCalendarItemBgStart,
+                                ColorCalendarItemBgEnd
+                            )
+                        ), shape = RoundedCornerShape(8.dp)
+                    )
+
                 for (day in 0..6) {
                     if (week == 0 && day < firstDayOfWeek) {
                         // 이전 달 날짜 표시
                         val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
 
                         DayView(
-                            Modifier
-                                .alpha(0.7f)
-                                .weight(1f)
-                                .padding(horizontal = 2.5.dp)
-                                .height(80.dp)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        listOf(
-                                            ColorCalendarItemBgStart,
-                                            ColorCalendarItemBgEnd
-                                        )
-                                    ), shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(5.dp),
-                            month.minusMonths(1L),
-                            prevDay.toString(), currentDate
+                            modifier = Modifier
+                                .alpha(0.5f)
+                                .then(dayViewModifier),
+                            month = month.minusMonths(1L),
+                            day = prevDay.toString(),
+                            currentDate = currentDate
                         ) { instant ->
                             onDateClick(instant)
                             onMonthChange("prev")
@@ -181,27 +184,12 @@ fun MonthView(
                     } else if (dayCounter > daysInMonth) {
                         // 다음 달 날짜 표시
                         DayView(
-                            Modifier
-                                .weight(1f)
-                                .alpha(0.7f)
-                                .padding(horizontal = 2.5.dp)
-                                .height(80.dp)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        listOf(
-                                            ColorCalendarItemBgStart,
-                                            ColorCalendarItemBgEnd
-                                        )
-                                    ), shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = { onDateClick(null) }
-                                )
-                                .padding(5.dp),
-                            month.plusMonths(1L),
-                            (dayCounter - daysInMonth).toString(), currentDate,
+                            modifier = Modifier
+                                .alpha(0.5f)
+                                .then(dayViewModifier),
+                            month = month.plusMonths(1L),
+                            day = (dayCounter - daysInMonth).toString(),
+                            currentDate = currentDate,
                         ) { instant ->
                             onDateClick(instant)
                             onMonthChange("next")
@@ -212,58 +200,26 @@ fun MonthView(
                         // 이번 달 날짜 표시
                         if (week > 0 || day >= firstDayOfWeek) {
                             val sameDate = dayCounter.toString() == currentDate.value
-
-                            var borderColor = Color.Transparent
-                            if (sameDate) {
-                                borderColor = ColorCalendarItemBorder
+                            val sameMonth = month.month == currentMonth.month
+                            val borderColor = if (sameDate && sameMonth) {
+                                ColorCalendarItemBorder
+                            } else {
+                                Color.Transparent
                             }
 
                             DayView(
-                                Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 2.5.dp)
-                                    .height(80.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            listOf(
-                                                ColorCalendarItemBgStart,
-                                                ColorCalendarItemBgEnd
-                                            )
-                                        ), shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        borderColor,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(5.dp),
-                                month,
-                                dayCounter.toString(),
-                                currentDate,
-                                onDateClick
+                                modifier = dayViewModifier.border(
+                                    1.5.dp,
+                                    borderColor,
+                                    RoundedCornerShape(8.dp)
+                                ),
+                                month = month,
+                                day = dayCounter.toString(),
+                                currentDate = currentDate,
+                                onDateClick = onDateClick
                             )
 
                             dayCounter++
-                        } else {
-                            // 빈 공간
-                            DayView(Modifier
-                                .weight(1f)
-                                .padding(horizontal = 2.5.dp)
-                                .height(80.dp)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        listOf(
-                                            ColorCalendarItemBgStart,
-                                            ColorCalendarItemBgEnd
-                                        )
-                                    ), shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = { onDateClick(null) }
-                                )
-                                .padding(5.dp), month, "", currentDate, { })
                         }
                     }
                 }
@@ -280,20 +236,22 @@ fun DayView(
     currentDate: MutableState<String>,
     onDateClick: (Instant?) -> Unit
 ) {
-    Box(modifier = modifier.clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = null,
-        onClick = {
-            currentDate.value = day
+    Box(modifier = modifier
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {
+                currentDate.value = day
 
-            onDateClick(
-                month
-                    .withDayOfMonth(day.toInt())
-                    .atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
-            )
-        }
-    )) {
+                onDateClick(
+                    month
+                        .withDayOfMonth(day.toInt())
+                        .atStartOfDay()
+                        .toInstant(ZoneOffset.UTC)
+                )
+            }
+        )
+        .padding(5.dp)) {
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
             // 내용
         }
