@@ -122,10 +122,7 @@ fun NavigationView(
                         .fillMaxSize()
                         .statusBarsPadding()
                 ) {
-                    CalendarView(
-                        viewModel = viewModel,
-                        navController,
-                        onDateClick = { it?.let { viewModel.findDetailRecord(it) } })
+                    CalendarView(viewModel = viewModel)
                     CalendarDetailView(viewModel = viewModel, Instant.now())
                 }
             }

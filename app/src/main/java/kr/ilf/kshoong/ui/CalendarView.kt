@@ -1,6 +1,5 @@
 package kr.ilf.kshoong.ui
 
-import android.R.attr.value
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,9 +55,7 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun CalendarView(
-    viewModel: SwimmingViewModel,
-    navController: NavHostController,
-    onDateClick: (Instant?) -> Unit
+    viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -87,10 +83,18 @@ fun CalendarView(
         val month = today.minusMonths(it.toLong())
         LaunchedEffect(pagerState.currentPage) {
             // 현재 페이지가 변경될 때마다 실행할 코드
-            currentMonth = today.minusMonths(pagerState.currentPage.toLong())
+            currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
         }
 
-        MonthView(month, selectedMonth, selectedDateStr, onDateClick) { newMonth ->
+        MonthView(month, selectedMonth, selectedDateStr) { newMonth ->
+            selectedDateStr.value = newMonth.dayOfMonth.toString()
+
+            viewModel.findDetailRecord(
+                newMonth
+                    .atStartOfDay()
+                    .toInstant(ZoneOffset.UTC)
+            )
+
             when {
                 newMonth.month == currentMonth.month -> {
                     selectedMonth.value = newMonth
@@ -101,7 +105,8 @@ fun CalendarView(
                 else -> {
                     selectedMonth.value = newMonth
 
-                    val diffMonth = ChronoUnit.MONTHS.between(newMonth, currentMonth).toInt()
+                    val diffMonth =
+                        ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth).toInt()
                     CoroutineScope(Dispatchers.Main).launch {
                         withContext(coroutineScope.coroutineContext) {
                             val target = pagerState.currentPage + diffMonth
@@ -120,8 +125,7 @@ fun MonthView(
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
     selectedDateStr: MutableState<String>,
-    onDateClick: (Instant?) -> Unit,
-    onMonthChange: (LocalDate) -> Unit
+    onDateClick: (LocalDate) -> Unit
 ) {
     val daysInMonth = month.lengthOfMonth()
     val firstDayOfMonth = month.withDayOfMonth(1)
@@ -182,11 +186,9 @@ fun MonthView(
                                 .then(dayViewModifier),
                             month = month.minusMonths(1L),
                             day = prevDay.toString(),
-                            selectedDate = selectedDateStr
-                        ) { instant ->
-                            onDateClick(instant)
-                            onMonthChange(month.minusMonths(1L))
-                        }
+                            selectedDate = selectedDateStr,
+                            onDateClick = onDateClick
+                        )
 
                     } else if (dayCounter > daysInMonth) {
                         // 다음 달 날짜 표시
@@ -197,10 +199,8 @@ fun MonthView(
                             month = month.plusMonths(1L),
                             day = (dayCounter - daysInMonth).toString(),
                             selectedDate = selectedDateStr,
-                        ) { instant ->
-                            onDateClick(instant)
-                            onMonthChange(month.plusMonths(1L))
-                        }
+                            onDateClick = onDateClick
+                        )
 
                         dayCounter++
                     } else {
@@ -222,11 +222,9 @@ fun MonthView(
                                 ),
                                 month = month,
                                 day = dayCounter.toString(),
-                                selectedDate = selectedDateStr
-                            ) { instant ->
-                                onDateClick(instant)
-                                onMonthChange(month)
-                            }
+                                selectedDate = selectedDateStr,
+                                onDateClick = onDateClick
+                            )
 
                             dayCounter++
                         }
@@ -243,22 +241,13 @@ fun DayView(
     month: LocalDate,
     day: String,
     selectedDate: MutableState<String>,
-    onDateClick: (Instant?) -> Unit
+    onDateClick: (LocalDate) -> Unit
 ) {
     Box(modifier = modifier
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
-            onClick = {
-                selectedDate.value = day
-
-                onDateClick(
-                    month
-                        .withDayOfMonth(day.toInt())
-                        .atStartOfDay()
-                        .toInstant(ZoneOffset.UTC)
-                )
-            }
+            onClick = { onDateClick(month.withDayOfMonth(day.toInt())) }
         )
         .padding(5.dp)) {
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
