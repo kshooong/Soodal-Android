@@ -52,6 +52,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun CalendarView(
@@ -63,7 +64,8 @@ fun CalendarView(
 
     val today by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
-    val currentDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
+    val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
@@ -80,26 +82,18 @@ fun CalendarView(
             .fillMaxWidth()
             .wrapContentHeight(),
         reverseLayout = true
-    ) { pager ->
-        val month = today.minusMonths(pager.toLong())
-
+    ) {
+        val month = today.minusMonths(it.toLong())
         LaunchedEffect(pagerState.currentPage) {
             // 현재 페이지가 변경될 때마다 실행할 코드
             currentMonth = today.minusMonths(pagerState.currentPage.toLong())
         }
 
-        MonthView(month, currentMonth, currentDateStr, onDateClick) { action ->
+        MonthView(month, selectedMonth, selectedDateStr, onDateClick) { month ->
+            val diffMonth = ChronoUnit.MONTHS.between(month, currentMonth).toInt()
             CoroutineScope(Dispatchers.Main).launch {
                 withContext(coroutineScope.coroutineContext) {
-                    val target = if (action == "prev") {
-                        if (pagerState.currentPage != 12)
-                            pagerState.currentPage + 1
-                        else pagerState.currentPage
-                    } else {
-                        if (pagerState.currentPage != 0)
-                            pagerState.currentPage - 1
-                        else pagerState.currentPage
-                    }
+                    val target = pagerState.currentPage + diffMonth
 
                     pagerState.animateScrollToPage(target)
                 }
@@ -111,10 +105,10 @@ fun CalendarView(
 @Composable
 fun MonthView(
     month: LocalDate,
-    currentMonth: LocalDate,
-    currentDate: MutableState<String>,
+    selectedMonth: MutableState<LocalDate>,
+    selectedDateStr: MutableState<String>,
     onDateClick: (Instant?) -> Unit,
-    onMonthChange: (String) -> Unit
+    onMonthChange: (LocalDate) -> Unit
 ) {
     val daysInMonth = month.lengthOfMonth()
     val firstDayOfMonth = month.withDayOfMonth(1)
@@ -175,10 +169,10 @@ fun MonthView(
                                 .then(dayViewModifier),
                             month = month.minusMonths(1L),
                             day = prevDay.toString(),
-                            currentDate = currentDate
+                            selectedDate = selectedDateStr
                         ) { instant ->
                             onDateClick(instant)
-                            onMonthChange("prev")
+                            onMonthChange(month.minusMonths(1L))
                         }
 
                     } else if (dayCounter > daysInMonth) {
@@ -189,18 +183,18 @@ fun MonthView(
                                 .then(dayViewModifier),
                             month = month.plusMonths(1L),
                             day = (dayCounter - daysInMonth).toString(),
-                            currentDate = currentDate,
+                            selectedDate = selectedDateStr,
                         ) { instant ->
                             onDateClick(instant)
-                            onMonthChange("next")
+                            onMonthChange(month.plusMonths(1L))
                         }
 
                         dayCounter++
                     } else {
                         // 이번 달 날짜 표시
                         if (week > 0 || day >= firstDayOfWeek) {
-                            val sameDate = dayCounter.toString() == currentDate.value
-                            val sameMonth = month.month == currentMonth.month
+                            val sameDate = dayCounter.toString() == selectedDateStr.value
+                            val sameMonth = month.month == selectedMonth.value.month
                             val borderColor = if (sameDate && sameMonth) {
                                 ColorCalendarItemBorder
                             } else {
@@ -215,7 +209,7 @@ fun MonthView(
                                 ),
                                 month = month,
                                 day = dayCounter.toString(),
-                                currentDate = currentDate,
+                                selectedDate = selectedDateStr,
                                 onDateClick = onDateClick
                             )
 
@@ -233,7 +227,7 @@ fun DayView(
     modifier: Modifier,
     month: LocalDate,
     day: String,
-    currentDate: MutableState<String>,
+    selectedDate: MutableState<String>,
     onDateClick: (Instant?) -> Unit
 ) {
     Box(modifier = modifier
@@ -241,7 +235,7 @@ fun DayView(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
             onClick = {
-                currentDate.value = day
+                selectedDate.value = day
 
                 onDateClick(
                     month
