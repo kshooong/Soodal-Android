@@ -1,5 +1,6 @@
 package kr.ilf.kshoong.ui
 
+import android.R.attr.value
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -89,13 +90,25 @@ fun CalendarView(
             currentMonth = today.minusMonths(pagerState.currentPage.toLong())
         }
 
-        MonthView(month, selectedMonth, selectedDateStr, onDateClick) { month ->
-            val diffMonth = ChronoUnit.MONTHS.between(month, currentMonth).toInt()
-            CoroutineScope(Dispatchers.Main).launch {
-                withContext(coroutineScope.coroutineContext) {
-                    val target = pagerState.currentPage + diffMonth
+        MonthView(month, selectedMonth, selectedDateStr, onDateClick) { newMonth ->
+            when {
+                newMonth.month == currentMonth.month -> {
+                    selectedMonth.value = newMonth
+                }
 
-                    pagerState.animateScrollToPage(target)
+                newMonth.withDayOfMonth(1).isAfter(today.withDayOfMonth(1)) -> {}
+                newMonth.withDayOfMonth(1).isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {}
+                else -> {
+                    selectedMonth.value = newMonth
+
+                    val diffMonth = ChronoUnit.MONTHS.between(newMonth, currentMonth).toInt()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        withContext(coroutineScope.coroutineContext) {
+                            val target = pagerState.currentPage + diffMonth
+
+                            pagerState.animateScrollToPage(target)
+                        }
+                    }
                 }
             }
         }
@@ -209,9 +222,11 @@ fun MonthView(
                                 ),
                                 month = month,
                                 day = dayCounter.toString(),
-                                selectedDate = selectedDateStr,
-                                onDateClick = onDateClick
-                            )
+                                selectedDate = selectedDateStr
+                            ) { instant ->
+                                onDateClick(instant)
+                                onMonthChange(month)
+                            }
 
                             dayCounter++
                         }
