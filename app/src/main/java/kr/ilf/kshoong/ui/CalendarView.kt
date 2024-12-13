@@ -1,5 +1,6 @@
 package kr.ilf.kshoong.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,29 +83,43 @@ fun CalendarView(
         reverseLayout = true
     ) {
         val month = today.minusMonths(it.toLong())
+        val context = LocalContext.current
+
         LaunchedEffect(pagerState.currentPage) {
             // 현재 페이지가 변경될 때마다 실행할 코드
             currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
         }
 
         MonthView(month, selectedMonth, selectedDateStr) { newMonth ->
-            selectedDateStr.value = newMonth.dayOfMonth.toString()
-
-            viewModel.findDetailRecord(
-                newMonth
-                    .atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
-            )
-
             when {
-                newMonth.month == currentMonth.month -> {
-                    selectedMonth.value = newMonth
+                newMonth.isAfter(today) -> {
+                    Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 }
 
-                newMonth.withDayOfMonth(1).isAfter(today.withDayOfMonth(1)) -> {}
-                newMonth.withDayOfMonth(1).isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {}
+                newMonth.withDayOfMonth(1).isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
+                    Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT).show()
+                }
+
+                newMonth.month == currentMonth.month -> {
+                    selectedMonth.value = newMonth
+                    selectedDateStr.value = newMonth.dayOfMonth.toString()
+
+                    viewModel.findDetailRecord(
+                        newMonth
+                            .atStartOfDay()
+                            .toInstant(ZoneOffset.UTC)
+                    )
+                }
+
                 else -> {
                     selectedMonth.value = newMonth
+                    selectedDateStr.value = newMonth.dayOfMonth.toString()
+
+                    viewModel.findDetailRecord(
+                        newMonth
+                            .atStartOfDay()
+                            .toInstant(ZoneOffset.UTC)
+                    )
 
                     val diffMonth =
                         ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth).toInt()
