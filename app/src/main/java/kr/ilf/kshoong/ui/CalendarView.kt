@@ -48,6 +48,7 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
+import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -90,7 +91,7 @@ fun CalendarView(
             currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
         }
 
-        MonthView(month, selectedMonth, selectedDateStr) { newMonth ->
+        MonthView(month, selectedMonth, selectedDateStr, today) { newMonth ->
             when {
                 newMonth.isAfter(today) -> {
                     Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -141,6 +142,7 @@ fun MonthView(
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
     selectedDateStr: MutableState<String>,
+    today: LocalDate,
     onDateClick: (LocalDate) -> Unit
 ) {
     val daysInMonth = month.lengthOfMonth()
@@ -203,6 +205,7 @@ fun MonthView(
                             month = month.minusMonths(1L),
                             day = prevDay.toString(),
                             selectedDate = selectedDateStr,
+                            today = today,
                             onDateClick = onDateClick
                         )
 
@@ -215,6 +218,7 @@ fun MonthView(
                             month = month.plusMonths(1L),
                             day = (dayCounter - daysInMonth).toString(),
                             selectedDate = selectedDateStr,
+                            today = today,
                             onDateClick = onDateClick
                         )
 
@@ -239,6 +243,7 @@ fun MonthView(
                                 month = month,
                                 day = dayCounter.toString(),
                                 selectedDate = selectedDateStr,
+                                today = today,
                                 onDateClick = onDateClick
                             )
 
@@ -257,15 +262,21 @@ fun DayView(
     month: LocalDate,
     day: String,
     selectedDate: MutableState<String>,
+    today: LocalDate,
     onDateClick: (LocalDate) -> Unit
 ) {
+    val thisDate = month.withDayOfMonth(day.toInt())
+
     Box(modifier = modifier
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
-            onClick = { onDateClick(month.withDayOfMonth(day.toInt())) }
+            onClick = { onDateClick(thisDate) }
         )
         .padding(5.dp)) {
+        val dateBorderColor = if (today == thisDate) ColorCalendarItemBorder else Color.Transparent
+        val dateBgColor = if (today == thisDate) ColorCalendarOnDateBg else ColorCalendarDateBg
+
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
             // 내용
         }
@@ -274,8 +285,8 @@ fun DayView(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .size(15.dp)
-                .border(1.dp, ColorCalendarItemBorder, RoundedCornerShape(5.dp))
-                .background(ColorCalendarDateBg, RoundedCornerShape(5.dp))
+                .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
+                .background(dateBgColor, RoundedCornerShape(5.dp))
         ) {
             Text(
                 modifier = Modifier
