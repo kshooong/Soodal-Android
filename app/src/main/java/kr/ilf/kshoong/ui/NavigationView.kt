@@ -166,12 +166,10 @@ fun LoadingView(
             }
 
         LaunchedEffect(Unit) {
-            delay(1000)
             permissionsLauncher.launch(permissions)
         }
     } else if (availability && viewModel.hasAllPermissions.value) {
         LaunchedEffect(Unit) {
-            delay(1000)
             setChangeToken()
         }
     } else {
@@ -205,7 +203,6 @@ fun SyncView(
     onSyncComplete: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(1000)
         viewModel.initSwimmingData()
         onSyncComplete()
     }
