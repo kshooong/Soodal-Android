@@ -17,6 +17,9 @@ val ColorCalendarItemBorder = Color(0xFFC8C8C8)
 val ColorCalendarOnDateBg = Color(0xFFFCFCFC)
 val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
+val DailyGraphStart = Color(0xFF86F4DA)
+val DailyGraphEnd = Color(0xFFA2E3FF)
+
 val ColorCrawl = Color(0xFF84C0FF)
 val ColorBackStroke = Color(0xFFFFD078)
 val ColorBreastStroke= Color(0xFFBE89FF)
