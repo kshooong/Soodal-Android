@@ -99,7 +99,8 @@ class SwimmingViewModel(
                                     session.endTime
                                 )
 
-                            totalDistance += detailRecordResponse.distance?.toDouble()?.roundToInt() ?: 0
+                            totalDistance += detailRecordResponse.distance?.toDouble()?.roundToInt()
+                                ?: 0
                             totalCalories += detailRecordResponse.energyBurned?.toDouble() ?: 0.0
                             totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
                                 ?: Duration.ZERO
@@ -143,7 +144,8 @@ class SwimmingViewModel(
                         }
 
                         // 데이터 초기값 데이터 있으면 가져오고 없으면 0
-                        var totalDistance = dailyRecord?.totalDistance?.toDouble()?.roundToInt() ?: 0
+                        var totalDistance =
+                            dailyRecord?.totalDistance?.toDouble()?.roundToInt() ?: 0
                         var totalCalories = dailyRecord?.totalEnergyBurned?.toDouble() ?: 0.0
                         var totalActiveTime =
                             dailyRecord?.totalActiveTime?.let { Duration.parse(it) }
@@ -168,7 +170,8 @@ class SwimmingViewModel(
 
                             if (detailRecord == null) {
                                 // 이전 데이터 없다면 데이터 더하기, insertDetailRecords 에 추가
-                                totalDistance += detailRecordResponse.distance?.toDouble()?.roundToInt() ?: 0
+                                totalDistance += detailRecordResponse.distance?.toDouble()
+                                    ?.roundToInt() ?: 0
                                 totalCalories += detailRecordResponse.energyBurned?.toDouble()
                                     ?: 0.0
                                 totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
@@ -177,12 +180,14 @@ class SwimmingViewModel(
                                 insertDetailRecords.add(detailRecordResponse)
                             } else {
                                 // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
-                                totalDistance -= detailRecord.distance?.toDouble()?.roundToInt() ?: 0
+                                totalDistance -= detailRecord.distance?.toDouble()?.roundToInt()
+                                    ?: 0
                                 totalCalories -= detailRecord.energyBurned?.toDouble() ?: 0.0
                                 totalActiveTime -= Duration.parse(detailRecord.activeTime)
                                     ?: Duration.ZERO
 
-                                totalDistance += detailRecordResponse.distance?.toDouble()?.roundToInt() ?: 0
+                                totalDistance += detailRecordResponse.distance?.toDouble()
+                                    ?.roundToInt() ?: 0
                                 totalCalories += detailRecordResponse.energyBurned?.toDouble()
                                     ?: 0.0
                                 totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
