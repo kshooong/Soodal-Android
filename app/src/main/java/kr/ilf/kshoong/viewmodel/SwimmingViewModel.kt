@@ -73,7 +73,7 @@ class SwimmingViewModel(
         }
     }
 
-    fun initSwimmingData() {
+    fun initSwimmingData(onSyncComplete: () -> Unit) {
         viewModelScope.launch {
             val dao = SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
             var nextChangeToken: String? = null
@@ -247,6 +247,8 @@ class SwimmingViewModel(
 
                 dailyRecordsMap
             }
+
+            onSyncComplete()
         }
     }
 

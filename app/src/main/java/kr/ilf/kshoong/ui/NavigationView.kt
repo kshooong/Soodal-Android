@@ -206,9 +206,8 @@ fun SyncView(
     onSyncComplete: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        viewModel.initSwimmingData()
         delay(500)
-        onSyncComplete()
+        viewModel.initSwimmingData(onSyncComplete)
     }
 
     Box(
