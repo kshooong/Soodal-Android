@@ -87,12 +87,25 @@ fun CalendarView(
             }
     }
 
+    // 년, 웧
     Text(
         text = currentMonth.format(monthFormatter),
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.padding(10.dp),
         textAlign = TextAlign.Center
     )
+
+    // 요일 헤더
+    Row {
+        listOf("일", "월", "화", "수", "목", "금", "토").forEach {
+            Text(
+                text = it,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 
     LaunchedEffect(pagerState.currentPage) {
             currentMonth =
@@ -178,18 +191,6 @@ fun MonthView(
             .wrapContentSize()
             .background(Color.White)
     ) {
-        // 요일 헤더
-        Row {
-            listOf("일", "월", "화", "수", "목", "금", "토").forEach {
-                Text(
-                    text = it,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
         // 날짜 표시
         var dayCounter = 1
 
