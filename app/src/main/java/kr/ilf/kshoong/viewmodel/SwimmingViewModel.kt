@@ -2,6 +2,7 @@ package kr.ilf.kshoong.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -27,6 +28,8 @@ import kr.ilf.kshoong.database.entity.DailyRecord
 import kr.ilf.kshoong.database.entity.DetailRecord
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
@@ -239,6 +242,24 @@ class SwimmingViewModel(
                 val end = Instant.now()
 
                 dao?.findAllByMonth(start, end)?.forEach { record ->
+                    dailyRecordsMap[record.date] = record
+                }
+
+                dailyRecordsMap
+            }
+        }
+    }
+
+    fun updateDailyRecords(month: LocalDate) {
+        viewModelScope.launch {
+            _dailyRecords.value = withContext(Dispatchers.IO) {
+                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+
+                val start = month.atStartOfDay().toInstant(ZoneOffset.UTC)
+                val end = month.withDayOfMonth(month.lengthOfMonth()).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+                SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
+                    ?.findAllByMonth(start, end)?.forEach { record ->
                     dailyRecordsMap[record.date] = record
                 }
 

@@ -94,6 +94,12 @@ fun CalendarView(
         textAlign = TextAlign.Center
     )
 
+    LaunchedEffect(pagerState.currentPage) {
+            currentMonth =
+                today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
+            viewModel.updateDailyRecords(currentMonth)
+    }
+
     HorizontalPager(
         state = pagerState,
         modifier = Modifier
@@ -103,11 +109,6 @@ fun CalendarView(
     ) {
         val month = today.minusMonths(it.toLong())
         val context = LocalContext.current
-
-        LaunchedEffect(pagerState.currentPage) {
-            // 현재 페이지가 변경될 때마다 실행할 코드
-            currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
-        }
 
         MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
             when {
