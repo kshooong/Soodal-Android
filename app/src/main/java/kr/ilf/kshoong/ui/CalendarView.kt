@@ -314,18 +314,28 @@ fun DayView(
                 }
             }
 
-            val boxWidthsTemp =
-                rememberUpdatedState(newValue = dailyRecord.value?.totalDistance?.let { totalDistance ->
-                    (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
-                        if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-                    }
-                } ?: emptyList())
+//            val boxWidthsTemp =
+//                rememberUpdatedState(newValue = dailyRecord.value?.totalDistance?.let { totalDistance ->
+//                    (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
+//                        if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+//                    }
+//                } ?: emptyList())
+//
+//            val boxWidths = remember { mutableStateOf<List<Float>>(emptyList()) }
+//
+//            LaunchedEffect(viewModel.uiState.value) {
+//                if (viewModel.uiState.value == UiState.COMPLETE) {
+//                    boxWidths.value = boxWidthsTemp.value
+//                }
+//            }
 
-            val boxWidths = remember { mutableStateOf<List<Float>>(emptyList()) }
-
-            LaunchedEffect(viewModel.uiState.value) {
-                if (viewModel.uiState.value == UiState.COMPLETE) {
-                    boxWidths.value = boxWidthsTemp.value
+            val boxWidths = remember {
+                derivedStateOf {
+                    dailyRecord.value?.totalDistance?.let { totalDistance ->
+                        (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
+                            if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+                        }
+                    } ?: emptyList()
                 }
             }
 
