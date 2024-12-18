@@ -227,6 +227,18 @@ class SwimmingViewModel(
             edit.apply()
 
             changeToken.value = nextChangeToken
+            _dailyRecords.value = withContext(Dispatchers.IO) {
+                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+
+                val start = Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
+                val end = Instant.now()
+
+                dao?.findAllByMonth(start, end)?.forEach { record ->
+                    dailyRecordsMap[record.date] = record
+                }
+
+                dailyRecordsMap
+            }
         }
     }
 
