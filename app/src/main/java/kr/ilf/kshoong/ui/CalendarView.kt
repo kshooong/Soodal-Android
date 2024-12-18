@@ -25,11 +25,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
@@ -49,7 +53,10 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
+import kr.ilf.kshoong.ui.theme.DailyGraphEnd
+import kr.ilf.kshoong.ui.theme.DailyGraphStart
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -68,6 +75,17 @@ fun CalendarView(
     val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.isScrollInProgress }.distinctUntilChanged()
+            .collect {
+                if (pagerState.isScrollInProgress) {
+                    viewModel.uiState.value = UiState.SCROLLING
+                } else {
+                    viewModel.uiState.value = UiState.COMPLETE
+                }
+            }
+    }
 
     Text(
         text = currentMonth.format(monthFormatter),
@@ -91,7 +109,7 @@ fun CalendarView(
             currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
         }
 
-        MonthView(month, selectedMonth, selectedDateStr, today) { newMonth ->
+        MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
             when {
                 newMonth.isAfter(today) -> {
                     Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -139,6 +157,7 @@ fun CalendarView(
 
 @Composable
 fun MonthView(
+    viewModel: SwimmingViewModel,
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
     selectedDateStr: MutableState<String>,
@@ -202,7 +221,8 @@ fun MonthView(
                             modifier = Modifier
                                 .alpha(0.5f)
                                 .then(dayViewModifier),
-                            month = month.minusMonths(1L),
+                            viewModel = viewModel,
+                            month = month.minusMonths(1L).withDayOfMonth(prevDay),
                             day = prevDay.toString(),
                             selectedDate = selectedDateStr,
                             today = today,
@@ -215,7 +235,8 @@ fun MonthView(
                             modifier = Modifier
                                 .alpha(0.5f)
                                 .then(dayViewModifier),
-                            month = month.plusMonths(1L),
+                            viewModel = viewModel,
+                            month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
                             day = (dayCounter - daysInMonth).toString(),
                             selectedDate = selectedDateStr,
                             today = today,
@@ -240,7 +261,8 @@ fun MonthView(
                                     borderColor,
                                     RoundedCornerShape(8.dp)
                                 ),
-                                month = month,
+                                viewModel = viewModel,
+                                month = month.withDayOfMonth(dayCounter),
                                 day = dayCounter.toString(),
                                 selectedDate = selectedDateStr,
                                 today = today,
@@ -259,6 +281,7 @@ fun MonthView(
 @Composable
 fun DayView(
     modifier: Modifier,
+    viewModel: SwimmingViewModel,
     month: LocalDate,
     day: String,
     selectedDate: MutableState<String>,
@@ -277,8 +300,49 @@ fun DayView(
         val dateBorderColor = if (today == thisDate) ColorCalendarItemBorder else Color.Transparent
         val dateBgColor = if (today == thisDate) ColorCalendarOnDateBg else ColorCalendarDateBg
 
-        Box(modifier = Modifier.align(Alignment.TopCenter)) {
-            // 내용
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+        ) {
+            val dailyRecords by viewModel.dailyRecords.collectAsState()
+            val dailyRecord = remember {
+                derivedStateOf {
+                    dailyRecords[thisDate.atStartOfDay().toInstant(ZoneOffset.UTC)]
+                }
+            }
+
+            val boxWidthsTemp =
+                rememberUpdatedState(newValue = dailyRecord.value?.totalDistance?.let { totalDistance ->
+                    (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
+                        if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+                    }
+                } ?: emptyList())
+
+            val boxWidths = remember { mutableStateOf<List<Float>>(emptyList()) }
+
+            LaunchedEffect(viewModel.uiState.value) {
+                if (viewModel.uiState.value == UiState.COMPLETE) {
+                    boxWidths.value = boxWidthsTemp.value
+                }
+            }
+
+            boxWidths.value.forEach {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 3.dp)
+                        .fillMaxWidth(it)
+                        .height(10.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                Pair(0f, DailyGraphStart),
+                                Pair(1f, DailyGraphEnd)
+                            ),
+                            shape = RoundedCornerShape(3.dp)
+                        )
+                        .align(Alignment.Start)
+                )
+            }
         }
 
         Box(
