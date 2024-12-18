@@ -108,9 +108,8 @@ fun CalendarView(
     }
 
     LaunchedEffect(pagerState.currentPage) {
-            currentMonth =
-                today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
-            viewModel.updateDailyRecords(currentMonth)
+        currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
+        viewModel.updateDailyRecords(currentMonth)
     }
 
     HorizontalPager(
@@ -118,6 +117,7 @@ fun CalendarView(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
+        key = { today.minusMonths(it.toLong()) },
         reverseLayout = true
     ) {
         val month = today.minusMonths(it.toLong())
