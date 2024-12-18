@@ -39,6 +39,7 @@ import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
 
 @Composable
@@ -90,7 +91,7 @@ fun NavigationView(
                         anim { }
                     }
 
-                    viewModel.isLoaded.value = true
+                    viewModel.uiState.value = UiState.SCROLLING
                 }
             )
         }

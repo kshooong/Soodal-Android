@@ -35,7 +35,7 @@ class SwimmingViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
-    val isLoaded = mutableStateOf(false)
+    val uiState = mutableStateOf(UiState.LOADING)
 
     val healthPermissions =
         setOf(
@@ -288,4 +288,11 @@ class SwimmingViewModelFactory(
 
         throw IllegalArgumentException("Unknown ViewModel class")
     }
+
+}
+
+enum class UiState {
+    LOADING,
+    COMPLETE,
+    SCROLLING
 }

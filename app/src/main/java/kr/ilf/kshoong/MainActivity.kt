@@ -35,6 +35,7 @@ import kr.ilf.kshoong.ui.NavigationView
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
+import kr.ilf.kshoong.viewmodel.UiState
 
 class MainActivity : ComponentActivity() {
 
@@ -71,7 +72,7 @@ class MainActivity : ComponentActivity() {
 
                     AnimatedVisibility(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        visible = viewModel.isLoaded.value,
+                        visible = viewModel.uiState.value != UiState.LOADING,
                         enter =  fadeIn(
                             animationSpec = tween(
                                 300, easing = LinearEasing
