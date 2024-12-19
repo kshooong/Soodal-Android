@@ -286,6 +286,15 @@ class SwimmingViewModel(
         }
     }
 
+    fun getHeartRate(start: Instant, end: Instant) {
+        viewModelScope.launch {
+            val response = healthConnectManager.readHeartRates(TimeRangeFilter.between(start, end))
+            response.forEach {
+                Log.d("heartRate", it.toString())
+            }
+        }
+    }
+
     fun checkPermissions(): Boolean {
         viewModelScope.launch {
             hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)

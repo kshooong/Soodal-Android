@@ -94,12 +94,25 @@ class HealthConnectManager(private val context: Context) {
             startTime = startTime,
             endTime = endTime,
             activeTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL].toString(),
-            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt().toString(),
+            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt()
+                .toString(),
             energyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories.toString(),
             minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
             maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],
             avgHeartRate = aggregateData[HeartRateRecord.BPM_AVG]
         )
+    }
+
+    suspend fun readHeartRates(
+        timeRangeFilter: TimeRangeFilter
+    ): List<HeartRateRecord> {
+        val request = ReadRecordsRequest(
+            recordType = HeartRateRecord::class,
+            timeRangeFilter = timeRangeFilter
+        )
+
+        return healthConnectClient.readRecords(request).records
+
     }
 
     suspend fun checkPermissions(permissions: Set<String>): Boolean {

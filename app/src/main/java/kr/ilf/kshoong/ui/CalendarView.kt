@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -373,7 +375,10 @@ private fun CalendarHeaderView(
     )
 
     // 요일 헤더
-    Row(modifier = Modifier.padding(horizontal = 5.dp),horizontalArrangement = Arrangement.SpaceEvenly) {
+    Row(
+        modifier = Modifier.padding(horizontal = 5.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
         Text(
             text = "SUN",
             modifier = Modifier.weight(1f),
@@ -408,9 +413,15 @@ fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
             .fillMaxSize()
             .background(Color.Cyan)
     ) {
-        val detailRecord by viewModel.currentDetailRecord.collectAsState()
-        detailRecord.forEach {
-            Text(text = it?.distance.toString() ?: "기록 없음")
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            val detailRecord by viewModel.currentDetailRecord.collectAsState()
+            detailRecord.forEach {
+                Text(text = it!!.distance.toString() ?: "기록 없음")
+                val start = it.startTime
+                val end = it.endTime
+                viewModel.getHeartRate(start, end)
+            }
+
         }
     }
 }
