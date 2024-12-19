@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -73,7 +73,7 @@ fun CalendarView(
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
-    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyy.MM")
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
     LaunchedEffect(pagerState) {
@@ -87,25 +87,7 @@ fun CalendarView(
             }
     }
 
-    // 년, 웧
-    Text(
-        text = currentMonth.format(monthFormatter),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(10.dp),
-        textAlign = TextAlign.Center
-    )
-
-    // 요일 헤더
-    Row {
-        listOf("일", "월", "화", "수", "목", "금", "토").forEach {
-            Text(
-                text = it,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    CalendarHeaderView(currentMonth, monthFormatter)
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
@@ -374,6 +356,48 @@ fun DayView(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+@Composable
+private fun CalendarHeaderView(
+    currentMonth: LocalDate,
+    monthFormatter: DateTimeFormatter?
+) {
+    // 년, 월
+    Text(
+        text = currentMonth.format(monthFormatter),
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.padding(10.dp),
+        textAlign = TextAlign.Center
+    )
+
+    // 요일 헤더
+    Row(modifier = Modifier.padding(horizontal = 5.dp),horizontalArrangement = Arrangement.SpaceEvenly) {
+        Text(
+            text = "SUN",
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            color = Color.Red
+        )
+
+        listOf("MON", "TUE", "WED", "THU", "FRI").forEach {
+            Text(
+                text = it,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Text(
+            text = "SAT",
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            color = Color.Blue
+        )
     }
 }
 
