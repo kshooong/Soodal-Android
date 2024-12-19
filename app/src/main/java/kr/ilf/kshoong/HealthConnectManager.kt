@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.util.fastRoundToInt
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.records.DistanceRecord
@@ -93,7 +94,7 @@ class HealthConnectManager(private val context: Context) {
             startTime = startTime,
             endTime = endTime,
             activeTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL].toString(),
-            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.toString(),
+            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt().toString(),
             energyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories.toString(),
             minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
             maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],

@@ -6,18 +6,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -33,69 +33,109 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import kotlinx.coroutines.delay
-import kr.ilf.kshoong.Destinations
+import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import kr.ilf.kshoong.viewmodel.UiState
+import java.time.Instant
 
 @Composable
 fun NavigationView(
+    modifier: Modifier,
     navController: NavHostController,
     healthConnectManager: HealthConnectManager,
     viewModel: SwimmingViewModel
 ) {
     val context = LocalContext.current
 
-    NavHost(navController = navController,
-        startDestination = Destinations.DESTINATION_LOADING,
+    NavHost(
+        modifier = modifier,
+        navController = navController,
+        startDestination = Destination.Loading.route,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }) {
-        composable(Destinations.DESTINATION_LOADING) {
+        composable(Destination.Loading.route) {
             LoadingView(
                 context = context,
                 healthConnectManager = healthConnectManager,
                 viewModel = viewModel,
                 onLoadingComplete = {
-                    navController.navigate(Destinations.DESTINATION_SYNC) {
-                        popUpTo(Destinations.DESTINATION_LOADING) {
+                    navController.navigate(Destination.Sync.route) {
+                        popUpTo(Destination.Loading.route) {
                             inclusive = true
                         }
                     }
                 })
         }
-        composable(Destinations.DESTINATION_SYNC, enterTransition = {
+        composable(Destination.Sync.route, enterTransition = {
             fadeIn(
                 animationSpec = tween(
                     300, easing = LinearEasing
                 )
             )
+        }, exitTransition = {
+            fadeOut()
         }) {
             SyncView(
                 context = context,
                 viewModel = viewModel,
                 onSyncComplete = {
-                    navController.navigate(Destinations.DESTINATION_CALENDAR) {
-                        popUpTo(Destinations.DESTINATION_SYNC) {
+                    navController.navigate(Destination.Home.route) {
+                        popUpTo(Destination.Sync.route) {
                             inclusive = true
                         }
 
                         anim { }
                     }
+
+                    viewModel.uiState.value = UiState.SCROLLING
                 }
             )
         }
-        composable(Destinations.DESTINATION_CALENDAR, enterTransition = {
-            fadeIn(
-                animationSpec = tween(
-                    300, easing = LinearEasing
-                )
-            ) + slideIntoContainer(
-                animationSpec = tween(700, easing =  CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
-                towards = AnimatedContentTransitionScope.SlideDirection.Up
-            )
-        }) {
-            CalendarView()
+
+        navigation(
+            startDestination = Destination.Calendar.route,
+            route = Destination.Home.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            // 달력 커스텀 애니메이션
+//            enterTransition = {
+//                fadeIn(
+//                    animationSpec = tween(
+//                        300, easing = LinearEasing
+//                    )
+//                ) + slideIntoContainer(
+//                    animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
+//                    towards = AnimatedContentTransitionScope.SlideDirection.Up
+//                )
+//            }
+        ) {
+            composable(
+                Destination.Calendar.route,
+                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) {
+                    CalendarView(viewModel = viewModel)
+                    CalendarDetailView(viewModel = viewModel, Instant.now())
+                }
+            }
+
+            composable(
+                Destination.Detail.route,
+                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+            ) {
+
+            }
+
         }
     }
 }
@@ -127,12 +167,12 @@ fun LoadingView(
             }
 
         LaunchedEffect(Unit) {
-            delay(1000)
+            delay(500)
             permissionsLauncher.launch(permissions)
         }
     } else if (availability && viewModel.hasAllPermissions.value) {
         LaunchedEffect(Unit) {
-            delay(1000)
+            delay(500)
             setChangeToken()
         }
     } else {
@@ -145,20 +185,17 @@ fun LoadingView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "KSHOONG!", style = MaterialTheme.typography.titleLarge)
-            Image(
-                painter = painterResource(id = R.drawable.logo_loading_img),
-                contentDescription = "logo",
-                modifier = Modifier.size(108.dp)
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher),
+            contentDescription = "logo",
+            modifier = Modifier.size(288.dp)
+        )
+
+        Text(
+            text = "KSHOONG!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 270.dp)
+        )
     }
 }
 
@@ -169,9 +206,8 @@ fun SyncView(
     onSyncComplete: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(1000)
-        viewModel.initSwimmingData()
-        onSyncComplete()
+        delay(500)
+        viewModel.initSwimmingData(onSyncComplete)
     }
 
     Box(
@@ -180,19 +216,16 @@ fun SyncView(
             .background(color = Color.White, shape = ShapeDefaults.ExtraLarge),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Synchronizing", style = MaterialTheme.typography.titleLarge)
-            Image(
-                painter = painterResource(id = R.drawable.logo_loading_img),
-                contentDescription = "logo",
-                modifier = Modifier.size(108.dp)
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher),
+            contentDescription = "logo",
+            modifier = Modifier.size(288.dp)
+        )
+
+        Text(
+            text = "Synchronizing!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 270.dp)
+        )
     }
 }
