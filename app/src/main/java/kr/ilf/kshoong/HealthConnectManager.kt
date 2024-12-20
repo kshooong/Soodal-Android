@@ -102,6 +102,17 @@ class HealthConnectManager(private val context: Context) {
         )
     }
 
+    suspend fun readHeartRates(
+        timeRangeFilter: TimeRangeFilter
+    ): List<HeartRateRecord> {
+        val request = ReadRecordsRequest(
+            recordType = HeartRateRecord::class,
+            timeRangeFilter = timeRangeFilter
+        )
+
+        return healthConnectClient.readRecords(request).records
+    }
+
     suspend fun checkPermissions(permissions: Set<String>): Boolean {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
         return granted.containsAll(permissions)
