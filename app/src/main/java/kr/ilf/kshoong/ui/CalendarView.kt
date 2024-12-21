@@ -97,8 +97,11 @@ fun CalendarView(
     HorizontalPager(
         state = pagerState,
         modifier = Modifier
+            .padding(horizontal = 5.dp)
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .padding(vertical = 5.dp),
         key = { today.minusMonths(it.toLong()) },
         reverseLayout = true
     ) {
