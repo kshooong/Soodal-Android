@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 Box(modifier = Modifier.fillMaxSize().background(
-                    ColorBottomBar,
+                    Color.White,
                     shape = RoundedCornerShape(3.dp)
                 )) {
                     NavigationView(
