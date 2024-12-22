@@ -189,7 +189,7 @@ fun MonthView(
                 val dayViewModifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 2.5.dp)
-                    .height(80.dp)
+                    .height(70.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             listOf(
@@ -327,9 +327,9 @@ fun DayView(
             boxWidths.value.forEach {
                 Box(
                     modifier = Modifier
-                        .padding(bottom = 3.dp)
+                        .padding(bottom = 2.dp)
                         .fillMaxWidth(it)
-                        .height(10.dp)
+                        .height(8.dp)
                         .background(
                             brush = Brush.horizontalGradient(
                                 Pair(0f, DailyGraphStart),
