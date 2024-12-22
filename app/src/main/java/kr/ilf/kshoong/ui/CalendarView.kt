@@ -373,18 +373,18 @@ private fun CalendarHeaderView(
     Text(
         text = currentMonth.format(monthFormatter),
         style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(horizontal = 5.dp)
+        modifier = Modifier.padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
             .background(Color.White, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 15.dp),
         textAlign = TextAlign.Center
     )
 
     // 요일 헤더
     Row(
         modifier = Modifier
-            .padding(5.dp)
+            .padding(start = 5.dp, end = 5.dp, top = 5.dp)
             .background(Color.White, shape = RoundedCornerShape(10.dp))
-            .padding(5.dp),
+            .padding(horizontal = 5.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
