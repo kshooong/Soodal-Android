@@ -6,10 +6,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,18 +18,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import kr.ilf.kshoong.ui.BottomBarView
 import kr.ilf.kshoong.ui.NavigationView
+import kr.ilf.kshoong.ui.theme.ColorBottomBar
+import kr.ilf.kshoong.ui.theme.ColorBottomBarDivider
 import kr.ilf.kshoong.ui.theme.KshoongTheme
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
@@ -61,10 +63,13 @@ class MainActivity : ComponentActivity() {
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
 
-                Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+                Box(modifier = Modifier.fillMaxSize().background(
+                    ColorBottomBar,
+                    shape = RoundedCornerShape(3.dp)
+                )) {
                     NavigationView(
                         Modifier
-                            .fillMaxSize(),
+                            .fillMaxSize().background(Color.Transparent),
                         navController,
                         healthConnectManager,
                         viewModel

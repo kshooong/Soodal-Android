@@ -174,7 +174,7 @@ fun MonthView(
     Column(
         modifier = Modifier
             .wrapContentSize()
-            .background(Color.White)
+            .background(Color.Transparent)
     ) {
         // 날짜 표시
         var dayCounter = 1
@@ -371,12 +371,20 @@ private fun CalendarHeaderView(
     Text(
         text = currentMonth.format(monthFormatter),
         style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(10.dp),
+        modifier = Modifier.padding(horizontal = 5.dp)
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp),
         textAlign = TextAlign.Center
     )
 
     // 요일 헤더
-    Row(modifier = Modifier.padding(horizontal = 5.dp),horizontalArrangement = Arrangement.SpaceEvenly) {
+    Row(
+        modifier = Modifier
+            .padding(5.dp)
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .padding(5.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
         Text(
             text = "SUN",
             modifier = Modifier.weight(1f),
@@ -406,10 +414,14 @@ private fun CalendarHeaderView(
 
 @Composable
 fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
-    Surface(
+
+    Column(
         Modifier
+            .padding(5.dp, 5.dp, 5.dp, bottom = 65.dp)
+            .navigationBarsPadding()
             .fillMaxSize()
-            .background(Color.Cyan)
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .verticalScroll(rememberScrollState())
     ) {
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {

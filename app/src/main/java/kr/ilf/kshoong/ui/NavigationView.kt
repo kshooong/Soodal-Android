@@ -121,7 +121,7 @@ fun NavigationView(
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .statusBarsPadding()
+                        .statusBarsPadding().background(Color.Transparent)
                 ) {
                     CalendarView(viewModel = viewModel)
                     CalendarDetailView(viewModel = viewModel, Instant.now())
