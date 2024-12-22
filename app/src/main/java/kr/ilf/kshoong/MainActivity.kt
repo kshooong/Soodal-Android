@@ -83,10 +83,11 @@ class MainActivity : ComponentActivity() {
                         BottomBarView(
                             modifier = Modifier
                                 .navigationBarsPadding()
-                                .height(100.dp)
+                                .height(60.dp)
                                 .fillMaxWidth()
                                 .align(Alignment.BottomCenter)
-                                .background(Color.Transparent),
+                                .background(Color.White)
+                                .topBorder(1.dp, Color.LightGray),
                             {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {
@@ -112,6 +113,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+fun Modifier.topBorder(width: Dp, color: Color): Modifier = this.then(
+    Modifier.drawBehind {
+        val strokeWidthPx = width.toPx()
+        drawLine(
+            color = color,
+            start = androidx.compose.ui.geometry.Offset(0f, strokeWidthPx / 2),
+            end = androidx.compose.ui.geometry.Offset(size.width, strokeWidthPx / 2),
+            strokeWidth = strokeWidthPx
+        )
+    }
+)
+
 
 
 @Preview(showBackground = true)
