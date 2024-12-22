@@ -86,8 +86,8 @@ class MainActivity : ComponentActivity() {
                                 .height(60.dp)
                                 .fillMaxWidth()
                                 .align(Alignment.BottomCenter)
-                                .background(Color.White)
-                                .topBorder(1.dp, Color.LightGray),
+                                .background(ColorBottomBar)
+                                .topBorder(0.5.dp, ColorBottomBarDivider),
                             {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {

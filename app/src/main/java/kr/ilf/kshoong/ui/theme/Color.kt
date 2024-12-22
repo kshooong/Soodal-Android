@@ -1,6 +1,7 @@
 package kr.ilf.kshoong.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key.Companion.D
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -19,6 +20,9 @@ val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
 val DailyGraphStart = Color(0xFF86F4DA)
 val DailyGraphEnd = Color(0xFFA2E3FF)
+
+val ColorBottomBar = Color(0xFFF9F9F9)
+val ColorBottomBarDivider = Color(0xFFD8D8D8)
 
 val ColorCrawl = Color(0xFF84C0FF)
 val ColorBackStroke = Color(0xFFFFD078)

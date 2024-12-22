@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kr.ilf.kshoong.R
+import kr.ilf.kshoong.ui.theme.ColorBottomBar
 
 @Composable
 fun BottomBarView(modifier: Modifier, onCalenderClick: () -> Unit, onDetailClick: () -> Unit) {
@@ -30,7 +31,7 @@ fun BottomBarView(modifier: Modifier, onCalenderClick: () -> Unit, onDetailClick
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
             Button(
                 modifier = Modifier
@@ -93,7 +94,7 @@ fun BottomBarViewPreview() {
         BottomBarView(modifier = Modifier
             .height(60.dp)
             .fillMaxWidth()
-            .background(Color.White), onCalenderClick = {}, onDetailClick = {})// 상단 공간 확보
+            .background(ColorBottomBar), onCalenderClick = {}, onDetailClick = {})// 상단 공간 확보
         Box(
             modifier = Modifier
                 .fillMaxWidth()
