@@ -20,6 +20,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.response.ChangesResponse
 import androidx.health.connect.client.time.TimeRangeFilter
 import kr.ilf.kshoong.database.entity.DetailRecord
+import kr.ilf.kshoong.database.entity.HeartRateSample
 import java.time.Instant
 
 class HealthConnectManager(private val context: Context) {
@@ -64,7 +65,6 @@ class HealthConnectManager(private val context: Context) {
         startTime: Instant,
         endTime: Instant
     ): DetailRecord {
-        // Use the start time and end time from the session, for reading raw and aggregate data.
         val timeRangeFilter = TimeRangeFilter.between(
             startTime = startTime,
             endTime = endTime
@@ -77,15 +77,12 @@ class HealthConnectManager(private val context: Context) {
             HeartRateRecord.BPM_MAX,
             HeartRateRecord.BPM_MIN,
         )
-        // Limit the data read to just the application that wrote the session. This may or may not
-        // be desirable depending on the use case: In some cases, it may be useful to combine with
-        // data written by other apps.
-//        val dataOriginFilter = setOf(exerciseSession.record.metadata.dataOrigin)
+
         val aggregateRequest = AggregateRequest(
             metrics = aggregateDataTypes,
             timeRangeFilter = timeRangeFilter,
-//            dataOriginFilter = dataOriginFilter
         )
+
         val aggregateData = healthConnectClient.aggregate(aggregateRequest)
 
         return DetailRecord(
@@ -94,7 +91,8 @@ class HealthConnectManager(private val context: Context) {
             startTime = startTime,
             endTime = endTime,
             activeTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL].toString(),
-            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt().toString(),
+            distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt()
+                .toString(),
             energyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories.toString(),
             minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
             maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],
@@ -103,14 +101,36 @@ class HealthConnectManager(private val context: Context) {
     }
 
     suspend fun readHeartRates(
-        timeRangeFilter: TimeRangeFilter
-    ): List<HeartRateRecord> {
+        detailRecordId: String,
+        startTime: Instant,
+        endTime: Instant
+    ): List<HeartRateSample> {
+        val timeRangeFilter = TimeRangeFilter.between(
+            startTime = startTime,
+            endTime = endTime
+        )
+
         val request = ReadRecordsRequest(
             recordType = HeartRateRecord::class,
             timeRangeFilter = timeRangeFilter
         )
 
-        return healthConnectClient.readRecords(request).records
+        val heartRateSamples = mutableListOf<HeartRateSample>()
+
+        val heartRateRecords = healthConnectClient.readRecords(request).records
+        if (heartRateRecords.isNotEmpty()) {
+            heartRateRecords[0].samples.forEach { sample ->
+                heartRateSamples.add(
+                    HeartRateSample(
+                        sample.time,
+                        detailRecordId,
+                        sample.beatsPerMinute.toInt()
+                    )
+                )
+            }
+        }
+
+        return heartRateSamples
     }
 
     suspend fun checkPermissions(permissions: Set<String>): Boolean {

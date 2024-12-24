@@ -9,8 +9,11 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kr.ilf.kshoong.database.DatabaseConst
 import kr.ilf.kshoong.database.entity.DailyRecord
+import kr.ilf.kshoong.database.entity.DailyRecordWithAll
 import kr.ilf.kshoong.database.entity.DailyRecordWithDetailRecord
 import kr.ilf.kshoong.database.entity.DetailRecord
+import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.kshoong.database.entity.HeartRateSample
 import java.time.Instant
 
 @Dao
@@ -19,11 +22,26 @@ interface SwimmingRecordDao {
     /*
     * DailyRecordWithDetailRecord
     */
+    @Transaction
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} ORDER BY date DESC")
-    fun getAllRecords(): List<DailyRecordWithDetailRecord>
+    fun getAllRecords(): List<DailyRecordWithAll>
+
+    @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE date = :date")
+    fun findDetailRecordsWithHeartRateSamplesByDate(date: Instant): List<DetailRecordWithHeartRateSample>
 
     @Transaction
-    fun insertDailyRecordWithDetailRecord(
+    fun insertDailyRecordWithAll(
+        dailyRecord: DailyRecord,
+        detailRecord: List<DetailRecord>,
+        heartRateSamples: List<HeartRateSample>
+    ) {
+        insertDailyRecord(dailyRecord)
+        insertDetailRecords(detailRecord)
+        insertHeartRateSamples(heartRateSamples)
+    }
+
+    @Transaction
+    fun insertDailyRecordWithAll(
         dailyRecord: DailyRecord,
         detailRecord: List<DetailRecord>
     ) {
@@ -40,7 +58,7 @@ interface SwimmingRecordDao {
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} WHERE date = :date")
     fun getDailyRecord(date: Instant): DailyRecord?
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDailyRecord(dailyRecord: DailyRecord)
 
     @Insert
@@ -62,12 +80,12 @@ interface SwimmingRecordDao {
     * DetailRecord
     */
     @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE id = :id")
-    fun getDetailRecord(id: String): DetailRecord
+    fun findDetailRecordById(id: String): DetailRecord
 
     @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE date = :date")
-    fun getDetailRecordsByDate(date: Instant): List<DetailRecord>
+    fun findDetailRecordsByDate(date: Instant): List<DetailRecord>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDetailRecord(detailRecord: DetailRecord)
 
     @Insert
@@ -87,4 +105,32 @@ interface SwimmingRecordDao {
 
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} daily WHERE date BETWEEN :start AND :end")
     fun findAllByMonth(start: Instant, end: Instant): List<DailyRecord>
+
+    /*
+    * HeartRateSample
+    */
+    @Query("SELECT * FROM ${DatabaseConst.TB_HEARTRATE_SAMPLE} WHERE time = :time")
+    fun findHeartRateSampleByTime(time: Instant): HeartRateSample
+
+    @Query("SELECT * FROM ${DatabaseConst.TB_HEARTRATE_SAMPLE} WHERE detailRecordId = :detailRecordId")
+    fun findHeartRateSamplesById(detailRecordId: String): List<HeartRateSample>
+
+    @Insert
+    fun insertHeartRateSample(heartRateSample: HeartRateSample)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertHeartRateSamples(heartRateSamples: List<HeartRateSample>)
+
+    @Update
+    fun updateHeartRateSample(heartRateSample: HeartRateSample)
+
+    @Update
+    fun updateHeartRateSamples(heartRateSamples: List<HeartRateSample>)
+
+    @Delete
+    fun deleteHeartRateSample(heartRateSample: HeartRateSample)
+
+    @Delete
+    fun deleteHeartRateSamples(heartRateSamples: List<HeartRateSample>)
+
 }
