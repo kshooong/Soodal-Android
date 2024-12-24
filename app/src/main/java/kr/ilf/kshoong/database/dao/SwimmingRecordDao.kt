@@ -41,7 +41,7 @@ interface SwimmingRecordDao {
     }
 
     @Transaction
-    fun insertDailyRecordWithAll(
+    fun insertDailyRecordWithDetailRecord(
         dailyRecord: DailyRecord,
         detailRecord: List<DetailRecord>
     ) {

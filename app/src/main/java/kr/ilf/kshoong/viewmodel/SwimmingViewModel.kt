@@ -169,6 +169,8 @@ class SwimmingViewModel(
                                 ?: Duration.ZERO
                         val insertDetailRecords = mutableListOf<DetailRecord>()
                         val updateDetailRecords = mutableListOf<DetailRecord>()
+                        val insertHeartRateRecords = mutableListOf<HeartRateSample>()
+                        val updateHeartRateRecords = mutableListOf<HeartRateSample>()
 
                         records.forEach { session ->
                             // 변경 레코드 상세 데이터 가져오기
@@ -195,6 +197,11 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 insertDetailRecords.add(detailRecordResponse)
+                                insertHeartRateRecords.addAll(healthConnectManager.readHeartRates(
+                                    session.metadata.id,
+                                    session.startTime,
+                                    session.endTime
+                                ))
                             } else {
                                 // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
                                 totalDistance -= detailRecord.distance?.toDouble()?.roundToInt()
@@ -211,6 +218,11 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 updateDetailRecords.add(detailRecordResponse)
+                                updateHeartRateRecords.addAll(healthConnectManager.readHeartRates(
+                                    session.metadata.id,
+                                    session.startTime,
+                                    session.endTime
+                                ))
                             }
 
                         }
@@ -228,14 +240,17 @@ class SwimmingViewModel(
                                 // dailyRecord 없다면 detail도 없을 테니 detail도 insert로직만 호출
                                 dao?.insertDailyRecordWithAll(
                                     newDailyRecord,
-                                    insertDetailRecords
+                                    insertDetailRecords,
+                                    insertHeartRateRecords
                                 )
                             } else {
                                 dao?.updateDailyRecord(newDailyRecord)
-                                if (updateDetailRecords.size > 0)
+                                if (updateDetailRecords.isNotEmpty())
                                     dao?.updateDetailRecords(updateDetailRecords)
-                                if (insertDetailRecords.size > 0) {
+                                    dao?.updateHeartRateSamples(updateHeartRateRecords)
+                                if (insertDetailRecords.isNotEmpty()) {
                                     dao?.insertDetailRecords(insertDetailRecords)
+                                    dao?.insertHeartRateSamples(insertHeartRateRecords)
                                 }
                             }
                         }
