@@ -428,7 +428,7 @@ fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
     ) {
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {
-            Text(text = it?.distance.toString() ?: "기록 없음")
+            Text(text = it!!.detailRecord.distance.toString() ?: "기록 없음")
         }
     }
 }
