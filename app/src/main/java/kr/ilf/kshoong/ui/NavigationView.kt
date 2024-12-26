@@ -96,12 +96,50 @@ fun NavigationView(
             )
         }
 
-        navigation(
-            startDestination = Destination.Calendar.route,
-            route = Destination.Home.route,
-            enterTransition = { EnterTransition.None },
-            exitTransition = { ExitTransition.None },
-            // 달력 커스텀 애니메이션
+        composable(
+            Destination.Home.route,
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+        ) {
+            val webView = remember {
+                WebView(context).apply {
+                    webViewClient = WebViewClient()
+                    settings.javaScriptEnabled = true
+                    settings.cacheMode = WebSettings.LOAD_NO_CACHE
+                }
+            }
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize(),
+                factory = { webView },
+                update = {
+                    it.loadUrl("https://ilf.kr:8899/test/clothTest")
+                })
+        }
+
+        composable(
+            Destination.Calendar.route,
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+        ) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .background(Color.Transparent)
+            ) {
+                CalendarView(viewModel = viewModel)
+                CalendarDetailView(viewModel = viewModel, Instant.now())
+            }
+        }
+
+//        navigation(
+//            startDestination = Destination.Calendar.route,
+//            route = Destination.Home.route,
+//            enterTransition = { EnterTransition.None },
+//            exitTransition = { ExitTransition.None },
+        // 달력 커스텀 애니메이션
 //            enterTransition = {
 //                fadeIn(
 //                    animationSpec = tween(
@@ -112,31 +150,9 @@ fun NavigationView(
 //                    towards = AnimatedContentTransitionScope.SlideDirection.Up
 //                )
 //            }
-        ) {
-            composable(
-                Destination.Calendar.route,
-                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
-                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
-            ) {
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding().background(Color.Transparent)
-                ) {
-                    CalendarView(viewModel = viewModel)
-                    CalendarDetailView(viewModel = viewModel, Instant.now())
-                }
-            }
-
-            composable(
-                Destination.Detail.route,
-                enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
-                exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
-            ) {
-
-            }
-
-        }
+//        ) {
+//
+//        }
     }
 }
 
