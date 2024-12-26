@@ -20,7 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,7 +98,13 @@ class MainActivity : ComponentActivity() {
                         exit = fadeOut()
                     ) {
                         val currentDestination =
-                            remember { derivedStateOf { navController.currentDestination?.route } }
+                            remember { mutableStateOf(navController.currentDestination?.route) }
+
+                        LaunchedEffect(navController) {
+                            navController.addOnDestinationChangedListener { _, destination, _ ->
+                                currentDestination.value = destination.route
+                            }
+                        }
 
                         BottomBarView(
                             modifier = Modifier
@@ -109,8 +116,8 @@ class MainActivity : ComponentActivity() {
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
                             onHomeClick = {
-                                if (navController.currentDestination?.route != Destination.Calendar.route)
-                                    navController.navigate(Destination.Calendar.route) {
+                                if (navController.currentDestination?.route != Destination.Home.route)
+                                    navController.navigate(Destination.Home.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
