@@ -23,6 +23,8 @@ val DailyGraphEnd = Color(0xFFA2E3FF)
 
 val ColorBottomBar = Color(0xFFFDFDFD)
 val ColorBottomBarDivider = Color(0xFFE5E5E5)
+val ColorBottomBarButton = Color(0xFF374957)
+val ColorBottomBarButtonActive = Color(0xFF4967FB)
 
 val ColorCrawl = Color(0xFF84C0FF)
 val ColorBackStroke = Color(0xFFFFD078)

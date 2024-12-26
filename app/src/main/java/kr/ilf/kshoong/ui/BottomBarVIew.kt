@@ -1,6 +1,5 @@
 package kr.ilf.kshoong.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,72 +13,112 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kr.ilf.kshoong.Destination
+import kr.ilf.kshoong.NoRippleInteractionSource
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.ui.theme.ColorBottomBar
+import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
+import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
 
 @Composable
-fun BottomBarView(modifier: Modifier, onCalenderClick: () -> Unit, onDetailClick: () -> Unit) {
+fun BottomBarView(
+    modifier: Modifier,
+    currentDestination: State<String?>,
+    onHomeClick: () -> Unit,
+    onCalenderClick: () -> Unit,
+    onShopClick: () -> Unit,
+    onOptionClick: () -> Unit
+) {
     Box(modifier) {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            Button(
-                modifier = Modifier
-                    .size(30.dp),
-                onClick = { onCalenderClick() },
-                shape = RectangleShape,
-                contentPadding = PaddingValues(),
-                colors = ButtonColors(Color.White, Color.White, Color.White, Color.White)
-            ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.drawable.union),
-                    contentDescription = ""
-                )
-            }
 
-            Button(
+            BottomBarButton(
                 modifier = Modifier
                     .size(30.dp),
-                onClick = { onCalenderClick() },
-                shape = RectangleShape,
-                contentPadding = PaddingValues(),
-                colors = ButtonColors(Color.White, Color.White, Color.White, Color.White)
-            ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.drawable.union),
-                    contentDescription = ""
-                )
-            }
+                onClick = onHomeClick,
+                isActivated = Destination.Home.route == currentDestination.value,
+                R.drawable.ic_home,
+                R.drawable.ic_home_active
+            )
 
-            Button(
+            BottomBarButton(
                 modifier = Modifier
                     .size(30.dp),
-                onClick = { onCalenderClick() },
-                shape = RectangleShape,
-                contentPadding = PaddingValues(),
-                colors = ButtonColors(Color.White, Color.White, Color.White, Color.White)
-            ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.drawable.union),
-                    contentDescription = ""
-                )
-            }
+                onClick = onHomeClick,
+                isActivated = Destination.Calendar.route == currentDestination.value,
+                R.drawable.ic_calendar,
+                R.drawable.ic_calendar_active
+            )
+
+            BottomBarButton(
+                modifier = Modifier
+                    .size(30.dp),
+                onClick = onHomeClick,
+                isActivated = Destination.Home.route == currentDestination.value,
+                R.drawable.ic_shop,
+                R.drawable.ic_shop_active
+            )
+
+            BottomBarButton(
+                modifier = Modifier
+                    .size(30.dp),
+                onClick = onHomeClick,
+                isActivated = Destination.Home.route == currentDestination.value,
+                R.drawable.ic_option,
+                R.drawable.ic_option_active
+            )
         }
     }
 }
+
+@Composable
+private fun BottomBarButton(
+    modifier: Modifier,
+    onClick: () -> Unit,
+    isActivated: Boolean = false,
+    imageResource: Int,
+    imageResourceActive: Int
+) {
+    Button(
+        modifier = modifier,
+        onClick = onClick,
+        shape = RectangleShape,
+        contentPadding = PaddingValues(),
+        enabled = isActivated.not(),
+        colors = ButtonColors(
+            Color.Transparent,
+            ColorBottomBarButton,
+            Color.Transparent,
+            ColorBottomBarButtonActive
+        ),
+        interactionSource = NoRippleInteractionSource()
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
+            contentDescription = "home",
+            modifier = Modifier.size(30.dp),
+        )
+    }
+
+}
+
 
 @Preview()
 @Composable
@@ -94,7 +133,12 @@ fun BottomBarViewPreview() {
         BottomBarView(modifier = Modifier
             .height(60.dp)
             .fillMaxWidth()
-            .background(ColorBottomBar), onCalenderClick = {}, onDetailClick = {})// 상단 공간 확보
+            .background(ColorBottomBar),
+            remember { mutableStateOf("calendar") },
+            onHomeClick = {},
+            onCalenderClick = {},
+            onShopClick = {},
+            onOptionClick = {})// 상단 공간 확보
         Box(
             modifier = Modifier
                 .fillMaxWidth()

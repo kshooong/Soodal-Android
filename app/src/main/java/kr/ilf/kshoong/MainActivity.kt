@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -63,13 +65,18 @@ class MainActivity : ComponentActivity() {
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
 
-                Box(modifier = Modifier.fillMaxSize().background(
-                    Color.White,
-                    shape = RoundedCornerShape(3.dp)
-                )) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Color.White,
+                            shape = RoundedCornerShape(3.dp)
+                        )
+                ) {
                     NavigationView(
                         Modifier
-                            .fillMaxSize().background(Color.Transparent),
+                            .fillMaxSize()
+                            .background(Color.Transparent),
                         navController,
                         healthConnectManager,
                         viewModel
@@ -78,13 +85,20 @@ class MainActivity : ComponentActivity() {
                     AnimatedVisibility(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         visible = viewModel.uiState.value != UiState.LOADING,
-                        enter =  fadeIn(
+                        enter = fadeIn(
                             animationSpec = tween(
                                 300, easing = LinearEasing
                             )
-                        ) + slideInVertically(animationSpec = tween(500, easing = FastOutSlowInEasing) ,initialOffsetY = { it }),
+                        ) + slideInVertically(
+                            animationSpec = tween(
+                                500,
+                                easing = FastOutSlowInEasing
+                            ), initialOffsetY = { it }),
                         exit = fadeOut()
                     ) {
+                        val currentDestination =
+                            remember { derivedStateOf { navController.currentDestination?.route } }
+
                         BottomBarView(
                             modifier = Modifier
                                 .navigationBarsPadding()
@@ -93,6 +107,7 @@ class MainActivity : ComponentActivity() {
                                 .align(Alignment.BottomCenter)
                                 .background(ColorBottomBar)
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
+                            currentDestination,
                             {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {
@@ -103,14 +118,14 @@ class MainActivity : ComponentActivity() {
                                     }
                             },
                             {
-                                if (navController.currentDestination?.route != Destination.Detail.route)
-                                    navController.navigate(Destination.Detail.route) {
+                                if (navController.currentDestination?.route != Destination.Calendar.route)
+                                    navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
                                     }
-                            },
+                            }, {}, {}
                         )
                     }
                 }
@@ -130,7 +145,6 @@ fun Modifier.topBorder(width: Dp, color: Color): Modifier = this.then(
         )
     }
 )
-
 
 
 @Preview(showBackground = true)
