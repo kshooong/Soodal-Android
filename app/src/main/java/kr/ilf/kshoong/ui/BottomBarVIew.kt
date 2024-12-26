@@ -40,7 +40,7 @@ fun BottomBarView(
     modifier: Modifier,
     currentDestination: State<String?>,
     onHomeClick: () -> Unit,
-    onCalenderClick: () -> Unit,
+    onCalendarClick: () -> Unit,
     onShopClick: () -> Unit,
     onSettingClick: () -> Unit
 ) {
@@ -65,7 +65,7 @@ fun BottomBarView(
                 modifier = Modifier
                     .size(34.dp),
                 "캘린더",
-                onClick = onHomeClick,
+                onClick = onCalendarClick,
                 isActivated = Destination.Calendar.route == currentDestination.value,
                 R.drawable.ic_calendar,
                 R.drawable.ic_calendar_active
@@ -75,7 +75,7 @@ fun BottomBarView(
                 modifier = Modifier
                     .size(34.dp),
                 "상점",
-                onClick = onHomeClick,
+                onClick = onShopClick,
                 isActivated = Destination.Home.route == currentDestination.value,
                 R.drawable.ic_shop,
                 R.drawable.ic_shop_active
@@ -85,7 +85,7 @@ fun BottomBarView(
                 modifier = Modifier
                     .size(34.dp),
                 "설정",
-                onClick = onHomeClick,
+                onClick = onSettingClick,
                 isActivated = Destination.Home.route == currentDestination.value,
                 R.drawable.ic_setting,
                 R.drawable.ic_setting_active
@@ -146,9 +146,9 @@ fun BottomBarViewPreview() {
             .background(ColorBottomBar),
             remember { mutableStateOf("calendar") },
             onHomeClick = {},
-            onCalenderClick = {},
+            onCalendarClick = {},
             onShopClick = {},
-            onOptionClick = {})// 상단 공간 확보
+            onSettingClick = {})// 상단 공간 확보
         Box(
             modifier = Modifier
                 .fillMaxWidth()

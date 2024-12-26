@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                                 .background(ColorBottomBar)
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
-                            {
+                            onHomeClick = {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                             },
-                            {
+                            onCalendarClick = {
                                 if (navController.currentDestination?.route != Destination.Calendar.route)
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
@@ -125,7 +125,9 @@ class MainActivity : ComponentActivity() {
                                             inclusive = true
                                         }
                                     }
-                            }, {}, {}
+                            },
+                            onShopClick = {},
+                            onSettingClick = {}
                         )
                     }
                 }
