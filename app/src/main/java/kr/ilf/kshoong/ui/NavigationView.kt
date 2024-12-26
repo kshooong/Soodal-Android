@@ -26,6 +26,7 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -51,9 +52,24 @@ fun NavigationView(
     modifier: Modifier,
     navController: NavHostController,
     healthConnectManager: HealthConnectManager,
-    viewModel: SwimmingViewModel
+    viewModel: SwimmingViewModel,
+    prevDestination: MutableState<String>
 ) {
     val context = LocalContext.current
+    val webView = remember {
+        WebView(context).apply {
+            webViewClient = WebViewClient()
+            settings.javaScriptEnabled = true
+            settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        }
+    }
+    val shopWebView = remember {
+        WebView(context).apply {
+            webViewClient = WebViewClient()
+            settings.javaScriptEnabled = true
+            settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        }
+    }
 
     NavHost(
         modifier = modifier,
@@ -61,6 +77,7 @@ fun NavigationView(
         startDestination = Destination.Loading.route,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }) {
+
         composable(Destination.Loading.route) {
             LoadingView(
                 context = context,
@@ -87,7 +104,7 @@ fun NavigationView(
                 context = context,
                 viewModel = viewModel,
                 onSyncComplete = {
-                    navController.navigate(Destination.Home.route) {
+                    navController.navigate(Destination.Calendar.route) {
                         popUpTo(Destination.Sync.route) {
                             inclusive = true
                         }
@@ -105,27 +122,43 @@ fun NavigationView(
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
         ) {
-            val webView = remember {
-                WebView(context).apply {
-                    webViewClient = WebViewClient()
-                    settings.javaScriptEnabled = true
-                    settings.cacheMode = WebSettings.LOAD_NO_CACHE
-                }
-            }
+            val url = "https://ilf.kr:8899/test/clothTest"
 
             AndroidView(
                 modifier = Modifier
                     .fillMaxSize(),
                 factory = { webView },
-                update = {
-                    it.loadUrl("https://ilf.kr:8899/test/clothTest")
-                })
+
+                update = { webView ->
+                    // URL이 변경되지 않은 경우에만 업데이트
+                    if (webView.url != url) {
+                        webView.loadUrl(url)
+                    }
+                },
+            )
         }
 
         composable(
             Destination.Calendar.route,
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
-            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+            enterTransition = {
+                slideIntoContainer(
+                    towards = if (Destination.Home.route == prevDestination.value) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards =
+                    if (Destination.Home.route == navController.currentDestination?.route) {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    }
+                )
+            },
         ) {
             Column(
                 Modifier
@@ -136,6 +169,44 @@ fun NavigationView(
                 CalendarView(viewModel = viewModel)
                 CalendarDetailView(viewModel = viewModel, Instant.now())
             }
+        }
+
+        composable(
+            Destination.Shop.route,
+            enterTransition = {
+                slideIntoContainer(
+                    towards = if (Destination.Setting.route == prevDestination.value) {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    }
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards =
+                    if (Destination.Setting.route == navController.currentDestination?.route) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                )
+            },
+        ) {
+            val url = "https://ilf.kr:8899/test/clothTestWithButton"
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize(),
+                factory = { shopWebView },
+
+                update = { webView ->
+                    // URL이 변경되지 않은 경우에만 업데이트
+                    if (webView.url != url) {
+                        webView.loadUrl(url)
+                    }
+                },
+            )
         }
 
 //        navigation(

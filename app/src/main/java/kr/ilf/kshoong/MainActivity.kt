@@ -74,13 +74,16 @@ class MainActivity : ComponentActivity() {
                             shape = RoundedCornerShape(3.dp)
                         )
                 ) {
+                    val prevDestination = remember { mutableStateOf(Destination.Home.route) }
+
                     NavigationView(
                         Modifier
                             .fillMaxSize()
                             .background(Color.Transparent),
                         navController,
                         healthConnectManager,
-                        viewModel
+                        viewModel,
+                        prevDestination
                     )
 
                     AnimatedVisibility(
@@ -116,24 +119,35 @@ class MainActivity : ComponentActivity() {
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
                             onHomeClick = {
-                                if (navController.currentDestination?.route != Destination.Home.route)
-                                    navController.navigate(Destination.Home.route) {
-                                        launchSingleTop = true
-                                        popUpTo(navController.currentDestination?.route!!) {
-                                            inclusive = true
-                                        }
+                                if (navController.currentDestination?.route != Destination.Home.route){
+                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                navController.navigate(Destination.Home.route) {
+                                    launchSingleTop = true
+                                    popUpTo(navController.currentDestination?.route!!) {
+                                        inclusive = true
                                     }
+                                }}
                             },
                             onCalendarClick = {
-                                if (navController.currentDestination?.route != Destination.Calendar.route)
+                                if (navController.currentDestination?.route != Destination.Calendar.route){
+                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
-                                    }
+                                    }}
                             },
-                            onShopClick = {},
+                            onShopClick = {
+                                if (navController.currentDestination?.route != Destination.Shop.route){
+                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                    navController.navigate(Destination.Shop.route) {
+                                        launchSingleTop = true
+                                        popUpTo(navController.currentDestination?.route!!) {
+                                            inclusive = true
+                                        }
+                                    }}
+                            },
                             onSettingClick = {}
                         )
                     }
