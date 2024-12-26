@@ -30,15 +30,23 @@ val Typography = Typography(
         fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
         fontSize = 30.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 10.sp,
+        lineHeight = 30.sp,
+        letterSpacing = 7.sp,
     ),
 
     titleMedium =  TextStyle(
         fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 24.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp,
+    ),
+
+    labelSmall = TextStyle(
+        fontFamily = notoSansKrBold,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 8.sp,
         letterSpacing = 0.5.sp,
     )
     /* Other default text styles to override

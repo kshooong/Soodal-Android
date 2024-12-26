@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +53,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = Modifier
-                    .size(30.dp),
+                    .size(34.dp),
+                "마이룸",
                 onClick = onHomeClick,
                 isActivated = Destination.Home.route == currentDestination.value,
                 R.drawable.ic_home,
@@ -60,7 +63,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = Modifier
-                    .size(30.dp),
+                    .size(34.dp),
+                "캘린더",
                 onClick = onHomeClick,
                 isActivated = Destination.Calendar.route == currentDestination.value,
                 R.drawable.ic_calendar,
@@ -69,7 +73,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = Modifier
-                    .size(30.dp),
+                    .size(34.dp),
+                "상점",
                 onClick = onHomeClick,
                 isActivated = Destination.Home.route == currentDestination.value,
                 R.drawable.ic_shop,
@@ -78,7 +83,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = Modifier
-                    .size(30.dp),
+                    .size(34.dp),
+                "설정",
                 onClick = onHomeClick,
                 isActivated = Destination.Home.route == currentDestination.value,
                 R.drawable.ic_option,
@@ -91,6 +97,7 @@ fun BottomBarView(
 @Composable
 private fun BottomBarButton(
     modifier: Modifier,
+    title: String,
     onClick: () -> Unit,
     isActivated: Boolean = false,
     imageResource: Int,
@@ -110,11 +117,14 @@ private fun BottomBarButton(
         ),
         interactionSource = NoRippleInteractionSource()
     ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
-            contentDescription = "home",
-            modifier = Modifier.size(30.dp),
-        )
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
+            Icon(
+                imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
+                contentDescription = "home",
+                modifier = Modifier.size(19.dp),
+            )
+            Text(text = title, style = MaterialTheme.typography.labelSmall)
+        }
     }
 
 }
