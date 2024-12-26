@@ -104,7 +104,7 @@ fun NavigationView(
                 context = context,
                 viewModel = viewModel,
                 onSyncComplete = {
-                    navController.navigate(Destination.Calendar.route) {
+                    navController.navigate(Destination.Home.route) {
                         popUpTo(Destination.Sync.route) {
                             inclusive = true
                         }
