@@ -76,7 +76,7 @@ fun BottomBarView(
                     .size(34.dp),
                 "상점",
                 onClick = onShopClick,
-                isActivated = Destination.Home.route == currentDestination.value,
+                isActivated = Destination.Shop.route == currentDestination.value,
                 R.drawable.ic_shop,
                 R.drawable.ic_shop_active
             )
@@ -86,7 +86,7 @@ fun BottomBarView(
                     .size(34.dp),
                 "설정",
                 onClick = onSettingClick,
-                isActivated = Destination.Home.route == currentDestination.value,
+                isActivated = Destination.Setting.route == currentDestination.value,
                 R.drawable.ic_setting,
                 R.drawable.ic_setting_active
             )
