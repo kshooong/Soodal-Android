@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -50,10 +51,13 @@ fun BottomBarView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
         ) {
+            val buttonModifier = Modifier
+                .padding(horizontal = 2.5.dp)
+                .height(60.dp)
+                .weight(1f)
 
             BottomBarButton(
-                modifier = Modifier
-                    .size(34.dp),
+                modifier = buttonModifier,
                 "마이룸",
                 onClick = onHomeClick,
                 isActivated = Destination.Home.route == currentDestination.value,
@@ -62,8 +66,7 @@ fun BottomBarView(
             )
 
             BottomBarButton(
-                modifier = Modifier
-                    .size(34.dp),
+                modifier = buttonModifier,
                 "캘린더",
                 onClick = onCalendarClick,
                 isActivated = Destination.Calendar.route == currentDestination.value,
@@ -72,8 +75,7 @@ fun BottomBarView(
             )
 
             BottomBarButton(
-                modifier = Modifier
-                    .size(34.dp),
+                modifier = buttonModifier,
                 "상점",
                 onClick = onShopClick,
                 isActivated = Destination.Shop.route == currentDestination.value,
@@ -82,8 +84,7 @@ fun BottomBarView(
             )
 
             BottomBarButton(
-                modifier = Modifier
-                    .size(34.dp),
+                modifier = buttonModifier,
                 "설정",
                 onClick = onSettingClick,
                 isActivated = Destination.Setting.route == currentDestination.value,
@@ -117,7 +118,11 @@ private fun BottomBarButton(
         ),
         interactionSource = NoRippleInteractionSource()
     ) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
                 contentDescription = "home",
