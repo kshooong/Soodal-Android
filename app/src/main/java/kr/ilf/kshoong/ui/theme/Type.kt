@@ -12,6 +12,9 @@ import kr.ilf.kshoong.R
 val tiny5 = FontFamily(
     Font(R.font.tiny5_regular)
 )
+val notoSansKrBold = FontFamily(
+    Font(R.font.noto_sans_kr_bold)
+)
 
 // Set of Material typography styles to start with
 val Typography = Typography(
@@ -24,7 +27,7 @@ val Typography = Typography(
     ),
 
     titleLarge = TextStyle(
-        fontFamily = tiny5,
+        fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
         fontSize = 30.sp,
         lineHeight = 24.sp,
@@ -32,7 +35,7 @@ val Typography = Typography(
     ),
 
     titleMedium =  TextStyle(
-        fontFamily = tiny5,
+        fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
