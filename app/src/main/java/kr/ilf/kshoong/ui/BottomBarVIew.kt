@@ -42,7 +42,7 @@ fun BottomBarView(
     onHomeClick: () -> Unit,
     onCalenderClick: () -> Unit,
     onShopClick: () -> Unit,
-    onOptionClick: () -> Unit
+    onSettingClick: () -> Unit
 ) {
     Box(modifier) {
         Row(
@@ -87,8 +87,8 @@ fun BottomBarView(
                 "설정",
                 onClick = onHomeClick,
                 isActivated = Destination.Home.route == currentDestination.value,
-                R.drawable.ic_option,
-                R.drawable.ic_option_active
+                R.drawable.ic_setting,
+                R.drawable.ic_setting_active
             )
         }
     }
