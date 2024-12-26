@@ -419,7 +419,7 @@ fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
 
     Column(
         Modifier
-            .padding(10.dp, 0.dp, 10.dp, 65.dp)
+            .padding(12.5.dp, 0.dp, 12.5.dp, 65.dp)
             .navigationBarsPadding()
             .fillMaxSize()
             .background(ColorCalendarItemBgStart, shape = RoundedCornerShape(10.dp))
