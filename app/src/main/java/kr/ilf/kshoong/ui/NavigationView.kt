@@ -2,6 +2,7 @@ package kr.ilf.kshoong.ui
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -127,14 +128,19 @@ fun NavigationView(
             AndroidView(
                 modifier = Modifier
                     .fillMaxSize(),
-                factory = { webView },
+                factory = {
+                    webView.parent?.let {
+                        (it as ViewGroup).removeView(webView)
+                    }
+                    webView
+                },
 
                 update = { webView ->
                     // URL이 변경되지 않은 경우에만 업데이트
                     if (webView.url != url) {
                         webView.loadUrl(url)
                     }
-                },
+                }
             )
         }
 
@@ -198,14 +204,19 @@ fun NavigationView(
             AndroidView(
                 modifier = Modifier
                     .fillMaxSize(),
-                factory = { shopWebView },
-
-                update = { webView ->
-                    // URL이 변경되지 않은 경우에만 업데이트
-                    if (webView.url != url) {
-                        webView.loadUrl(url)
+                factory = {
+                    shopWebView.parent?.let {
+                        (it as ViewGroup).removeView(shopWebView)
                     }
+                    shopWebView
                 },
+
+                update = { shopWebView ->
+                    // URL이 변경되지 않은 경우에만 업데이트
+                    if (shopWebView.url != url) {
+                        shopWebView.loadUrl(url)
+                    }
+                }
             )
         }
 
