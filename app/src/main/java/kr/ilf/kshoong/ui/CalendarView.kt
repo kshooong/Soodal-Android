@@ -75,7 +75,6 @@ fun CalendarView(
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
-    val monthFormatter = DateTimeFormatter.ofPattern("yyyy.MM")
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
     LaunchedEffect(pagerState) {
@@ -89,7 +88,7 @@ fun CalendarView(
             }
     }
 
-    CalendarHeaderView(currentMonth, monthFormatter)
+    CalendarHeaderView(currentMonth)
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
@@ -366,14 +365,15 @@ fun DayView(
 
 @Composable
 private fun CalendarHeaderView(
-    currentMonth: LocalDate,
-    monthFormatter: DateTimeFormatter?
+    currentMonth: LocalDate
 ) {
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
     Text(
         text = currentMonth.format(monthFormatter),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier
+            .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
             .background(Color.White, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 15.dp),
         textAlign = TextAlign.Center
@@ -388,26 +388,26 @@ private fun CalendarHeaderView(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = "SUN",
+            text = "일",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
             color = Color.Red
         )
 
-        listOf("MON", "TUE", "WED", "THU", "FRI").forEach {
+        listOf("월", "화", "수", "목", "금").forEach {
             Text(
                 text = it,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 textAlign = TextAlign.Center
             )
         }
 
         Text(
-            text = "SAT",
+            text = "토",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
             color = Color.Blue
         )

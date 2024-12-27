@@ -26,6 +26,14 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     ),
 
+    headlineLarge = TextStyle(
+        fontFamily = notoSansKrBold,
+        fontWeight = FontWeight.Normal,
+        fontSize = 30.sp,
+        lineHeight = 30.sp,
+        letterSpacing = 1.sp,
+    ),
+
     titleLarge = TextStyle(
         fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
@@ -35,6 +43,14 @@ val Typography = Typography(
     ),
 
     titleMedium =  TextStyle(
+        fontFamily = notoSansKrBold,
+        fontWeight = FontWeight.Normal,
+        fontSize = 24.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp,
+    ),
+
+    titleSmall =  TextStyle(
         fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
