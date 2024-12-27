@@ -119,8 +119,8 @@ fun NavigationView(
 
         composable(
             Destination.Home.route,
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) },
-            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) },
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn()},
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
         ) {
             val url = "https://ilf.kr:8899/test/clothTest"
 
@@ -147,7 +147,7 @@ fun NavigationView(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                )
+                ) + fadeIn()
             },
             exitTransition = {
                 slideOutOfContainer(
@@ -157,7 +157,7 @@ fun NavigationView(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.Start
                     }
-                )
+                ) + fadeOut()
             },
         ) {
             Column(
@@ -180,7 +180,7 @@ fun NavigationView(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.Start
                     }
-                )
+                ) + fadeIn()
             },
             exitTransition = {
                 slideOutOfContainer(
@@ -190,7 +190,7 @@ fun NavigationView(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                )
+                ) + fadeOut()
             },
         ) {
             val url = "https://ilf.kr:8899/test/clothTestWithButton"
