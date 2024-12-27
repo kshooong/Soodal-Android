@@ -333,9 +333,9 @@ fun DayView(
                         .fillMaxWidth(it)
                         .height(8.dp)
                         .background(
-                            brush = Brush.horizontalGradient(
-                                Pair(0f, DailyGraphStart),
-                                Pair(1f, DailyGraphEnd)
+                            brush = Brush.verticalGradient(
+                                Pair(0f, ColorMixStart),
+                                Pair(1f, ColorMixEnd)
                             ),
                             shape = RoundedCornerShape(3.dp)
                         )
