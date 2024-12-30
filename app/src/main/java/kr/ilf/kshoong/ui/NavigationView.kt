@@ -17,11 +17,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -120,7 +121,7 @@ fun NavigationView(
 
         composable(
             Destination.Home.route,
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn()},
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
         ) {
             val url = "https://ilf.kr:8899/test/clothTest"
@@ -166,14 +167,22 @@ fun NavigationView(
                 ) + fadeOut()
             },
         ) {
-            Column(
+            Box(
                 Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .background(Color.Transparent)
             ) {
-                CalendarView(viewModel = viewModel)
-                CalendarDetailView(viewModel = viewModel, Instant.now())
+                CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
+
+                val initialHeight = LocalConfiguration.current.screenHeightDp - 600
+
+                CalendarDetailView(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    viewModel = viewModel,
+                    Instant.now(),
+                    initialHeight
+                )
             }
         }
 

@@ -1,15 +1,16 @@
 package kr.ilf.kshoong.ui
 
+import android.content.res.Resources
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -37,9 +38,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +54,7 @@ import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
+import kr.ilf.kshoong.ui.theme.ColorCalendarDetailBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
 import kr.ilf.kshoong.ui.theme.DailyGraphEnd
@@ -64,6 +66,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.max
 
 @Composable
 fun CalendarView(
@@ -419,20 +422,39 @@ private fun CalendarHeaderView(
 }
 
 @Composable
-fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
+fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, currentDate: Instant, initialHeight: Int) {
+    var columnHeight by remember { mutableStateOf(initialHeight.dp) }
 
     Column(
         Modifier
-            .padding(12.5.dp, 0.dp, 12.5.dp, 65.dp)
+            .padding(0.dp, 0.dp, 0.dp, 60.dp)
+            .then(modifier)
+            .fillMaxWidth()
+            .height(columnHeight)
             .navigationBarsPadding()
-            .fillMaxSize()
             .background(ColorCalendarDetailBg, shape = RoundedCornerShape(10.dp))
             .padding(5.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Box(
+            modifier = Modifier
+                .size(width = 80.dp, height = 5.dp)
+                .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        // Column의 높이를 조정
+                        columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
+                    }
+                }
+        )
+
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {
             Text(text = it!!.detailRecord.distance.toString() ?: "기록 없음")
         }
     }
 }
+
+fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
