@@ -95,19 +95,22 @@ fun CalendarView(
         viewModel.updateDailyRecords(currentMonth)
     }
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier
-            .padding(horizontal = 5.dp)
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
-            .padding(vertical = 5.dp),
-        key = { today.minusMonths(it.toLong()) },
-        reverseLayout = true
-    ) {
-        val month = today.minusMonths(it.toLong())
-        val context = LocalContext.current
+    Column(modifier = modifier) {
+        CalendarHeaderView(currentMonth)
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .padding(vertical = 5.dp),
+            key = { today.minusMonths(it.toLong()) },
+            reverseLayout = true
+        ) {
+            val month = today.minusMonths(it.toLong())
+            val context = LocalContext.current
 
         MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
             when {
@@ -146,7 +149,8 @@ fun CalendarView(
                         withContext(coroutineScope.coroutineContext) {
                             val target = pagerState.currentPage + diffMonth
 
-                            pagerState.animateScrollToPage(target)
+                                pagerState.animateScrollToPage(target)
+                            }
                         }
                     }
                 }
