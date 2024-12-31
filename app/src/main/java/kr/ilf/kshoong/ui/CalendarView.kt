@@ -433,12 +433,12 @@ fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, current
             .height(columnHeight)
             .navigationBarsPadding()
             .background(ColorCalendarDetailBg, shape = RoundedCornerShape(10.dp))
-            .padding(5.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
+                .padding(bottom = 5.dp)
                 .size(width = 80.dp, height = 5.dp)
                 .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
                 .pointerInput(Unit) {
