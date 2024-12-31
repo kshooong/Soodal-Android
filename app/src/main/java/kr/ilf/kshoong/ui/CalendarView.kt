@@ -452,7 +452,16 @@ fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, current
 
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {
-            Text(text = it!!.detailRecord.distance.toString() ?: "기록 없음")
+            Column(Modifier.fillMaxWidth()) {
+                Text(text = it!!.detailRecord.startTime.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.endTime.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
+
+            }
         }
     }
 }
