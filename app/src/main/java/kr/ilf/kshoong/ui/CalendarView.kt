@@ -452,7 +452,10 @@ fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, current
 
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {
-            Column(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())) {
                 Text(text = it!!.detailRecord.startTime.toString() ?: "기록 없음")
                 Text(text = it.detailRecord.endTime.toString() ?: "기록 없음")
                 Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
