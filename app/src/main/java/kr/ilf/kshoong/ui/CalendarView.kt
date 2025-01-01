@@ -456,8 +456,8 @@ fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, current
                 Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())) {
-                Text(text = it!!.detailRecord.startTime.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.endTime.toString() ?: "기록 없음")
+                Text(text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
+                Text(text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
                 Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
                 Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
                 Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
