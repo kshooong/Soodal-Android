@@ -5,5 +5,6 @@ sealed class Destination(val route: String) {
     data object Home : Destination("home")
     data object Sync : Destination("sync")
     data object Calendar : Destination("calendar")
-    data object Detail : Destination("detail")
+    data object Shop : Destination("shop")
+    data object Setting : Destination("setting")
 }
