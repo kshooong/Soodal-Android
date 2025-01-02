@@ -53,8 +53,8 @@ val Typography = Typography(
     titleSmall =  TextStyle(
         fontFamily = notoSansKrBold,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 14.sp,
+        fontSize = 12.sp,
+        lineHeight = 12.sp,
         letterSpacing = 0.5.sp,
     ),
 
