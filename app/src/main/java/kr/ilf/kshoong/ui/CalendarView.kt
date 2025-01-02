@@ -1,25 +1,29 @@
 package kr.ilf.kshoong.ui
 
+import android.content.res.Resources
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,14 +34,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +54,7 @@ import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
+import kr.ilf.kshoong.ui.theme.ColorCalendarDetailBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
 import kr.ilf.kshoong.ui.theme.DailyGraphEnd
@@ -62,6 +66,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.max
 
 @Composable
 fun CalendarView(
@@ -73,7 +78,6 @@ fun CalendarView(
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
-    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
     LaunchedEffect(pagerState) {
@@ -87,41 +91,29 @@ fun CalendarView(
             }
     }
 
-    // 년, 웧
-    Text(
-        text = currentMonth.format(monthFormatter),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(10.dp),
-        textAlign = TextAlign.Center
-    )
-
-    // 요일 헤더
-    Row {
-        listOf("일", "월", "화", "수", "목", "금", "토").forEach {
-            Text(
-                text = it,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    CalendarHeaderView(currentMonth)
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
         viewModel.updateDailyRecords(currentMonth)
     }
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        key = { today.minusMonths(it.toLong()) },
-        reverseLayout = true
-    ) {
-        val month = today.minusMonths(it.toLong())
-        val context = LocalContext.current
+    Column(modifier = modifier) {
+        CalendarHeaderView(currentMonth)
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .padding(vertical = 5.dp),
+            key = { today.minusMonths(it.toLong()) },
+            reverseLayout = true
+        ) {
+            val month = today.minusMonths(it.toLong())
+            val context = LocalContext.current
 
         MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
             when {
@@ -160,7 +152,8 @@ fun CalendarView(
                         withContext(coroutineScope.coroutineContext) {
                             val target = pagerState.currentPage + diffMonth
 
-                            pagerState.animateScrollToPage(target)
+                                pagerState.animateScrollToPage(target)
+                            }
                         }
                     }
                 }
@@ -189,7 +182,7 @@ fun MonthView(
     Column(
         modifier = Modifier
             .wrapContentSize()
-            .background(Color.White)
+            .background(Color.Transparent)
     ) {
         // 날짜 표시
         var dayCounter = 1
@@ -204,7 +197,7 @@ fun MonthView(
                 val dayViewModifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 2.5.dp)
-                    .height(80.dp)
+                    .height(70.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             listOf(
@@ -342,13 +335,13 @@ fun DayView(
             boxWidths.value.forEach {
                 Box(
                     modifier = Modifier
-                        .padding(bottom = 3.dp)
+                        .padding(bottom = 2.dp)
                         .fillMaxWidth(it)
-                        .height(10.dp)
+                        .height(8.dp)
                         .background(
-                            brush = Brush.horizontalGradient(
-                                Pair(0f, DailyGraphStart),
-                                Pair(1f, DailyGraphEnd)
+                            brush = Brush.verticalGradient(
+                                Pair(0f, ColorMixStart),
+                                Pair(1f, ColorMixEnd)
                             ),
                             shape = RoundedCornerShape(3.dp)
                         )
@@ -378,15 +371,102 @@ fun DayView(
 }
 
 @Composable
-fun CalendarDetailView(viewModel: SwimmingViewModel, currentDate: Instant) {
-    Surface(
-        Modifier
-            .fillMaxSize()
-            .background(Color.Cyan)
+private fun CalendarHeaderView(
+    currentMonth: LocalDate
+) {
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
+    // 년, 월
+    Text(
+        text = currentMonth.format(monthFormatter),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier
+            .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .padding(horizontal = 15.dp),
+        textAlign = TextAlign.Center
+    )
+
+    // 요일 헤더
+    Row(
+        modifier = Modifier
+            .padding(start = 5.dp, end = 5.dp, top = 5.dp)
+            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .padding(horizontal = 5.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
+        Text(
+            text = "일",
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleSmall,
+            textAlign = TextAlign.Center,
+            color = Color.Red
+        )
+
+        listOf("월", "화", "수", "목", "금").forEach {
+            Text(
+                text = it,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Text(
+            text = "토",
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleSmall,
+            textAlign = TextAlign.Center,
+            color = Color.Blue
+        )
+    }
+}
+
+@Composable
+fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, currentDate: Instant, initialHeight: Int) {
+    var columnHeight by remember { mutableStateOf(initialHeight.dp) }
+
+    Column(
+        Modifier
+            .padding(0.dp, 0.dp, 0.dp, 60.dp)
+            .then(modifier)
+            .fillMaxWidth()
+            .height(columnHeight)
+            .navigationBarsPadding()
+            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(10.dp))
+            .padding(5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(bottom = 5.dp)
+                .size(width = 80.dp, height = 5.dp)
+                .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        // Column의 높이를 조정
+                        columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
+                    }
+                }
+        )
+
         val detailRecord by viewModel.currentDetailRecord.collectAsState()
         detailRecord.forEach {
-            Text(text = it?.distance.toString() ?: "기록 없음")
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())) {
+                Text(text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
+                Text(text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
+                Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
+                Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
+
+            }
         }
     }
 }
+
+fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp

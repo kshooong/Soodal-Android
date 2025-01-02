@@ -41,6 +41,34 @@ data class DetailRecord(
     val avgHeartRate: Long? = null,
 )
 
+@Entity(
+    tableName = DatabaseConst.TB_HEARTRATE_SAMPLE,
+    foreignKeys = [ForeignKey(
+        entity = DetailRecord::class,
+        parentColumns = arrayOf("id"),
+        childColumns = arrayOf("detailRecordId"),
+        onDelete = ForeignKey.CASCADE,
+        onUpdate = ForeignKey.CASCADE
+    )]
+)
+data class HeartRateSample(
+    @PrimaryKey(autoGenerate = false)
+    val time: Instant,
+    val detailRecordId: String,
+    val beatsPerMinute: Int
+)
+
+data class DailyRecordWithAll(
+    @Embedded val dailyRecord: DailyRecord,
+
+    @Relation(
+        parentColumn = "date",
+        entityColumn = "date",
+        entity = DetailRecord::class
+    )
+    val detailRecords: List<DetailRecordWithHeartRateSample>
+)
+
 data class DailyRecordWithDetailRecord(
     @Embedded val dailyRecord: DailyRecord,
 
@@ -49,4 +77,14 @@ data class DailyRecordWithDetailRecord(
         entityColumn = "date"
     )
     val detailRecords: List<DetailRecord>
+)
+
+data class DetailRecordWithHeartRateSample(
+    @Embedded val detailRecord: DetailRecord,
+
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "detailRecordId"
+    )
+    val heartRateSamples: List<HeartRateSample>
 )

@@ -26,6 +26,8 @@ import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.database.database.SwimmingRecordDatabase
 import kr.ilf.kshoong.database.entity.DailyRecord
 import kr.ilf.kshoong.database.entity.DetailRecord
+import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.kshoong.database.entity.HeartRateSample
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -57,13 +59,14 @@ class SwimmingViewModel(
     val hasAllPermissions = mutableStateOf(false)
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
 
-    val changeToken = mutableStateOf<String?>(null)
+    private val changeToken = mutableStateOf<String?>(null)
 
     private val _dailyRecords = MutableStateFlow<MutableMap<Instant, DailyRecord>>(mutableMapOf())
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
-    private val _currentDetailRecord = MutableStateFlow<List<DetailRecord?>>(mutableListOf())
+    private val _currentDetailRecord =
+        MutableStateFlow<List<DetailRecordWithHeartRateSample?>>(mutableListOf())
     val currentDetailRecord
         get() = _currentDetailRecord.asStateFlow()
 
@@ -92,6 +95,7 @@ class SwimmingViewModel(
                         var totalCalories = 0.0
                         var totalActiveTime = Duration.ZERO
                         val detailRecords = mutableListOf<DetailRecord>()
+                        var heartRateRecords = listOf<HeartRateSample>()
 
                         records.forEach { session ->
                             val detailRecordResponse =
@@ -109,6 +113,12 @@ class SwimmingViewModel(
                                 ?: Duration.ZERO
 
                             detailRecords.add(detailRecordResponse)
+
+                            heartRateRecords = healthConnectManager.readHeartRates(
+                                session.metadata.id,
+                                session.startTime,
+                                session.endTime
+                            )
                         }
 
                         val dailyRecord = DailyRecord(
@@ -119,7 +129,11 @@ class SwimmingViewModel(
                         )
 
                         CoroutineScope(Dispatchers.IO).launch {
-                            dao?.insertDailyRecordWithDetailRecord(dailyRecord, detailRecords)
+                            dao?.insertDailyRecordWithAll(
+                                dailyRecord,
+                                detailRecords,
+                                heartRateRecords
+                            )
                         }
                     }
 
@@ -155,6 +169,8 @@ class SwimmingViewModel(
                                 ?: Duration.ZERO
                         val insertDetailRecords = mutableListOf<DetailRecord>()
                         val updateDetailRecords = mutableListOf<DetailRecord>()
+                        val insertHeartRateRecords = mutableListOf<HeartRateSample>()
+                        val updateHeartRateRecords = mutableListOf<HeartRateSample>()
 
                         records.forEach { session ->
                             // 변경 레코드 상세 데이터 가져오기
@@ -168,7 +184,7 @@ class SwimmingViewModel(
 
                             // 변경 레코드의 이전 데이터가 있는지 확인
                             val detailRecord = withContext(Dispatchers.IO) {
-                                dao?.getDetailRecord(session.metadata.id)
+                                dao?.findDetailRecordById(session.metadata.id)
                             }
 
                             if (detailRecord == null) {
@@ -181,6 +197,11 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 insertDetailRecords.add(detailRecordResponse)
+                                insertHeartRateRecords.addAll(healthConnectManager.readHeartRates(
+                                    session.metadata.id,
+                                    session.startTime,
+                                    session.endTime
+                                ))
                             } else {
                                 // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
                                 totalDistance -= detailRecord.distance?.toDouble()?.roundToInt()
@@ -197,6 +218,11 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 updateDetailRecords.add(detailRecordResponse)
+                                updateHeartRateRecords.addAll(healthConnectManager.readHeartRates(
+                                    session.metadata.id,
+                                    session.startTime,
+                                    session.endTime
+                                ))
                             }
 
                         }
@@ -212,16 +238,19 @@ class SwimmingViewModel(
                             // dailyRecord 없다면 insert, 있으면 update
                             if (dailyRecord == null) {
                                 // dailyRecord 없다면 detail도 없을 테니 detail도 insert로직만 호출
-                                dao?.insertDailyRecordWithDetailRecord(
+                                dao?.insertDailyRecordWithAll(
                                     newDailyRecord,
-                                    insertDetailRecords
+                                    insertDetailRecords,
+                                    insertHeartRateRecords
                                 )
                             } else {
                                 dao?.updateDailyRecord(newDailyRecord)
-                                if (updateDetailRecords.size > 0)
+                                if (updateDetailRecords.isNotEmpty())
                                     dao?.updateDetailRecords(updateDetailRecords)
-                                if (insertDetailRecords.size > 0) {
+                                    dao?.updateHeartRateSamples(updateHeartRateRecords)
+                                if (insertDetailRecords.isNotEmpty()) {
                                     dao?.insertDetailRecords(insertDetailRecords)
+                                    dao?.insertHeartRateSamples(insertHeartRateRecords)
                                 }
                             }
                         }
@@ -277,7 +306,7 @@ class SwimmingViewModel(
                 val dao = SwimmingRecordDatabase.getInstance(context = application)
                     ?.dailyRecordDao()
 
-                val result = dao?.getDetailRecordsByDate(date)
+                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(date)
                 result?.let {
                     _currentDetailRecord.value = it
                 }

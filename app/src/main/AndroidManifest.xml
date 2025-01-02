@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.WRITE_TOTAL_CALORIES_BURNED" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- For check if Health Connect is installed -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
