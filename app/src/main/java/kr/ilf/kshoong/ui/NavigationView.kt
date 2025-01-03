@@ -16,12 +16,22 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -126,23 +136,59 @@ fun NavigationView(
         ) {
             val url = "https://ilf.kr:8899/test/clothTest"
 
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize(),
-                factory = {
-                    webView.parent?.let {
-                        (it as ViewGroup).removeView(webView)
-                    }
-                    webView
-                },
+            Column(modifier = Modifier.fillMaxSize()) {
+                AndroidView(
+                    modifier = Modifier
+                        .size(300.dp),
+                    factory = {
+                        webView.parent?.let {
+                            (it as ViewGroup).removeView(webView)
+                        }
+                        webView
+                    },
 
-                update = { webView ->
-                    // URL이 변경되지 않은 경우에만 업데이트
-                    if (webView.url != url) {
-                        webView.loadUrl(url)
+                    update = { webView ->
+                        // URL이 변경되지 않은 경우에만 업데이트
+                        if (webView.url != url) {
+                            webView.loadUrl(url)
+                        }
+                    }
+                )
+
+                val items = listOf(
+                    "기본",
+                    "누더기",
+                    "루돌프",
+                    "밀집모자",
+                    "빨간조끼",
+                    "수경",
+                    "수모",
+                    "운동복",
+                    "병아리모자",
+                    "오리튜브",
+                    "미니가방",
+                    "파랑옷",
+                    "개구리모자",
+                    "개구리목도리",
+                    "묘기공머리띠"
+                )
+
+                Row(
+                    Modifier
+                        .horizontalScroll(rememberScrollState())) {
+                    items.forEach {
+                        Column {
+                            Button(onClick = { webView.evaluateJavascript("getGif('$it')", null) }) {
+                                Text(text = "get$it")
+                            }
+
+                            Button(onClick = { webView.evaluateJavascript("deleteGif('$it')", null) }) {
+                                Text(text = "delete$it")
+                            }
+                        }
                     }
                 }
-            )
+            }
         }
 
         composable(
