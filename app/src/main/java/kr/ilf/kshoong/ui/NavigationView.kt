@@ -133,7 +133,10 @@ fun NavigationView(
             Destination.Home.route,
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
-        ) {
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
+
+            ) {
             val url = "https://ilf.kr:8899/test/clothTest"
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -212,6 +215,25 @@ fun NavigationView(
                     }
                 ) + fadeOut()
             },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = if (Destination.Home.route == prevDestination.value) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                ) + fadeIn()
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards =
+                    if (Destination.Home.route == navController.currentDestination?.route) {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    }
+                ) + fadeOut()
+            },
         ) {
             Box(
                 Modifier
@@ -244,6 +266,25 @@ fun NavigationView(
                 ) + fadeIn()
             },
             exitTransition = {
+                slideOutOfContainer(
+                    towards =
+                    if (Destination.Setting.route == navController.currentDestination?.route) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                ) + fadeOut()
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = if (Destination.Setting.route == prevDestination.value) {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    }
+                ) + fadeIn()
+            },
+            popExitTransition = {
                 slideOutOfContainer(
                     towards =
                     if (Destination.Setting.route == navController.currentDestination?.route) {
