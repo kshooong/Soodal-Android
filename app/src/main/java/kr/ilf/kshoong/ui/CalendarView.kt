@@ -58,7 +58,8 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarDateDis
 import kr.ilf.kshoong.ui.theme.ColorCalendarDetailBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgDis
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
+import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBg
+import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarToday
 import kr.ilf.kshoong.ui.theme.ColorCalendarTodayBg
 import kr.ilf.kshoong.ui.theme.ColorMixEnd
@@ -242,13 +243,13 @@ fun MonthView(
                             val sameDate = dayCounter.toString() == selectedDateStr.value
                             val sameMonth = month.month == selectedMonth.value.month
                             val borderColor = if (sameDate && sameMonth) {
-                                ColorCalendarItemBorder
+                                ColorCalendarOnItemBorder
                             } else {
                                 Color.Transparent
                             }
 
                             val bgColor = if (sameDate && sameMonth) {
-                                ColorCalendarItemBorder
+                                ColorCalendarOnItemBg
                             } else {
                                 ColorCalendarItemBg
                             }
@@ -300,7 +301,7 @@ fun DayView(
         )
         .padding(5.dp))
     {
-        val dateBorderColor = if (today == thisDate) ColorCalendarItemBorder else Color.Transparent
+        val dateBorderColor = if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
         val dateBgColor =
             if (isThisMonth)
                 if (today == thisDate)
