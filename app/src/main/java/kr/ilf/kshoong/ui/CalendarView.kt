@@ -231,7 +231,7 @@ fun MonthView(
                             viewModel = viewModel,
                             month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
                             day = (dayCounter - daysInMonth).toString(),
-                            today =today,
+                            today = today,
                             isThisMonth = true,
                             onDateClick = onDateClick
                         )
@@ -301,7 +301,8 @@ fun DayView(
         )
         .padding(5.dp))
     {
-        val dateBorderColor = if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
+        val dateBorderColor =
+            if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
         val dateBgColor =
             if (isThisMonth)
                 if (today == thisDate)
@@ -478,21 +479,21 @@ fun CalendarDetailView(
                         .padding(vertical = 5.dp)
                 ) {
                     Text(
-                        text = ("시작" + it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
-                            .toString())
-                            ?: "기록 없음"
+                        text = "시작" + (it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
+                            .toString()
+                            ?: "기록 없음")
                     )
                     Text(
-                        text = ("종료" + it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
-                            .toString())
-                            ?: "기록 없음"
+                        text = "종료" + (it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
+                            .toString()
+                            ?: "기록 없음")
                     )
-                    Text(text = ("수영시간" + it.detailRecord.activeTime.toString()) ?: "기록 없음")
-                    Text(text = ("거리" + it.detailRecord.distance.toString()) ?: "기록 없음")
-                    Text(text = ("평균심박" + it.detailRecord.avgHeartRate.toString()) ?: "기록 없음")
-                    Text(text = ("최고심박" + it.detailRecord.maxHeartRate.toString()) ?: "기록 없음")
-                    Text(text = ("최저심박" + it.detailRecord.minHeartRate.toString()) ?: "기록 없음")
-                    Text(text = ("칼로리 모소모" + it.detailRecord.energyBurned.toString()) ?: "기록 없음")
+                    Text(text = "수영시간" + (it.detailRecord.activeTime?.toString() ?: " 기록 없음"))
+                    Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
+                    Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
 
                 }
             }
