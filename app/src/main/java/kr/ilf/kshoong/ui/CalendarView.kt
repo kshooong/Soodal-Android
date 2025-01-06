@@ -460,27 +460,33 @@ fun CalendarDetailView(
                 }
         )
 
-        val detailRecord by viewModel.currentDetailRecord.collectAsState()
-        detailRecord.forEach {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString()
-                        ?: "기록 없음"
-                )
-                Text(
-                    text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString()
-                        ?: "기록 없음"
-                )
-                Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            val detailRecord by viewModel.currentDetailRecord.collectAsState()
+            detailRecord.forEach {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 5.dp)
+                ) {
+                    Text(
+                        text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString()
+                            ?: "기록 없음"
+                    )
+                    Text(
+                        text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString()
+                            ?: "기록 없음"
+                    )
+                    Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
+                    Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
+                    Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
+                    Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
+                    Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
 
+                }
             }
         }
     }
