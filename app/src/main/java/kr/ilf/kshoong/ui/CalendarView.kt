@@ -447,18 +447,23 @@ fun CalendarDetailView(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier
-                .padding(bottom = 5.dp)
-                .size(width = 80.dp, height = 5.dp)
-                .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+            modifier
+                .fillMaxWidth()
+                .height(15.dp)
                 .pointerInput(Unit) {
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         // Column의 높이를 조정
                         columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
                     }
-                }
-        )
+                }, contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 80.dp, height = 5.dp)
+                    .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+            )
+        }
 
         Column(
             Modifier
