@@ -82,7 +82,7 @@ class SwimmingViewModel(
             var nextChangeToken: String? = null
 
             if (changeToken.value == null) {
-                val startOfDay = ZonedDateTime.now().minusDays(30L).truncatedTo(ChronoUnit.DAYS)
+                val startOfDay = ZonedDateTime.now().minusDays(120L).truncatedTo(ChronoUnit.DAYS)
                 val now = Instant.now()
                 val timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), now)
 
@@ -106,7 +106,7 @@ class SwimmingViewModel(
                                     session.endTime
                                 )
 
-                            totalDistance += detailRecordResponse.distance?.toDouble()?.roundToInt()
+                            totalDistance += detailRecordResponse.distance?.toInt()
                                 ?: 0
                             totalCalories += detailRecordResponse.energyBurned?.toDouble() ?: 0.0
                             totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
@@ -162,7 +162,7 @@ class SwimmingViewModel(
 
                         // 데이터 초기값 데이터 있으면 가져오고 없으면 0
                         var totalDistance =
-                            dailyRecord?.totalDistance?.toDouble()?.roundToInt() ?: 0
+                            dailyRecord?.totalDistance?.toInt() ?: 0
                         var totalCalories = dailyRecord?.totalEnergyBurned?.toDouble() ?: 0.0
                         var totalActiveTime =
                             dailyRecord?.totalActiveTime?.let { Duration.parse(it) }
@@ -197,11 +197,13 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 insertDetailRecords.add(detailRecordResponse)
-                                insertHeartRateRecords.addAll(healthConnectManager.readHeartRates(
-                                    session.metadata.id,
-                                    session.startTime,
-                                    session.endTime
-                                ))
+                                insertHeartRateRecords.addAll(
+                                    healthConnectManager.readHeartRates(
+                                        session.metadata.id,
+                                        session.startTime,
+                                        session.endTime
+                                    )
+                                )
                             } else {
                                 // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
                                 totalDistance -= detailRecord.distance?.toDouble()?.roundToInt()
@@ -218,11 +220,13 @@ class SwimmingViewModel(
                                     ?: Duration.ZERO
 
                                 updateDetailRecords.add(detailRecordResponse)
-                                updateHeartRateRecords.addAll(healthConnectManager.readHeartRates(
-                                    session.metadata.id,
-                                    session.startTime,
-                                    session.endTime
-                                ))
+                                updateHeartRateRecords.addAll(
+                                    healthConnectManager.readHeartRates(
+                                        session.metadata.id,
+                                        session.startTime,
+                                        session.endTime
+                                    )
+                                )
                             }
 
                         }
@@ -247,7 +251,7 @@ class SwimmingViewModel(
                                 dao?.updateDailyRecord(newDailyRecord)
                                 if (updateDetailRecords.isNotEmpty())
                                     dao?.updateDetailRecords(updateDetailRecords)
-                                    dao?.updateHeartRateSamples(updateHeartRateRecords)
+                                dao?.updateHeartRateSamples(updateHeartRateRecords)
                                 if (insertDetailRecords.isNotEmpty()) {
                                     dao?.insertDetailRecords(insertDetailRecords)
                                     dao?.insertHeartRateSamples(insertHeartRateRecords)

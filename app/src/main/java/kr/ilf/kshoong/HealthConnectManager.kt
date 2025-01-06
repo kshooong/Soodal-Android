@@ -92,7 +92,7 @@ class HealthConnectManager(private val context: Context) {
             endTime = endTime,
             activeTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL]?.toString(),
             distance = aggregateData[DistanceRecord.DISTANCE_TOTAL]?.inMeters?.fastRoundToInt()
-                ?.toString(),
+                ?.toString() ?: "0",
             energyBurned = aggregateData[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories?.toString(),
             minHeartRate = aggregateData[HeartRateRecord.BPM_MIN],
             maxHeartRate = aggregateData[HeartRateRecord.BPM_MAX],
