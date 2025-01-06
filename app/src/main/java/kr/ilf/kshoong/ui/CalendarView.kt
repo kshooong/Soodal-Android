@@ -473,18 +473,21 @@ fun CalendarDetailView(
                         .padding(vertical = 5.dp)
                 ) {
                     Text(
-                        text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString()
+                        text = ("시작" + it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
+                            .toString())
                             ?: "기록 없음"
                     )
                     Text(
-                        text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString()
+                        text = ("종료" + it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
+                            .toString())
                             ?: "기록 없음"
                     )
-                    Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
-                    Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
-                    Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
-                    Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
-                    Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
+                    Text(text = ("수영시간" + it.detailRecord.activeTime.toString()) ?: "기록 없음")
+                    Text(text = ("거리" + it.detailRecord.distance.toString()) ?: "기록 없음")
+                    Text(text = ("평균심박" + it.detailRecord.avgHeartRate.toString()) ?: "기록 없음")
+                    Text(text = ("최고심박" + it.detailRecord.maxHeartRate.toString()) ?: "기록 없음")
+                    Text(text = ("최저심박" + it.detailRecord.minHeartRate.toString()) ?: "기록 없음")
+                    Text(text = ("칼로리 모소모" + it.detailRecord.energyBurned.toString()) ?: "기록 없음")
 
                 }
             }
