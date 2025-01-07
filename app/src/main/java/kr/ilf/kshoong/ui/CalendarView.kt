@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.kshoong.ui.theme.ColorBackStroke
+import kr.ilf.kshoong.ui.theme.ColorBreastStroke
+import kr.ilf.kshoong.ui.theme.ColorButterfly
 import kr.ilf.kshoong.ui.theme.ColorCalendarDate
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBgDis
@@ -62,6 +66,8 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarToday
 import kr.ilf.kshoong.ui.theme.ColorCalendarTodayBg
+import kr.ilf.kshoong.ui.theme.ColorCrawl
+import kr.ilf.kshoong.ui.theme.ColorKickBoard
 import kr.ilf.kshoong.ui.theme.ColorMixEnd
 import kr.ilf.kshoong.ui.theme.ColorMixStart
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
@@ -327,25 +333,54 @@ fun DayView(
 
             val boxWidths = remember {
                 derivedStateOf {
-                    dailyRecord.value?.totalDistance?.let { totalDistance ->
-                        (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
-                            if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-                        }
+//                    dailyRecord.value?.totalDistance?.let { totalDistance ->
+//                        (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
+//                            if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+//                        }
+//                    } ?: emptyList()
+
+                    dailyRecord.value?.let { record ->
+                        // 거리 정보를 리스트로 변환
+                        val distances = listOf(
+                            "crawl" to record.crawl,
+                            "back" to record.backStroke,
+                            "breast" to record.breastStroke,
+                            "butterfly" to record.butterfly,
+                            "mixed" to record.mixed,
+                            "kickBoard" to record.kickBoard
+                        )
+
+                        // 가장 큰 값 4개 찾기
+                        val topDistances =
+                            distances.sortedByDescending { it.second }.take(4).toSet()
+
+                        // 원래 순서 유지하면서 필터링 및 비율 계산
+                        distances.filter { it in topDistances }
+                            .map { (type, distance) ->
+                                type to (distance / 500f).coerceAtMost(1f)
+                            }
                     } ?: emptyList()
+
                 }
             }
 
-            boxWidths.value.forEach {
+            boxWidths.value.forEach { (type, widthRatio) ->
+                val color = when (type) {
+                    "crawl" -> SolidColor(ColorCrawl)
+                    "back" -> SolidColor(ColorBackStroke)
+                    "breast" -> SolidColor(ColorBreastStroke)
+                    "butterfly" -> SolidColor(ColorButterfly)
+                    "kickBoard" -> SolidColor(ColorKickBoard)
+                    else -> Brush.verticalGradient(Pair(0f, ColorMixStart), Pair(1f, ColorMixEnd))
+                }
+
                 Box(
                     modifier = Modifier
                         .padding(bottom = 1.dp)
-                        .fillMaxWidth(it)
+                        .fillMaxWidth(widthRatio)
                         .height(10.dp)
                         .background(
-                            brush = Brush.verticalGradient(
-                                Pair(0f, ColorMixStart),
-                                Pair(1f, ColorMixEnd)
-                            ),
+                            brush = color,
                             shape = RoundedCornerShape(4.dp)
                         )
                         .align(Alignment.Start)
