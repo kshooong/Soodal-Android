@@ -305,14 +305,12 @@ fun DayView(
             if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
         val dateBgColor =
             if (isThisMonth)
-                if (today == thisDate)
-                    ColorCalendarTodayBg
-                else
-                    ColorCalendarDateBg
+                if (today == thisDate) ColorCalendarTodayBg else ColorCalendarDateBg
             else ColorCalendarDateBgDis
         val dateTextColor =
-            if (isThisMonth) if (today == thisDate) ColorCalendarToday else ColorCalendarDate else ColorCalendarDateDis
-
+            if (isThisMonth)
+                if (today == thisDate) ColorCalendarToday else ColorCalendarDate
+            else ColorCalendarDateDis
 
 
         Column(
