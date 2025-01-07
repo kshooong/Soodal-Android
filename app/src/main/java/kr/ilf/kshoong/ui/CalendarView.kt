@@ -333,58 +333,66 @@ fun DayView(
 
             val boxWidths = remember {
                 derivedStateOf {
-//                    dailyRecord.value?.totalDistance?.let { totalDistance ->
-//                        (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
-//                            if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-//                        }
-//                    } ?: emptyList()
-
                     dailyRecord.value?.let { record ->
-                        // 거리 정보를 리스트로 변환
-                        val distances = listOf(
-                            "crawl" to record.crawl,
-                            "back" to record.backStroke,
-                            "breast" to record.breastStroke,
-                            "butterfly" to record.butterfly,
-                            "mixed" to record.mixed,
-                            "kickBoard" to record.kickBoard
-                        )
-
-                        // 가장 큰 값 4개 찾기
-                        val topDistances =
-                            distances.sortedByDescending { it.second }.take(4).toSet()
-
-                        // 원래 순서 유지하면서 필터링 및 비율 계산
-                        distances.filter { it in topDistances }
-                            .map { (type, distance) ->
-                                type to (distance / 500f).coerceAtMost(1f)
+                        if (record.mixed == record.totalDistance?.toInt()) {
+                            dailyRecord.value?.totalDistance?.let { totalDistance ->
+                                // mixed만 있으면 전체 거리 표시
+                                (0..totalDistance.toInt().div(1000)).map { i ->
+                                    "mixed" to if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+                                }
                             }
+                        } else {
+                            // 거리 정보를 리스트로 변환
+                            val distances = listOf(
+                                "crawl" to record.crawl,
+                                "back" to record.backStroke,
+                                "breast" to record.breastStroke,
+                                "butterfly" to record.butterfly,
+                                "mixed" to record.mixed,
+                                "kickBoard" to record.kickBoard
+                            )
+
+                            // 가장 큰 값 4개 찾기
+                            val topDistances =
+                                distances.sortedByDescending { it.second }.take(4).toSet()
+
+                            // 원래 순서 유지하면서 필터링 및 비율 계산
+                            distances.filter { it in topDistances }
+                                .map { (type, distance) ->
+                                    type to (distance / 500f).coerceAtMost(1f)
+                                }
+                        }
                     } ?: emptyList()
 
                 }
             }
 
             boxWidths.value.forEach { (type, widthRatio) ->
-                val color = when (type) {
-                    "crawl" -> SolidColor(ColorCrawl)
-                    "back" -> SolidColor(ColorBackStroke)
-                    "breast" -> SolidColor(ColorBreastStroke)
-                    "butterfly" -> SolidColor(ColorButterfly)
-                    "kickBoard" -> SolidColor(ColorKickBoard)
-                    else -> Brush.verticalGradient(Pair(0f, ColorMixStart), Pair(1f, ColorMixEnd))
-                }
-
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 1.dp)
-                        .fillMaxWidth(widthRatio)
-                        .height(10.dp)
-                        .background(
-                            brush = color,
-                            shape = RoundedCornerShape(4.dp)
+                if (widthRatio > 0) {
+                    val color = when (type) {
+                        "crawl" -> SolidColor(ColorCrawl)
+                        "back" -> SolidColor(ColorBackStroke)
+                        "breast" -> SolidColor(ColorBreastStroke)
+                        "butterfly" -> SolidColor(ColorButterfly)
+                        "kickBoard" -> SolidColor(ColorKickBoard)
+                        else -> Brush.verticalGradient(
+                            Pair(0f, ColorMixStart),
+                            Pair(1f, ColorMixEnd)
                         )
-                        .align(Alignment.Start)
-                )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 1.dp)
+                            .fillMaxWidth(widthRatio)
+                            .height(10.dp)
+                            .background(
+                                brush = color,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .align(Alignment.Start)
+                    )
+                }
             }
         }
 
