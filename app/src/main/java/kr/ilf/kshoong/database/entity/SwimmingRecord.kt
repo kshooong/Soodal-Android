@@ -15,6 +15,12 @@ data class DailyRecord(
     val totalActiveTime: String? = null,
     val totalDistance: String? = null,
     val totalEnergyBurned: String? = null,
+    val crawl: Int = 0,
+    val backStroke: Int = 0,
+    val breastStroke: Int = 0,
+    val butterfly: Int = 0,
+    val kickBoard: Int = 0,
+    val mixed: Int = 0
 )
 
 @Entity(
@@ -39,6 +45,13 @@ data class DetailRecord(
     val minHeartRate: Long? = null,
     val maxHeartRate: Long? = null,
     val avgHeartRate: Long? = null,
+    val poolLength : Int = 25,
+    val crawl: Int = 0,
+    val backStroke: Int = 0,
+    val breastStroke: Int = 0,
+    val butterfly: Int = 0,
+    val kickBoard: Int = 0,
+    val mixed: Int = 0
 )
 
 @Entity(

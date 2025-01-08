@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -51,14 +52,31 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.kshoong.ui.theme.ColorBackStroke
+import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
+import kr.ilf.kshoong.ui.theme.ColorBreastStroke
+import kr.ilf.kshoong.ui.theme.ColorBreastStrokeSecondary
+import kr.ilf.kshoong.ui.theme.ColorButterfly
+import kr.ilf.kshoong.ui.theme.ColorButterflySecondary
+import kr.ilf.kshoong.ui.theme.ColorCalendarDate
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgEnd
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgStart
+import kr.ilf.kshoong.ui.theme.ColorCalendarDateBgDis
+import kr.ilf.kshoong.ui.theme.ColorCalendarDateDis
 import kr.ilf.kshoong.ui.theme.ColorCalendarDetailBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBorder
-import kr.ilf.kshoong.ui.theme.ColorCalendarOnDateBg
-import kr.ilf.kshoong.ui.theme.DailyGraphEnd
-import kr.ilf.kshoong.ui.theme.DailyGraphStart
+import kr.ilf.kshoong.ui.theme.ColorCalendarItemBg
+import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgDis
+import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBg
+import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBorder
+import kr.ilf.kshoong.ui.theme.ColorCalendarToday
+import kr.ilf.kshoong.ui.theme.ColorCalendarTodayBg
+import kr.ilf.kshoong.ui.theme.ColorCrawl
+import kr.ilf.kshoong.ui.theme.ColorCrawlSecondary
+import kr.ilf.kshoong.ui.theme.ColorKickBoard
+import kr.ilf.kshoong.ui.theme.ColorKickBoardSecondary
+import kr.ilf.kshoong.ui.theme.ColorMixEnd
+import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
+import kr.ilf.kshoong.ui.theme.ColorMixStart
+import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -70,6 +88,7 @@ import kotlin.math.max
 
 @Composable
 fun CalendarView(
+    modifier: Modifier,
     viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -90,8 +109,6 @@ fun CalendarView(
                 }
             }
     }
-
-    CalendarHeaderView(currentMonth)
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
@@ -115,42 +132,44 @@ fun CalendarView(
             val month = today.minusMonths(it.toLong())
             val context = LocalContext.current
 
-        MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
-            when {
-                newMonth.isAfter(today) -> {
-                    Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                }
+            MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
+                when {
+                    newMonth.isAfter(today) -> {
+                        Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
 
-                newMonth.withDayOfMonth(1).isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
-                    Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT).show()
-                }
+                    newMonth.withDayOfMonth(1)
+                        .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
+                        Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT).show()
+                    }
 
-                newMonth.month == currentMonth.month -> {
-                    selectedMonth.value = newMonth
-                    selectedDateStr.value = newMonth.dayOfMonth.toString()
+                    newMonth.month == currentMonth.month -> {
+                        selectedMonth.value = newMonth
+                        selectedDateStr.value = newMonth.dayOfMonth.toString()
 
-                    viewModel.findDetailRecord(
-                        newMonth
-                            .atStartOfDay()
-                            .toInstant(ZoneOffset.UTC)
-                    )
-                }
+                        viewModel.findDetailRecord(
+                            newMonth
+                                .atStartOfDay()
+                                .toInstant(ZoneOffset.UTC)
+                        )
+                    }
 
-                else -> {
-                    selectedMonth.value = newMonth
-                    selectedDateStr.value = newMonth.dayOfMonth.toString()
+                    else -> {
+                        selectedMonth.value = newMonth
+                        selectedDateStr.value = newMonth.dayOfMonth.toString()
 
-                    viewModel.findDetailRecord(
-                        newMonth
-                            .atStartOfDay()
-                            .toInstant(ZoneOffset.UTC)
-                    )
+                        viewModel.findDetailRecord(
+                            newMonth
+                                .atStartOfDay()
+                                .toInstant(ZoneOffset.UTC)
+                        )
 
-                    val diffMonth =
-                        ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth).toInt()
-                    CoroutineScope(Dispatchers.Main).launch {
-                        withContext(coroutineScope.coroutineContext) {
-                            val target = pagerState.currentPage + diffMonth
+                        val diffMonth =
+                            ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth)
+                                .toInt()
+                        CoroutineScope(Dispatchers.Main).launch {
+                            withContext(coroutineScope.coroutineContext) {
+                                val target = pagerState.currentPage + diffMonth
 
                                 pagerState.animateScrollToPage(target)
                             }
@@ -198,14 +217,6 @@ fun MonthView(
                     .weight(1f)
                     .padding(horizontal = 2.5.dp)
                     .height(70.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            listOf(
-                                ColorCalendarItemBgStart,
-                                ColorCalendarItemBgEnd
-                            )
-                        ), shape = RoundedCornerShape(8.dp)
-                    )
 
                 for (day in 0..6) {
                     if (week == 0 && day < firstDayOfWeek) {
@@ -213,28 +224,28 @@ fun MonthView(
                         val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
 
                         DayView(
-                            modifier = Modifier
-                                .alpha(0.5f)
-                                .then(dayViewModifier),
+                            modifier = dayViewModifier.background(
+                                ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
+                            ),
                             viewModel = viewModel,
                             month = month.minusMonths(1L).withDayOfMonth(prevDay),
                             day = prevDay.toString(),
-                            selectedDate = selectedDateStr,
                             today = today,
+                            isThisMonth = false,
                             onDateClick = onDateClick
                         )
 
                     } else if (dayCounter > daysInMonth) {
                         // 다음 달 날짜 표시
                         DayView(
-                            modifier = Modifier
-                                .alpha(0.5f)
-                                .then(dayViewModifier),
+                            modifier = dayViewModifier.background(
+                                ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
+                            ),
                             viewModel = viewModel,
                             month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
                             day = (dayCounter - daysInMonth).toString(),
-                            selectedDate = selectedDateStr,
                             today = today,
+                            isThisMonth = false,
                             onDateClick = onDateClick
                         )
 
@@ -245,22 +256,32 @@ fun MonthView(
                             val sameDate = dayCounter.toString() == selectedDateStr.value
                             val sameMonth = month.month == selectedMonth.value.month
                             val borderColor = if (sameDate && sameMonth) {
-                                ColorCalendarItemBorder
+                                ColorCalendarOnItemBorder
                             } else {
                                 Color.Transparent
                             }
 
+                            val bgColor = if (sameDate && sameMonth) {
+                                ColorCalendarOnItemBg
+                            } else {
+                                ColorCalendarItemBg
+                            }
+
                             DayView(
-                                modifier = dayViewModifier.border(
-                                    1.5.dp,
-                                    borderColor,
-                                    RoundedCornerShape(8.dp)
-                                ),
+                                modifier = dayViewModifier
+                                    .background(
+                                        bgColor, shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        1.5.dp,
+                                        borderColor,
+                                        RoundedCornerShape(8.dp)
+                                    ),
                                 viewModel = viewModel,
                                 month = month.withDayOfMonth(dayCounter),
                                 day = dayCounter.toString(),
-                                selectedDate = selectedDateStr,
                                 today = today,
+                                isThisMonth = true,
                                 onDateClick = onDateClick
                             )
 
@@ -279,8 +300,8 @@ fun DayView(
     viewModel: SwimmingViewModel,
     month: LocalDate,
     day: String,
-    selectedDate: MutableState<String>,
     today: LocalDate,
+    isThisMonth: Boolean,
     onDateClick: (LocalDate) -> Unit
 ) {
     val thisDate = month.withDayOfMonth(day.toInt())
@@ -291,9 +312,19 @@ fun DayView(
             indication = null,
             onClick = { onDateClick(thisDate) }
         )
-        .padding(5.dp)) {
-        val dateBorderColor = if (today == thisDate) ColorCalendarItemBorder else Color.Transparent
-        val dateBgColor = if (today == thisDate) ColorCalendarOnDateBg else ColorCalendarDateBg
+        .padding(5.dp))
+    {
+        val dateBorderColor =
+            if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
+        val dateBgColor =
+            if (isThisMonth)
+                if (today == thisDate) ColorCalendarTodayBg else ColorCalendarDateBg
+            else ColorCalendarDateBgDis
+        val dateTextColor =
+            if (isThisMonth)
+                if (today == thisDate) ColorCalendarToday else ColorCalendarDate
+            else ColorCalendarDateDis
+
 
         Column(
             modifier = Modifier
@@ -307,46 +338,82 @@ fun DayView(
                 }
             }
 
-//            val boxWidthsTemp =
-//                rememberUpdatedState(newValue = dailyRecord.value?.totalDistance?.let { totalDistance ->
-//                    (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
-//                        if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-//                    }
-//                } ?: emptyList())
-//
-//            val boxWidths = remember { mutableStateOf<List<Float>>(emptyList()) }
-//
-//            LaunchedEffect(viewModel.uiState.value) {
-//                if (viewModel.uiState.value == UiState.COMPLETE) {
-//                    boxWidths.value = boxWidthsTemp.value
-//                }
-//            }
-
             val boxWidths = remember {
                 derivedStateOf {
-                    dailyRecord.value?.totalDistance?.let { totalDistance ->
-                        (0..(totalDistance.toInt().div(1000) ?: 0)).map { i ->
-                            if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+                    dailyRecord.value?.let { record ->
+                        if (record.mixed == record.totalDistance?.toInt()) {
+                            dailyRecord.value?.totalDistance?.let { totalDistance ->
+                                // mixed만 있으면 전체 거리 표시
+                                (0..totalDistance.toInt().div(1000)).map { i ->
+                                    "mixed" to if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
+                                }
+                            }
+                        } else {
+                            // 거리 정보를 리스트로 변환
+                            val distances = listOf(
+                                "crawl" to record.crawl,
+                                "back" to record.backStroke,
+                                "breast" to record.breastStroke,
+                                "butterfly" to record.butterfly,
+                                "mixed" to record.mixed,
+                                "kickBoard" to record.kickBoard
+                            )
+
+                            // 가장 큰 값 4개 찾기
+                            val topDistances =
+                                distances.sortedByDescending { it.second }.take(4).toSet()
+
+                            // 원래 순서 유지하면서 필터링 및 비율 계산
+                            distances.filter { it in topDistances }
+                                .map { (type, distance) ->
+                                    type to (distance / 500f).coerceAtMost(1f)
+                                }
                         }
                     } ?: emptyList()
+
                 }
             }
 
-            boxWidths.value.forEach {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 2.dp)
-                        .fillMaxWidth(it)
-                        .height(8.dp)
-                        .background(
-                            brush = Brush.verticalGradient(
+            boxWidths.value.forEach { (type, widthRatio) ->
+                if (widthRatio > 0) {
+                    val color = if (isThisMonth) {
+                        when (type) {
+                            "crawl" -> SolidColor(ColorCrawl)
+                            "back" -> SolidColor(ColorBackStroke)
+                            "breast" -> SolidColor(ColorBreastStroke)
+                            "butterfly" -> SolidColor(ColorButterfly)
+                            "kickBoard" -> SolidColor(ColorKickBoard)
+                            else -> Brush.verticalGradient(
                                 Pair(0f, ColorMixStart),
                                 Pair(1f, ColorMixEnd)
-                            ),
-                            shape = RoundedCornerShape(3.dp)
-                        )
-                        .align(Alignment.Start)
-                )
+                            )
+                        }
+                    } else {
+                        when (type) {
+                            "crawl" -> SolidColor(ColorCrawlSecondary)
+                            "back" -> SolidColor(ColorBackStrokeSecondary)
+                            "breast" -> SolidColor(ColorBreastStrokeSecondary)
+                            "butterfly" -> SolidColor(ColorButterflySecondary)
+                            "kickBoard" -> SolidColor(ColorKickBoardSecondary)
+                            else -> Brush.verticalGradient(
+                                Pair(0f, ColorMixStartSecondary),
+                                Pair(1f, ColorMixEndSecondary)
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 1.dp)
+                            .fillMaxWidth(widthRatio)
+                            .height(10.dp)
+                            .background(
+                                brush = color,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .align(Alignment.Start)
+                    )
+                }
             }
         }
 
@@ -364,7 +431,8 @@ fun DayView(
                 text = day, // 날짜만 표시
                 fontSize = 10.sp,
                 lineHeight = 10.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = dateTextColor
             )
         }
     }
@@ -422,7 +490,12 @@ private fun CalendarHeaderView(
 }
 
 @Composable
-fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, currentDate: Instant, initialHeight: Int) {
+fun CalendarDetailView(
+    modifier: Modifier,
+    viewModel: SwimmingViewModel,
+    currentDate: Instant,
+    initialHeight: Int
+) {
     var columnHeight by remember { mutableStateOf(initialHeight.dp) }
 
     Column(
@@ -437,33 +510,54 @@ fun CalendarDetailView(modifier: Modifier, viewModel: SwimmingViewModel, current
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier
-                .padding(bottom = 5.dp)
-                .size(width = 80.dp, height = 5.dp)
-                .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+            modifier
+                .fillMaxWidth()
+                .height(15.dp)
                 .pointerInput(Unit) {
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         // Column의 높이를 조정
                         columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
                     }
+                }, contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 80.dp, height = 5.dp)
+                    .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+            )
+        }
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            val detailRecord by viewModel.currentDetailRecord.collectAsState()
+            detailRecord.forEach {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "시작" + (it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
+                            .toString()
+                            ?: "기록 없음")
+                    )
+                    Text(
+                        text = "종료" + (it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
+                            .toString()
+                            ?: "기록 없음")
+                    )
+                    Text(text = "수영시간" + (it.detailRecord.activeTime?.toString() ?: " 기록 없음"))
+                    Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
+                    Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
+                    Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
+
                 }
-        )
-
-        val detailRecord by viewModel.currentDetailRecord.collectAsState()
-        detailRecord.forEach {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())) {
-                Text(text = it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
-                Text(text = it.detailRecord.endTime.atZone(ZoneOffset.systemDefault()).toString() ?: "기록 없음")
-                Text(text = it.detailRecord.activeTime.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.avgHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.maxHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.minHeartRate.toString() ?: "기록 없음")
-                Text(text = it.detailRecord.energyBurned.toString() ?: "기록 없음")
-
             }
         }
     }
