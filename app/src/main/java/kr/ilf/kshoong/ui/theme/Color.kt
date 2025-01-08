@@ -23,6 +23,8 @@ val blue3 = Color(0xFF499CFB)
 
 val ColorCalendarItemBg = Color(0xFFE7F3FF)
 val ColorCalendarItemBorder = blue3
+val ColorCalendarOnItemBg = Color(0xFFE7F3FF)
+val ColorCalendarOnItemBorder = blue3
 val ColorCalendarDate = Color(0xFF5E5959)
 val ColorCalendarDateBg = Color(0xFFF9F9F9)
 val ColorCalendarToday = Color(0xFFF9F9F9)
@@ -51,3 +53,11 @@ val ColorButterfly = Color(0xFFF8ABB3)
 val ColorKickBoard = Color(0xFF797979)
 val ColorMixStart = Color(0xFF86F4DA)
 val ColorMixEnd = Color(0xFFA2E3FF)
+
+val ColorCrawlSecondary = Color(0xFF9CB5CE)
+val ColorBackStrokeSecondary = Color(0xFFBCBDB2)
+val ColorBreastStrokeSecondary= Color(0xFF8F80A2)
+val ColorButterflySecondary = Color(0xFFC0A9AC)
+val ColorKickBoardSecondary = Color(0xFF9FABBA)
+val ColorMixStartSecondary = Color(0xFF9BC6C0)
+val ColorMixEndSecondary = Color(0xFFA3C1CE)
