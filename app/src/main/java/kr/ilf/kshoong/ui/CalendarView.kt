@@ -53,8 +53,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.ui.theme.ColorBackStroke
+import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.kshoong.ui.theme.ColorBreastStroke
+import kr.ilf.kshoong.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.kshoong.ui.theme.ColorButterfly
+import kr.ilf.kshoong.ui.theme.ColorButterflySecondary
 import kr.ilf.kshoong.ui.theme.ColorCalendarDate
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
 import kr.ilf.kshoong.ui.theme.ColorCalendarDateBgDis
@@ -67,9 +70,13 @@ import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBorder
 import kr.ilf.kshoong.ui.theme.ColorCalendarToday
 import kr.ilf.kshoong.ui.theme.ColorCalendarTodayBg
 import kr.ilf.kshoong.ui.theme.ColorCrawl
+import kr.ilf.kshoong.ui.theme.ColorCrawlSecondary
 import kr.ilf.kshoong.ui.theme.ColorKickBoard
+import kr.ilf.kshoong.ui.theme.ColorKickBoardSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixEnd
+import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixStart
+import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -224,7 +231,7 @@ fun MonthView(
                             month = month.minusMonths(1L).withDayOfMonth(prevDay),
                             day = prevDay.toString(),
                             today = today,
-                            isThisMonth = true,
+                            isThisMonth = false,
                             onDateClick = onDateClick
                         )
 
@@ -238,7 +245,7 @@ fun MonthView(
                             month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
                             day = (dayCounter - daysInMonth).toString(),
                             today = today,
-                            isThisMonth = true,
+                            isThisMonth = false,
                             onDateClick = onDateClick
                         )
 
@@ -369,16 +376,30 @@ fun DayView(
 
             boxWidths.value.forEach { (type, widthRatio) ->
                 if (widthRatio > 0) {
-                    val color = when (type) {
-                        "crawl" -> SolidColor(ColorCrawl)
-                        "back" -> SolidColor(ColorBackStroke)
-                        "breast" -> SolidColor(ColorBreastStroke)
-                        "butterfly" -> SolidColor(ColorButterfly)
-                        "kickBoard" -> SolidColor(ColorKickBoard)
-                        else -> Brush.verticalGradient(
-                            Pair(0f, ColorMixStart),
-                            Pair(1f, ColorMixEnd)
-                        )
+                    val color = if (isThisMonth) {
+                        when (type) {
+                            "crawl" -> SolidColor(ColorCrawl)
+                            "back" -> SolidColor(ColorBackStroke)
+                            "breast" -> SolidColor(ColorBreastStroke)
+                            "butterfly" -> SolidColor(ColorButterfly)
+                            "kickBoard" -> SolidColor(ColorKickBoard)
+                            else -> Brush.verticalGradient(
+                                Pair(0f, ColorMixStart),
+                                Pair(1f, ColorMixEnd)
+                            )
+                        }
+                    } else {
+                        when (type) {
+                            "crawl" -> SolidColor(ColorCrawlSecondary)
+                            "back" -> SolidColor(ColorBackStrokeSecondary)
+                            "breast" -> SolidColor(ColorBreastStrokeSecondary)
+                            "butterfly" -> SolidColor(ColorButterflySecondary)
+                            "kickBoard" -> SolidColor(ColorKickBoardSecondary)
+                            else -> Brush.verticalGradient(
+                                Pair(0f, ColorMixStartSecondary),
+                                Pair(1f, ColorMixEndSecondary)
+                            )
+                        }
                     }
 
                     Box(
