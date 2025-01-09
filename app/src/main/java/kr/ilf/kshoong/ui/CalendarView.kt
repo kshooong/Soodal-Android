@@ -517,7 +517,7 @@ fun CalendarDetailView(
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         // Column의 높이를 조정
-                        columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
+                        columnHeight = max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
                     }
                 }, contentAlignment = Alignment.Center
         ) {
