@@ -174,14 +174,25 @@ fun NavigationView(
 
                 Row(
                     Modifier
-                        .horizontalScroll(rememberScrollState())) {
+                        .horizontalScroll(rememberScrollState())
+                ) {
                     items.forEach {
                         Column {
-                            Button(onClick = { webView.evaluateJavascript("getGif('$it')", null) }) {
+                            Button(onClick = {
+                                webView.evaluateJavascript(
+                                    "getGif('$it')",
+                                    null
+                                )
+                            }) {
                                 Text(text = "get$it")
                             }
 
-                            Button(onClick = { webView.evaluateJavascript("deleteGif('$it')", null) }) {
+                            Button(onClick = {
+                                webView.evaluateJavascript(
+                                    "deleteGif('$it')",
+                                    null
+                                )
+                            }) {
                                 Text(text = "delete$it")
                             }
                         }
@@ -247,8 +258,12 @@ fun NavigationView(
                     Instant.now(),
                     initialHeight
                 )
-                
-                Button(modifier = Modifier.padding(bottom = 60.dp).navigationBarsPadding().align(Alignment.BottomEnd),onClick = { /*TODO*/ }) {
+
+                Button(
+                    modifier = Modifier
+                        .padding(bottom = 60.dp)
+                        .navigationBarsPadding()
+                        .align(Alignment.BottomEnd), onClick = { /*TODO*/ }) {
                     Text(text = "수정")
                 }
             }
