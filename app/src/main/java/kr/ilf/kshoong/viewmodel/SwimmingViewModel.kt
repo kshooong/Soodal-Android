@@ -125,7 +125,8 @@ class SwimmingViewModel(
                             date = date,
                             totalDistance = totalDistance.toString(),
                             totalActiveTime = totalActiveTime.toString(),
-                            totalEnergyBurned = totalCalories.toString()
+                            totalEnergyBurned = totalCalories.toString(),
+                            mixed = totalDistance
                         )
 
                         CoroutineScope(Dispatchers.IO).launch {
@@ -189,8 +190,7 @@ class SwimmingViewModel(
 
                             if (detailRecord == null) {
                                 // 이전 데이터 없다면 데이터 더하기, insertDetailRecords 에 추가
-                                totalDistance += detailRecordResponse.distance?.toDouble()
-                                    ?.roundToInt() ?: 0
+                                totalDistance += detailRecordResponse.distance?.toInt()?: 0
                                 totalCalories += detailRecordResponse.energyBurned?.toDouble()
                                     ?: 0.0
                                 totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
@@ -206,14 +206,13 @@ class SwimmingViewModel(
                                 )
                             } else {
                                 // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
-                                totalDistance -= detailRecord.distance?.toDouble()?.roundToInt()
+                                totalDistance -= detailRecord.distance?.toInt()
                                     ?: 0
                                 totalCalories -= detailRecord.energyBurned?.toDouble() ?: 0.0
                                 totalActiveTime -= Duration.parse(detailRecord.activeTime)
                                     ?: Duration.ZERO
 
-                                totalDistance += detailRecordResponse.distance?.toDouble()
-                                    ?.roundToInt() ?: 0
+                                totalDistance += detailRecordResponse.distance?.toInt() ?: 0
                                 totalCalories += detailRecordResponse.energyBurned?.toDouble()
                                     ?: 0.0
                                 totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
@@ -235,7 +234,8 @@ class SwimmingViewModel(
                             date = date,
                             totalDistance = totalDistance.toString(),
                             totalActiveTime = totalActiveTime.toString(),
-                            totalEnergyBurned = totalCalories.toString()
+                            totalEnergyBurned = totalCalories.toString(),
+                            mixed = totalDistance
                         )
 
                         CoroutineScope(Dispatchers.IO).launch {
