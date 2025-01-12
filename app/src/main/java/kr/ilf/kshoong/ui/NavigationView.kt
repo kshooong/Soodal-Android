@@ -8,6 +8,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.LinearEasing
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -35,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
@@ -251,6 +255,9 @@ fun NavigationView(
                 CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
 
                 val initialHeight = LocalConfiguration.current.screenHeightDp - 600
+                val modifyView = remember {
+                    mutableStateOf(false)
+                }
 
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -263,8 +270,27 @@ fun NavigationView(
                     modifier = Modifier
                         .padding(bottom = 60.dp)
                         .navigationBarsPadding()
-                        .align(Alignment.BottomEnd), onClick = { /*TODO*/ }) {
+                        .align(Alignment.BottomEnd), onClick = { /*TODO*/
+                        modifyView.value = true
+                    }) {
                     Text(text = "수정")
+                }
+
+                AnimatedVisibility(
+                    modifyView.value,
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White)
+                            .offset{ IntOffset((if (modifyView.value) 300.dp else 0.dp).roundToPx(), (if (modifyView.value) 300.dp else 0.dp).roundToPx()) }
+                    ) {
+                        Text(text = "수정창")
+                        Button(onClick = { modifyView.value = false }) {
+                            Text(text = "닫기")
+                        }
+                    }
                 }
             }
         }
