@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +78,7 @@ import kr.ilf.kshoong.ui.theme.ColorMixEnd
 import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixStart
 import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
+import kr.ilf.kshoong.ui.theme.notoSansKrBold
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -411,8 +413,21 @@ fun DayView(
                                 brush = color,
                                 shape = RoundedCornerShape(4.dp)
                             )
-                            .align(Alignment.Start)
-                    )
+                            .align(Alignment.Start),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        if (widthRatio == 1f) {
+                            val distance = when (type) {
+                                "crawl" -> dailyRecord.value?.crawl
+                                "back" -> dailyRecord.value?.backStroke
+                                "breast" -> dailyRecord.value?.breastStroke
+                                "butterfly" -> dailyRecord.value?.butterfly
+                                "kickBoard" -> dailyRecord.value?.kickBoard
+                                else -> dailyRecord.value?.mixed
+                            }
+                            Text(modifier = Modifier.padding(end = 2.dp),text = distance.toString(),lineHeight = 10.sp, fontSize = 8.sp, color = Color.White)
+                        }
+                    }
                 }
             }
         }
@@ -517,7 +532,7 @@ fun CalendarDetailView(
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         // Column의 높이를 조정
-                        columnHeight = max(0f, columnHeight.toPx() - dragAmount.y).toDp()
+                        columnHeight = max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
                     }
                 }, contentAlignment = Alignment.Center
         ) {

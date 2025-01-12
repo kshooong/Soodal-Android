@@ -51,7 +51,7 @@ data class DetailRecord(
     val breastStroke: Int = 0,
     val butterfly: Int = 0,
     val kickBoard: Int = 0,
-    val mixed: Int = 0
+    val mixed: Int = distance?.toInt() ?: 0
 )
 
 @Entity(
