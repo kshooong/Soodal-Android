@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
@@ -42,6 +43,7 @@ class SwimmingViewModel(
 ) : ViewModel() {
 
     val uiState = mutableStateOf(UiState.LOADING)
+    val modifyView = mutableStateOf(false)
 
     val healthPermissions =
         setOf(
@@ -190,7 +192,7 @@ class SwimmingViewModel(
 
                             if (detailRecord == null) {
                                 // 이전 데이터 없다면 데이터 더하기, insertDetailRecords 에 추가
-                                totalDistance += detailRecordResponse.distance?.toInt()?: 0
+                                totalDistance += detailRecordResponse.distance?.toInt() ?: 0
                                 totalCalories += detailRecordResponse.energyBurned?.toDouble()
                                     ?: 0.0
                                 totalActiveTime += Duration.parse(detailRecordResponse.activeTime)

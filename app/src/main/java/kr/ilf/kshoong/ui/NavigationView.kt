@@ -255,9 +255,7 @@ fun NavigationView(
                 CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
 
                 val initialHeight = LocalConfiguration.current.screenHeightDp - 600
-                val modifyView = remember {
-                    mutableStateOf(false)
-                }
+                val modifyView = viewModel.modifyView
 
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -274,23 +272,6 @@ fun NavigationView(
                         modifyView.value = true
                     }) {
                     Text(text = "수정")
-                }
-
-                AnimatedVisibility(
-                    modifyView.value,
-                    modifier = Modifier.align(Alignment.BottomEnd)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                            .offset{ IntOffset((if (modifyView.value) 300.dp else 0.dp).roundToPx(), (if (modifyView.value) 300.dp else 0.dp).roundToPx()) }
-                    ) {
-                        Text(text = "수정창")
-                        Button(onClick = { modifyView.value = false }) {
-                            Text(text = "닫기")
-                        }
-                    }
                 }
             }
         }

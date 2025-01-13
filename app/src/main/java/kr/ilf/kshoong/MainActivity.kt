@@ -14,11 +14,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -150,6 +153,26 @@ class MainActivity : ComponentActivity() {
                             },
                             onSettingClick = {}
                         )
+                    }
+
+                    val modifyView = viewModel.modifyView
+
+                    AnimatedVisibility(
+                        modifyView.value,
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White)
+                        ) {
+                            Column( Modifier.fillMaxSize()) {
+                                Text(text = "수정창")
+                                Button(onClick = { modifyView.value = false }) {
+                                    Text(text = "닫기")
+                                }
+                            }
+                        }
                     }
                 }
             }
