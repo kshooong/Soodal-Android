@@ -52,12 +52,6 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finish()
-            }
-        })
-
         splashScreen.setOnExitAnimationListener { splashScreenView ->
             splashScreenView.remove()
         }
@@ -68,6 +62,16 @@ class MainActivity : ComponentActivity() {
                 val viewModel: SwimmingViewModel =
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
+
+                onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
+                    override fun handleOnBackPressed() {
+                        if (viewModel.modifyView.value) {
+                            viewModel.modifyView.value = false
+                        } else {
+                            finish()
+                        }
+                    }
+                })
 
                 Box(
                     modifier = Modifier
