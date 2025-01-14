@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -37,7 +38,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import kr.ilf.kshoong.ui.BottomBarView
+import kr.ilf.kshoong.ui.ModifyRecordPopup
 import kr.ilf.kshoong.ui.NavigationView
+import kr.ilf.kshoong.ui.PopupView
 import kr.ilf.kshoong.ui.theme.ColorBottomBar
 import kr.ilf.kshoong.ui.theme.ColorBottomBarDivider
 import kr.ilf.kshoong.ui.theme.KshoongTheme
@@ -127,58 +130,53 @@ class MainActivity : ComponentActivity() {
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
                             onHomeClick = {
-                                if (navController.currentDestination?.route != Destination.Home.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
-                                navController.navigate(Destination.Home.route) {
-                                    launchSingleTop = true
-                                    popUpTo(navController.currentDestination?.route!!) {
-                                        inclusive = true
+                                if (navController.currentDestination?.route != Destination.Home.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
+                                    navController.navigate(Destination.Home.route) {
+                                        launchSingleTop = true
+                                        popUpTo(navController.currentDestination?.route!!) {
+                                            inclusive = true
+                                        }
                                     }
-                                }}
+                                }
                             },
                             onCalendarClick = {
-                                if (navController.currentDestination?.route != Destination.Calendar.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                if (navController.currentDestination?.route != Destination.Calendar.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
-                                    }}
+                                    }
+                                }
                             },
                             onShopClick = {
-                                if (navController.currentDestination?.route != Destination.Shop.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                if (navController.currentDestination?.route != Destination.Shop.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Shop.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
-                                    }}
+                                    }
+                                }
                             },
                             onSettingClick = {}
                         )
                     }
 
-                    val popupUiState = viewModel.popupUiState
-
-                    AnimatedVisibility(
-                        popupUiState.value == PopupUiState.MODIFY,
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.White)
-                        ) {
-                            Column( Modifier.fillMaxSize()) {
-                                Text(text = "수정창")
-                                Button(onClick = { popupUiState.value = PopupUiState.NONE }) {
-                                    Text(text = "닫기")
-                                }
-                            }
-                        }
-                    }
+                    PopupView(
+                        Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .navigationBarsPadding(),
+                        viewModel,
+                        navController
+                    )
                 }
             }
         }
