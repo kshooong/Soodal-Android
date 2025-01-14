@@ -41,6 +41,7 @@ import kr.ilf.kshoong.ui.NavigationView
 import kr.ilf.kshoong.ui.theme.ColorBottomBar
 import kr.ilf.kshoong.ui.theme.ColorBottomBarDivider
 import kr.ilf.kshoong.ui.theme.KshoongTheme
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
 import kr.ilf.kshoong.viewmodel.UiState
@@ -65,8 +66,8 @@ class MainActivity : ComponentActivity() {
 
                 onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
                     override fun handleOnBackPressed() {
-                        if (viewModel.modifyView.value) {
-                            viewModel.modifyView.value = false
+                        if (viewModel.popupUiState.value != PopupUiState.NONE) {
+                            viewModel.popupUiState.value = PopupUiState.NONE
                         } else {
                             finish()
                         }
@@ -159,10 +160,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    val modifyView = viewModel.modifyView
+                    val popupUiState = viewModel.popupUiState
 
                     AnimatedVisibility(
-                        modifyView.value,
+                        popupUiState.value == PopupUiState.MODIFY,
                         modifier = Modifier.align(Alignment.BottomEnd)
                     ) {
                         Box(
@@ -172,7 +173,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Column( Modifier.fillMaxSize()) {
                                 Text(text = "수정창")
-                                Button(onClick = { modifyView.value = false }) {
+                                Button(onClick = { popupUiState.value = PopupUiState.NONE }) {
                                     Text(text = "닫기")
                                 }
                             }

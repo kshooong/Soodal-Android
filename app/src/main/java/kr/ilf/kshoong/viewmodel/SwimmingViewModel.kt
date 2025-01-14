@@ -2,9 +2,7 @@ package kr.ilf.kshoong.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
@@ -35,7 +33,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.math.roundToInt
 
 class SwimmingViewModel(
     private val application: Application,
@@ -43,7 +40,7 @@ class SwimmingViewModel(
 ) : ViewModel() {
 
     val uiState = mutableStateOf(UiState.LOADING)
-    val modifyView = mutableStateOf(false)
+    val popupUiState = mutableStateOf(PopupUiState.NONE)
 
     val healthPermissions =
         setOf(
@@ -362,4 +359,10 @@ enum class UiState {
     LOADING,
     COMPLETE,
     SCROLLING
+}
+
+enum class PopupUiState {
+    NONE,
+    MODIFY,
+    WRITE
 }

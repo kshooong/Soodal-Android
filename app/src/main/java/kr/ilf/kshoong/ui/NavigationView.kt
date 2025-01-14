@@ -8,7 +8,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.LinearEasing
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -37,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +42,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
@@ -55,6 +51,7 @@ import kotlinx.coroutines.delay
 import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -255,7 +252,7 @@ fun NavigationView(
                 CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
 
                 val initialHeight = LocalConfiguration.current.screenHeightDp - 600
-                val modifyView = viewModel.modifyView
+                val popupUiState = viewModel.popupUiState
 
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -268,8 +265,8 @@ fun NavigationView(
                     modifier = Modifier
                         .padding(bottom = 60.dp)
                         .navigationBarsPadding()
-                        .align(Alignment.BottomEnd), onClick = { /*TODO*/
-                        modifyView.value = true
+                        .align(Alignment.BottomEnd), onClick = {
+                        popupUiState.value = PopupUiState.MODIFY
                     }) {
                     Text(text = "수정")
                 }
