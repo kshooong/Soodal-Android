@@ -88,8 +88,11 @@ class SwimmingViewModel(
                 val exerciseSessions = healthConnectManager.readExerciseSessions(timeRangeFilter)
 
                 exerciseSessions.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .groupBy { it.startTime.truncatedTo(ChronoUnit.DAYS) }
-                    .forEach { (date, records) ->
+                    .groupBy {
+                        it.startTime.atZone(it.startZoneOffset).truncatedTo(ChronoUnit.DAYS)
+                    }// 그룹하기 위해 타임존 적용 후 0시로 설정
+                    .forEach { (zoneDate, records) ->
+                        val date = zoneDate.toInstant() // 다시 Instant 로 변경해서 저장(UTC)
                         var totalDistance = 0
                         var totalCalories = 0.0
                         var totalActiveTime = Duration.ZERO
@@ -107,7 +110,8 @@ class SwimmingViewModel(
 
                             totalDistance += detailRecordResponse.distance?.toInt()
                                 ?: 0
-                            totalCalories += detailRecordResponse.energyBurned?.toDouble() ?: 0.0
+                            totalCalories += detailRecordResponse.energyBurned?.toDouble()
+                                ?: 0.0
                             totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
                                 ?: Duration.ZERO
 
@@ -153,8 +157,11 @@ class SwimmingViewModel(
                 } while (changeResponse.hasMore)
 
                 changeList.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .groupBy { it.startTime.truncatedTo(ChronoUnit.DAYS) }
-                    .forEach { (date, records) ->
+                    .groupBy {
+                        it.startTime.atZone(it.startZoneOffset).truncatedTo(ChronoUnit.DAYS)
+                    }
+                    .forEach { (zoneDate, records) ->
+                        val date = zoneDate.toInstant() // 다시 Instant 로 변경해서 저장(UTC)
                         // 변경 레코드의 날짜에 데이터가 있는지 확인
                         val dailyRecord = withContext(Dispatchers.IO) {
                             dao?.getDailyRecord(date)
@@ -270,7 +277,8 @@ class SwimmingViewModel(
             _dailyRecords.value = withContext(Dispatchers.IO) {
                 val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
 
-                val start = Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
+                val start =
+                    Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
                 val end = Instant.now()
 
                 dao?.findAllByMonth(start, end)?.forEach { record ->
@@ -290,8 +298,9 @@ class SwimmingViewModel(
                 val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
 
                 val start = month.minusMonths(1L).atStartOfDay().toInstant(ZoneOffset.UTC)
-                val end = month.withDayOfMonth(month.lengthOfMonth()).plusMonths(1L).atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
+                val end =
+                    month.withDayOfMonth(month.lengthOfMonth()).plusMonths(1L).atStartOfDay()
+                        .toInstant(ZoneOffset.UTC)
 
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
                     ?.findAllByMonth(start, end)?.forEach { record ->
