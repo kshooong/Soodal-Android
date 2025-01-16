@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,11 +77,11 @@ import kr.ilf.kshoong.ui.theme.ColorMixEnd
 import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixStart
 import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
-import kr.ilf.kshoong.ui.theme.notoSansKrBold
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -152,7 +151,7 @@ fun CalendarView(
                         viewModel.findDetailRecord(
                             newMonth
                                 .atStartOfDay()
-                                .toInstant(ZoneOffset.UTC)
+                                .atZone(ZoneId.systemDefault()).toInstant()
                         )
                     }
 
@@ -336,7 +335,7 @@ fun DayView(
             val dailyRecords by viewModel.dailyRecords.collectAsState()
             val dailyRecord = remember {
                 derivedStateOf {
-                    dailyRecords[thisDate.atStartOfDay().toInstant(ZoneOffset.UTC)]
+                    dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
                 }
             }
 
@@ -425,7 +424,13 @@ fun DayView(
                                 "kickBoard" -> dailyRecord.value?.kickBoard
                                 else -> dailyRecord.value?.mixed
                             }
-                            Text(modifier = Modifier.padding(end = 2.dp),text = distance.toString(),lineHeight = 10.sp, fontSize = 8.sp, color = Color.White)
+                            Text(
+                                modifier = Modifier.padding(end = 2.dp),
+                                text = distance.toString(),
+                                lineHeight = 10.sp,
+                                fontSize = 8.sp,
+                                color = Color.White
+                            )
                         }
                     }
                 }

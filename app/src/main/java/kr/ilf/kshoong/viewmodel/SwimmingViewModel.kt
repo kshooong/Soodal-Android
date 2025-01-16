@@ -30,6 +30,7 @@ import kr.ilf.kshoong.database.entity.HeartRateSample
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -60,7 +61,8 @@ class SwimmingViewModel(
 
     private val changeToken = mutableStateOf<String?>(null)
 
-    private val _dailyRecords = MutableStateFlow<MutableMap<Instant, DailyRecord>>(mutableMapOf())
+    private val _dailyRecords =
+        MutableStateFlow<MutableMap<ZonedDateTime, DailyRecord>>(mutableMapOf())
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
@@ -275,16 +277,51 @@ class SwimmingViewModel(
 
             changeToken.value = nextChangeToken
             _dailyRecords.value = withContext(Dispatchers.IO) {
-                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+                val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
 
                 val start =
                     Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
                 val end = Instant.now()
 
-                dao?.findAllByMonth(start, end)?.forEach { record ->
-                    dailyRecordsMap[record.date] = record
-                }
+                dao?.findDetailRecordsBetween(start, end)?.groupBy {
+                    ZonedDateTime.ofInstant(it.startTime, ZoneId.systemDefault())
+                        .truncatedTo(ChronoUnit.DAYS)
+                }?.forEach { (date, records) ->
+                    var totalActiveTime = Duration.ZERO
+                    var totalDistance = 0
+                    var totalEnergyBurned = 0.0
+                    var totalCrawl = 0
+                    var totalBackStroke = 0
+                    var totalBreastStroke = 0
+                    var totalButterfly = 0
+                    var totalKickBoard = 0
+                    var totalMixed = 0
 
+                    records.forEach { record ->
+                        totalActiveTime += record.activeTime?.let { Duration.parse(it) }
+                            ?: Duration.ZERO
+                        totalDistance += record.distance?.toInt() ?: 0
+                        totalEnergyBurned += record.energyBurned?.toDouble() ?: 0.0
+                        totalCrawl += record.crawl
+                        totalBackStroke += record.backStroke
+                        totalBreastStroke += record.breastStroke
+                        totalButterfly += record.butterfly
+                        totalKickBoard += record.kickBoard
+                        totalMixed += record.mixed ?: 0
+                    }
+                    dailyRecordsMap[date] = DailyRecord(
+                        date = date.toInstant(),
+                        totalActiveTime.toString(),
+                        totalDistance.toString(),
+                        totalEnergyBurned.toString(),
+                        totalCrawl,
+                        totalBackStroke,
+                        totalBreastStroke,
+                        totalButterfly,
+                        totalKickBoard,
+                        totalMixed
+                    )
+                }
                 dailyRecordsMap
             }
 
@@ -295,7 +332,7 @@ class SwimmingViewModel(
     fun updateDailyRecords(month: LocalDate) {
         viewModelScope.launch {
             _dailyRecords.value = withContext(Dispatchers.IO) {
-                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+                val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
 
                 val start = month.minusMonths(1L).atStartOfDay().toInstant(ZoneOffset.UTC)
                 val end =
@@ -303,10 +340,45 @@ class SwimmingViewModel(
                         .toInstant(ZoneOffset.UTC)
 
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
-                    ?.findAllByMonth(start, end)?.forEach { record ->
-                        dailyRecordsMap[record.date] = record
-                    }
+                    ?.findDetailRecordsBetween(start, end)?.groupBy {
+                        ZonedDateTime.ofInstant(it.startTime, ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.DAYS)
+                    }?.forEach { (date, records) ->
+                        var totalActiveTime = Duration.ZERO
+                        var totalDistance = 0
+                        var totalEnergyBurned = 0.0
+                        var totalCrawl = 0
+                        var totalBackStroke = 0
+                        var totalBreastStroke = 0
+                        var totalButterfly = 0
+                        var totalKickBoard = 0
+                        var totalMixed = 0
 
+                        records.forEach { record ->
+                            totalActiveTime += record.activeTime?.let { Duration.parse(it) }
+                                ?: Duration.ZERO
+                            totalDistance += record.distance?.toInt() ?: 0
+                            totalEnergyBurned += record.energyBurned?.toDouble() ?: 0.0
+                            totalCrawl += record.crawl
+                            totalBackStroke += record.backStroke
+                            totalBreastStroke += record.breastStroke
+                            totalButterfly += record.butterfly
+                            totalKickBoard += record.kickBoard
+                            totalMixed += record.mixed ?: 0
+                        }
+                        dailyRecordsMap[date] = DailyRecord(
+                            date = date.toInstant(),
+                            totalActiveTime.toString(),
+                            totalDistance.toString(),
+                            totalEnergyBurned.toString(),
+                            totalCrawl,
+                            totalBackStroke,
+                            totalBreastStroke,
+                            totalButterfly,
+                            totalKickBoard,
+                            totalMixed
+                        )
+                    }
                 dailyRecordsMap
             }
         }
@@ -318,7 +390,7 @@ class SwimmingViewModel(
                 val dao = SwimmingRecordDatabase.getInstance(context = application)
                     ?.dailyRecordDao()
 
-                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(date)
+                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(date, date.plus(1, ChronoUnit.DAYS))
                 result?.let {
                     _currentDetailRecord.value = it
                 }

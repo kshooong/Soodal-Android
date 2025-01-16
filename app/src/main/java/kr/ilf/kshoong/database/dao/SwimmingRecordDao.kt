@@ -26,8 +26,8 @@ interface SwimmingRecordDao {
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} ORDER BY date DESC")
     fun getAllRecords(): List<DailyRecordWithAll>
 
-    @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE date = :date")
-    fun findDetailRecordsWithHeartRateSamplesByDate(date: Instant): List<DetailRecordWithHeartRateSample>
+    @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE startTime BETWEEN :start AND :end")
+    fun findDetailRecordsWithHeartRateSamplesByDate(start: Instant, end: Instant): List<DetailRecordWithHeartRateSample>
 
     @Transaction
     fun insertDailyRecordWithAll(
@@ -85,10 +85,13 @@ interface SwimmingRecordDao {
     @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE date = :date")
     fun findDetailRecordsByDate(date: Instant): List<DetailRecord>
 
+    @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} daily WHERE startTime BETWEEN :start AND :end")
+    fun findDetailRecordsBetween(start: Instant, end: Instant): List<DetailRecord>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDetailRecord(detailRecord: DetailRecord)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDetailRecords(detailRecord: List<DetailRecord>)
 
     @Update
@@ -104,7 +107,7 @@ interface SwimmingRecordDao {
     fun deleteDetailRecords(detailRecord: List<DetailRecord>)
 
     @Query("SELECT * FROM ${DatabaseConst.TB_DAILY_RECORD} daily WHERE date BETWEEN :start AND :end")
-    fun findAllByMonth(start: Instant, end: Instant): List<DailyRecord>
+    fun findDailyRecordsBetween(start: Instant, end: Instant): List<DailyRecord>
 
     /*
     * HeartRateSample
