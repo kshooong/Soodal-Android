@@ -1,6 +1,10 @@
 package kr.ilf.kshoong.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,9 +22,9 @@ import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 
 @Composable
 fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: NavHostController) {
-    Box(modifier = modifier) {
+    Column(modifier = modifier) {
         ModifyRecordPopup(
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier,
             viewModel.popupUiState.value == PopupUiState.MODIFY,
             {
                 viewModel.popupUiState.value = PopupUiState.NONE
@@ -52,7 +56,9 @@ fun ModifyRecordPopup(
 ) {
     AnimatedVisibility(
         visible,
-        modifier = modifier
+        modifier = modifier,
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
     ) {
         Box(
             modifier = Modifier
