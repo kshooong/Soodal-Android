@@ -1,6 +1,7 @@
 package kr.ilf.kshoong.ui
 
 import android.content.res.Resources
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -45,6 +48,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -516,7 +520,10 @@ fun CalendarDetailView(
     currentDate: Instant,
     initialHeight: Int
 ) {
-    var columnHeight by remember { mutableStateOf(initialHeight.dp) }
+    val mySaver =
+        Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
+            restore = { it.getFloat("columnHeight").dp })
+    var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
 
     Column(
         Modifier
