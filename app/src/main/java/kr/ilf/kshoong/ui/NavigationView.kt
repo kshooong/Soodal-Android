@@ -278,7 +278,6 @@ fun NavigationView(
                 CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
 
                 val initialHeight = LocalConfiguration.current.screenHeightDp - 600
-                val popupUiState = viewModel.popupUiState
 
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -286,24 +285,6 @@ fun NavigationView(
                     Instant.now(),
                     initialHeight
                 )
-
-                IconButton(
-                    modifier = Modifier
-                        .padding(bottom = 60.dp)
-                        .navigationBarsPadding()
-                        .size(50.dp)
-                        .align(Alignment.BottomEnd),
-                    onClick = {
-                        viewModel.popupUiState.value = PopupUiState.MODIFY
-                    }) {
-
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
-                        modifier = modifier.size(50.dp),
-                        contentDescription = "기록 버튼",
-                        tint = Color.Unspecified
-                    )
-                }
             }
         }
 

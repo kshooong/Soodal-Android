@@ -24,6 +24,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,9 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -56,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.kshoong.R
 import kr.ilf.kshoong.ui.theme.ColorBackStroke
 import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.kshoong.ui.theme.ColorBreastStroke
@@ -81,6 +86,7 @@ import kr.ilf.kshoong.ui.theme.ColorMixEnd
 import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixStart
 import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -552,6 +558,24 @@ fun CalendarDetailView(
                 modifier = Modifier
                     .size(width = 80.dp, height = 5.dp)
                     .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
+            )
+        }
+
+        IconButton(
+            modifier = Modifier
+                .padding(bottom = 60.dp)
+                .navigationBarsPadding()
+                .size(50.dp)
+                .align(Alignment.End),
+            onClick = {
+                viewModel.popupUiState.value = PopupUiState.MODIFY
+            }) {
+
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
+                modifier = modifier.size(50.dp),
+                contentDescription = "기록 버튼",
+                tint = Color.Unspecified
             )
         }
 
