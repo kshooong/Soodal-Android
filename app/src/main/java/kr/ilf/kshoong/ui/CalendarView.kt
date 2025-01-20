@@ -597,7 +597,7 @@ fun CalendarDetailView(
                             .size(50.dp)
                             .align(Alignment.End),
                         onClick = {
-                            viewModel.setModifyRecord(it)
+                            viewModel.setModifyRecord(it.detailRecord)
                             viewModel.popupUiState.value = PopupUiState.MODIFY
                         }) {
 

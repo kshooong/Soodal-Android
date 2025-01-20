@@ -1,5 +1,6 @@
 package kr.ilf.kshoong.ui
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,11 +9,9 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -21,29 +20,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kr.ilf.kshoong.Destination
-import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.kshoong.database.entity.DetailRecord
 import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlin.math.sin
 
 @Composable
 fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: NavHostController) {
@@ -54,7 +51,9 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             .background(Color.White, shape = RoundedCornerShape(30.dp))
             .padding(10.dp),
         visible = viewModel.popupUiState.value == PopupUiState.MODIFY,
-        onClickDone = {
+        onClickDone = { record ->
+            viewModel.updateDetailRecord(record)
+
             viewModel.popupUiState.value = PopupUiState.NONE
             navController.navigate(Destination.Calendar.route) {
                 launchSingleTop = true
@@ -71,9 +70,9 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
 fun ModifyRecordPopup(
     modifier: Modifier,
     visible: Boolean,
-    onClickDone: () -> Unit,
+    onClickDone: (DetailRecord) -> Unit,
     onClickCancel: () -> Unit,
-    record: DetailRecordWithHeartRateSample?
+    record: DetailRecord?
 ) {
     AnimatedVisibility(
         visible,
@@ -90,17 +89,17 @@ fun ModifyRecordPopup(
                 val textModifier = Modifier.width(50.dp)
                 val textFieldModifier = Modifier.width(200.dp)
                 val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
-                val startTime = record!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
+                val startTime = record.startTime.atZone(ZoneId.systemDefault())
                     .format(formatter)
                 val endTime =
-                    record.detailRecord.endTime.atZone(ZoneId.systemDefault()).format(formatter)
+                    record.endTime.atZone(ZoneId.systemDefault()).format(formatter)
 
-                val crawl = remember { mutableIntStateOf(record.detailRecord.crawl) }
-                val back = remember { mutableIntStateOf(record.detailRecord.backStroke) }
-                val breast = remember { mutableIntStateOf(record.detailRecord.breastStroke) }
-                val butterfly = remember { mutableIntStateOf(record.detailRecord.butterfly) }
-                val kick = remember { mutableIntStateOf(record.detailRecord.kickBoard) }
-                val mixed = remember { mutableIntStateOf(record.detailRecord.mixed) }
+                val crawl = remember { mutableIntStateOf(record.crawl) }
+                val back = remember { mutableIntStateOf(record.backStroke) }
+                val breast = remember { mutableIntStateOf(record.breastStroke) }
+                val butterfly = remember { mutableIntStateOf(record.butterfly) }
+                val kick = remember { mutableIntStateOf(record.kickBoard) }
+                val mixed = remember { mutableIntStateOf(record.mixed) }
 
                 Column(
                     Modifier
@@ -112,7 +111,7 @@ fun ModifyRecordPopup(
                         rowModifier
                     ) {
                         Text(text = "수영 시간 $startTime ~ $endTime")
-                        Text(text = "총 거리 ${record.detailRecord.distance}")
+                        Text(text = "총 거리 ${record.distance}")
 
                         Row(
                             rowModifier,
@@ -217,9 +216,23 @@ fun ModifyRecordPopup(
                 }
 
                 Row(Modifier.align(Alignment.End)) {
+                    val context = LocalContext.current
                     Button(onClick = {
-
-                        onClickDone()
+                        val newDistance =
+                            crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue
+                        if (record.distance == newDistance.toString()) {
+                            val detailRecord = record.copy(
+                                crawl = crawl.intValue,
+                                backStroke = back.intValue,
+                                breastStroke = breast.intValue,
+                                butterfly = butterfly.intValue,
+                                kickBoard = kick.intValue,
+                                mixed = mixed.intValue
+                            )
+                            onClickDone(detailRecord)
+                        } else {
+                            Toast.makeText(context, "총 거리가 다릅니다.", Toast.LENGTH_SHORT).show()
+                        }
                     }) {
                         Text(text = "저장")
                     }

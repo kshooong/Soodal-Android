@@ -72,7 +72,7 @@ class SwimmingViewModel(
         get() = _currentDetailRecord.asStateFlow()
 
     private val _currentModifyRecord =
-        MutableStateFlow<DetailRecordWithHeartRateSample?>(null)
+        MutableStateFlow<DetailRecord?>(null)
     val currentModifyRecord
         get() = _currentModifyRecord.asStateFlow()
 
@@ -395,7 +395,10 @@ class SwimmingViewModel(
                 val dao = SwimmingRecordDatabase.getInstance(context = application)
                     ?.dailyRecordDao()
 
-                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(date, date.plus(1, ChronoUnit.DAYS))
+                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(
+                    date,
+                    date.plus(1, ChronoUnit.DAYS)
+                )
                 result?.let {
                     _currentDetailRecord.value = it
                 }
@@ -404,8 +407,17 @@ class SwimmingViewModel(
         }
     }
 
-    fun setModifyRecord(record: DetailRecordWithHeartRateSample?) {
+    fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
+    }
+
+    fun updateDetailRecord(record: DetailRecord) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
+                    ?.updateDetailRecord(record)
+            }
+        }
     }
 
     fun checkPermissions(): Boolean {
