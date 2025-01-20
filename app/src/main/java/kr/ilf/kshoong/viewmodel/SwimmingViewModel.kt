@@ -71,6 +71,11 @@ class SwimmingViewModel(
     val currentDetailRecord
         get() = _currentDetailRecord.asStateFlow()
 
+    private val _currentModifyRecord =
+        MutableStateFlow<DetailRecordWithHeartRateSample?>(null)
+    val currentModifyRecord
+        get() = _currentModifyRecord.asStateFlow()
+
     init {
         viewModelScope.launch {
             hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)
@@ -397,6 +402,10 @@ class SwimmingViewModel(
 
             }
         }
+    }
+
+    fun setModifyRecord(record: DetailRecordWithHeartRateSample?) {
+        _currentModifyRecord.value = record
     }
 
     fun checkPermissions(): Boolean {

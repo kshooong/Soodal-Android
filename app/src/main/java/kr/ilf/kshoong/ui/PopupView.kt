@@ -63,7 +63,7 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
         onClickCancel = {
             viewModel.popupUiState.value = PopupUiState.NONE
         },
-        viewModel.currentDetailRecord.collectAsState().value
+        viewModel.currentModifyRecord.collectAsState().value
     )
 }
 
@@ -73,7 +73,7 @@ fun ModifyRecordPopup(
     visible: Boolean,
     onClickDone: () -> Unit,
     onClickCancel: () -> Unit,
-    records: List<DetailRecordWithHeartRateSample?>
+    record: DetailRecordWithHeartRateSample?
 ) {
     AnimatedVisibility(
         visible,
@@ -83,29 +83,30 @@ fun ModifyRecordPopup(
         Column(
             modifier = modifier
         ) {
-            Column(
-                Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                records.forEach { record ->
-                    val rowModifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                    val textModifier = Modifier.width(50.dp)
-                    val textFieldModifier = Modifier.width(200.dp)
-                    val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
-                    val startTime = record!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
-                        .format(formatter)
-                    val endTime =
-                        record.detailRecord.endTime.atZone(ZoneId.systemDefault()).format(formatter)
+            record?.let {
+                val rowModifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                val textModifier = Modifier.width(50.dp)
+                val textFieldModifier = Modifier.width(200.dp)
+                val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
+                val startTime = record!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
+                    .format(formatter)
+                val endTime =
+                    record.detailRecord.endTime.atZone(ZoneId.systemDefault()).format(formatter)
 
-                    val crawl = remember { mutableIntStateOf(record.detailRecord.crawl) }
-                    val back = remember { mutableIntStateOf(record.detailRecord.backStroke) }
-                    val breast = remember { mutableIntStateOf(record.detailRecord.breastStroke) }
-                    val butterfly = remember { mutableIntStateOf(record.detailRecord.butterfly) }
-                    val kick = remember { mutableIntStateOf(record.detailRecord.kickBoard) }
-                    val mixed = remember { mutableIntStateOf(record.detailRecord.mixed) }
+                val crawl = remember { mutableIntStateOf(record.detailRecord.crawl) }
+                val back = remember { mutableIntStateOf(record.detailRecord.backStroke) }
+                val breast = remember { mutableIntStateOf(record.detailRecord.breastStroke) }
+                val butterfly = remember { mutableIntStateOf(record.detailRecord.butterfly) }
+                val kick = remember { mutableIntStateOf(record.detailRecord.kickBoard) }
+                val mixed = remember { mutableIntStateOf(record.detailRecord.mixed) }
+
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
 
                     Column(
                         rowModifier
@@ -211,18 +212,20 @@ fun ModifyRecordPopup(
                             )
                         }
                     }
-                }
-            }
 
-            Row(Modifier.align(Alignment.End)) {
-                Button(onClick = {
 
-                    onClickDone()
-                }) {
-                    Text(text = "저장")
                 }
-                Button(onClick = onClickCancel) {
-                    Text(text = "취소")
+
+                Row(Modifier.align(Alignment.End)) {
+                    Button(onClick = {
+
+                        onClickDone()
+                    }) {
+                        Text(text = "저장")
+                    }
+                    Button(onClick = onClickCancel) {
+                        Text(text = "취소")
+                    }
                 }
             }
         }

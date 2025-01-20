@@ -561,24 +561,6 @@ fun CalendarDetailView(
             )
         }
 
-        IconButton(
-            modifier = Modifier
-                .padding(bottom = 60.dp)
-                .navigationBarsPadding()
-                .size(50.dp)
-                .align(Alignment.End),
-            onClick = {
-                viewModel.popupUiState.value = PopupUiState.MODIFY
-            }) {
-
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
-                modifier = modifier.size(50.dp),
-                contentDescription = "기록 버튼",
-                tint = Color.Unspecified
-            )
-        }
-
         Column(
             Modifier
                 .fillMaxWidth()
@@ -608,6 +590,24 @@ fun CalendarDetailView(
                     Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
                     Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
 
+                    IconButton(
+                        modifier = Modifier
+                            .padding(bottom = 60.dp)
+                            .navigationBarsPadding()
+                            .size(50.dp)
+                            .align(Alignment.End),
+                        onClick = {
+                            viewModel.setModifyRecord(it)
+                            viewModel.popupUiState.value = PopupUiState.MODIFY
+                        }) {
+
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
+                            modifier = modifier.size(50.dp),
+                            contentDescription = "기록 버튼",
+                            tint = Color.Unspecified
+                        )
+                    }
                 }
             }
         }
