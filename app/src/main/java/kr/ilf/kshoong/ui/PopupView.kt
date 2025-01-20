@@ -55,9 +55,9 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             viewModel.updateDetailRecord(record)
 
             viewModel.popupUiState.value = PopupUiState.NONE
-            navController.navigate(Destination.Calendar.route) {
-                launchSingleTop = true
-            }
+//            navController.navigate(Destination.Calendar.route) {
+//                launchSingleTop = true
+//            }
         },
         onClickCancel = {
             viewModel.popupUiState.value = PopupUiState.NONE
