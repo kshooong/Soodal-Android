@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -97,6 +98,11 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
 
+val selectedMonthSaver =
+    mapSaver(save = { mapOf("selectedMonth" to it) },
+        restore = { it["selectedMonth"] as LocalDate })
+
+
 @Composable
 fun CalendarView(
     modifier: Modifier,
@@ -106,8 +112,13 @@ fun CalendarView(
 
     val today by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
-    val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
-    val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
+    val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
+        mutableStateOf(
+            LocalDate.now().withDayOfMonth(1)
+        )
+    }
+    val selectedDateStr =
+        rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
     LaunchedEffect(pagerState) {
