@@ -61,7 +61,6 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun readDetailRecord(
         id: String,
-        date: Instant,
         startTime: Instant,
         endTime: Instant
     ): DetailRecord {
@@ -87,7 +86,6 @@ class HealthConnectManager(private val context: Context) {
 
         return DetailRecord(
             id = id,
-            date = date,
             startTime = startTime,
             endTime = endTime,
             activeTime = aggregateData[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL]?.toString(),
