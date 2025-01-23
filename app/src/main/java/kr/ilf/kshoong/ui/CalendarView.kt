@@ -581,19 +581,22 @@ fun CalendarDetailView(
             detailRecord.forEach {
                 Column(
                     Modifier
+                        .padding(horizontal = 10.dp)
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp)
+                        .background(Color.White, shape = RoundedCornerShape(15.dp))
+                        .padding(5.dp)
                 ) {
-                    Text(
-                        text = "시작" + (it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
-                            .toString()
-                            ?: "기록 없음")
-                    )
-                    Text(
-                        text = "종료" + (it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
-                            .toString()
-                            ?: "기록 없음")
-                    )
+                    val startTime = it!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E) HH:mm"))
+                    val endTime = it.detailRecord.endTime.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+
+                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(text = it.detailRecord.distance.toString())
+                        Text(text = "$startTime ~ $endTime", fontSize = 10.sp)
+                    }
+
                     Text(text = "수영시간" + (it.detailRecord.activeTime?.toString() ?: " 기록 없음"))
                     Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
                     Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
