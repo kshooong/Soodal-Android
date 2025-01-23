@@ -53,15 +53,21 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.kshoong.R
+import kr.ilf.kshoong.database.entity.DetailRecord
+import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.kshoong.database.entity.HeartRateSample
 import kr.ilf.kshoong.ui.theme.ColorBackStroke
 import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.kshoong.ui.theme.ColorBreastStroke
@@ -533,7 +539,8 @@ private fun CalendarHeaderView(
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
-    viewModel: SwimmingViewModel,
+    viewModel: PreviewViewmodel, // Preview 용
+//    viewModel: SwimmingViewModel,
     currentDate: Instant,
     initialHeight: Int
 ) {
@@ -553,6 +560,7 @@ fun CalendarDetailView(
             .padding(horizontal = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 조절 바
         Box(
             modifier
                 .fillMaxWidth()
@@ -572,6 +580,7 @@ fun CalendarDetailView(
             )
         }
 
+        // 데이터
         Column(
             Modifier
                 .fillMaxWidth()
@@ -628,3 +637,50 @@ fun CalendarDetailView(
 }
 
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
+
+@Preview
+@Composable
+fun DetailViewPreview() {
+    Box(){
+    CalendarDetailView(
+        modifier = Modifier.align(Alignment.BottomCenter),
+        viewModel = PreviewViewmodel(),
+        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
+        initialHeight = 230
+    )}
+}
+
+class PreviewViewmodel {
+    val popupUiState = mutableStateOf(PopupUiState.NONE)
+    val currentDetailRecord: StateFlow<List<DetailRecordWithHeartRateSample?>> =
+        MutableStateFlow(
+            listOf(
+                DetailRecordWithHeartRateSample(
+                    DetailRecord(
+                        id = "123123",
+                        startTime = Instant.now().minusSeconds(22324L),
+                        endTime = Instant.now(),
+                        activeTime = "PT1H6M7.515S",
+                        distance = "1200",
+                        energyBurned = "364.23143454",
+                        minHeartRate = 140L,
+                        maxHeartRate = 190L,
+                        avgHeartRate = 160L,
+                        poolLength = 25,
+                        crawl = 0,
+                        backStroke = 0,
+                        breastStroke = 0,
+                        butterfly = 0,
+                        kickBoard = 0,
+                        mixed = 0
+                    ), emptyList<HeartRateSample>()
+                )
+            )
+        )
+
+    private val _currentModifyRecord =
+        MutableStateFlow<DetailRecord?>(null)
+    fun setModifyRecord(record: DetailRecord?) {
+        _currentModifyRecord.value = record
+    }
+}
