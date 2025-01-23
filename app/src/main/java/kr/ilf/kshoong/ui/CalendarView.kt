@@ -549,8 +549,8 @@ fun CalendarDetailView(
             .fillMaxWidth()
             .height(columnHeight)
             .navigationBarsPadding()
-            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(10.dp))
-            .padding(5.dp),
+            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+            .padding(horizontal = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -606,7 +606,6 @@ fun CalendarDetailView(
 
                     IconButton(
                         modifier = Modifier
-                            .padding(bottom = 60.dp)
                             .navigationBarsPadding()
                             .size(50.dp)
                             .align(Alignment.End),
