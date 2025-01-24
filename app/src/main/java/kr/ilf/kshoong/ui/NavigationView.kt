@@ -281,8 +281,8 @@ fun NavigationView(
 
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
-//                    viewModel = viewModel,
-                    viewModel = PreviewViewmodel(), // preview
+                    viewModel = viewModel,
+//                    viewModel = PreviewViewmodel(), // preview
                     Instant.now(),
                     initialHeight
                 )

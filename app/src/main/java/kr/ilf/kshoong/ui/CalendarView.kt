@@ -539,8 +539,8 @@ private fun CalendarHeaderView(
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
-    viewModel: PreviewViewmodel, // Preview 용
-//    viewModel: SwimmingViewModel,
+//    viewModel: PreviewViewmodel, // Preview 용
+    viewModel: SwimmingViewModel,
     currentDate: Instant,
     initialHeight: Int
 ) {
@@ -590,7 +590,7 @@ fun CalendarDetailView(
             detailRecord.forEach {
                 Column(
                     Modifier
-                        .padding(horizontal = 10.dp)
+                        .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 5.dp)
                         .fillMaxWidth()
                         .background(Color.White, shape = RoundedCornerShape(15.dp))
                         .padding(5.dp)
@@ -641,13 +641,13 @@ fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
 @Preview
 @Composable
 fun DetailViewPreview() {
-    Box(){
-    CalendarDetailView(
-        modifier = Modifier.align(Alignment.BottomCenter),
-        viewModel = PreviewViewmodel(),
-        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
-        initialHeight = 230
-    )}
+//    Box(){
+//    CalendarDetailView(
+//        modifier = Modifier.align(Alignment.BottomCenter),
+//        viewModel = PreviewViewmodel(),
+//        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
+//        initialHeight = 230
+//    )}
 }
 
 class PreviewViewmodel {
