@@ -176,9 +176,7 @@ fun CalendarView(
                         selectedDateStr.value = newMonth.dayOfMonth.toString()
 
                         viewModel.findDetailRecord(
-                            newMonth
-                                .atStartOfDay()
-                                .atZone(ZoneId.systemDefault()).toInstant()
+                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                         )
                     }
 
@@ -187,9 +185,7 @@ fun CalendarView(
                         selectedDateStr.value = newMonth.dayOfMonth.toString()
 
                         viewModel.findDetailRecord(
-                            newMonth
-                                .atStartOfDay()
-                                .toInstant(ZoneOffset.UTC)
+                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                         )
 
                         val diffMonth =
