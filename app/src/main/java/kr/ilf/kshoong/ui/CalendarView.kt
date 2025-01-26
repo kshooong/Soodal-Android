@@ -127,6 +127,13 @@ fun CalendarView(
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
+    // 최초 진입 시 DetailRecord 조회
+    LaunchedEffect(Unit) {
+        val selectedInstant = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
+            .atStartOfDay(ZoneId.systemDefault()).toInstant()
+        viewModel.findDetailRecord(selectedInstant)
+    }
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.isScrollInProgress }.distinctUntilChanged()
             .collect {
@@ -676,6 +683,7 @@ class PreviewViewmodel {
 
     private val _currentModifyRecord =
         MutableStateFlow<DetailRecord?>(null)
+
     fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
     }
