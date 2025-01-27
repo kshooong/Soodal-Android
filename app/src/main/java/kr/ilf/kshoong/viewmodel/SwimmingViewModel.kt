@@ -310,6 +310,10 @@ class SwimmingViewModel(
         }
     }
 
+    fun resetDetailRecord() {
+        _currentDetailRecord.value = emptyList()
+    }
+
     fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
     }

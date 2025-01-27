@@ -29,6 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.DisposableEffectResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -127,11 +129,13 @@ fun CalendarView(
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
-    // 최초 진입 시 DetailRecord 조회
-    LaunchedEffect(Unit) {
+    // 최초 진입 시 DetailRecord 조회, dispose 시 데이터 초기화
+    DisposableEffect(Unit) {
         val selectedInstant = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
             .atStartOfDay(ZoneId.systemDefault()).toInstant()
         viewModel.findDetailRecord(selectedInstant)
+
+        onDispose { viewModel.resetDetailRecord() }
     }
 
     LaunchedEffect(pagerState) {
