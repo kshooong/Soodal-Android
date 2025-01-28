@@ -98,6 +98,7 @@ import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
 import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
+import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -609,13 +610,18 @@ fun CalendarDetailView(
                         .format(DateTimeFormatter.ofPattern("HH:mm"))
 
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                        Text(text = it.detailRecord.distance.toString())
-                        Text( text = "$startTime ~ $endTime", fontSize = 10.sp, lineHeight = 10.sp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
+                        Text(text = "$startTime ~ $endTime", fontSize = 10.sp, lineHeight = 10.sp)
                     }
 
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        val formattedDuration = Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
+                        val formattedDuration =
+                            Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
                         Text(text = "수영시간: ")
                         Text(text = formattedDuration)
                     }
