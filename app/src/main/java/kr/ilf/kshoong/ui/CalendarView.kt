@@ -105,6 +105,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
+import kotlin.time.Duration
 
 val selectedMonthSaver =
     mapSaver(save = { mapOf("selectedMonth" to it) },
@@ -608,12 +609,16 @@ fun CalendarDetailView(
                         .format(DateTimeFormatter.ofPattern("HH:mm"))
 
 
-                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                         Text(text = it.detailRecord.distance.toString())
-                        Text(text = "$startTime ~ $endTime", fontSize = 10.sp)
+                        Text( text = "$startTime ~ $endTime", fontSize = 10.sp, lineHeight = 10.sp)
                     }
 
-                    Text(text = "수영시간" + (it.detailRecord.activeTime?.toString() ?: " 기록 없음"))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        val formattedDuration = Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
+                        Text(text = "수영시간: ")
+                        Text(text = formattedDuration)
+                    }
                     Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
                     Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
                     Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
@@ -691,4 +696,17 @@ class PreviewViewmodel {
     fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
     }
+}
+
+fun Duration.toCustomTimeString(): String {
+    val hours = this.inWholeHours
+    val minutes = this.inWholeMinutes % 60
+    val seconds = this.inWholeSeconds % 60
+
+    val parts = mutableListOf<String>()
+    if (hours > 0) parts.add("${hours}시간")
+    if (minutes > 0) parts.add("${minutes}분")
+    if (seconds > 0) parts.add("${seconds}초")
+
+    return if (parts.isNotEmpty()) parts.joinToString(" ") else "기록 없음"
 }
