@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,9 +37,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import kr.ilf.kshoong.ui.BottomBarView
 import kr.ilf.kshoong.ui.NavigationView
+import kr.ilf.kshoong.ui.PopupView
 import kr.ilf.kshoong.ui.theme.ColorBottomBar
 import kr.ilf.kshoong.ui.theme.ColorBottomBarDivider
 import kr.ilf.kshoong.ui.theme.KshoongTheme
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
 import kr.ilf.kshoong.viewmodel.UiState
@@ -49,12 +53,6 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finish()
-            }
-        })
-
         splashScreen.setOnExitAnimationListener { splashScreenView ->
             splashScreenView.remove()
         }
@@ -65,6 +63,16 @@ class MainActivity : ComponentActivity() {
                 val viewModel: SwimmingViewModel =
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
+
+                onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
+                    override fun handleOnBackPressed() {
+                        if (viewModel.popupUiState.value != PopupUiState.NONE) {
+                            viewModel.popupUiState.value = PopupUiState.NONE
+                        } else {
+                            finish()
+                        }
+                    }
+                })
 
                 Box(
                     modifier = Modifier
@@ -119,38 +127,54 @@ class MainActivity : ComponentActivity() {
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
                             onHomeClick = {
-                                if (navController.currentDestination?.route != Destination.Home.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
-                                navController.navigate(Destination.Home.route) {
-                                    launchSingleTop = true
-                                    popUpTo(navController.currentDestination?.route!!) {
-                                        inclusive = true
+                                if (navController.currentDestination?.route != Destination.Home.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
+                                    navController.navigate(Destination.Home.route) {
+                                        launchSingleTop = true
+                                        popUpTo(navController.currentDestination?.route!!) {
+                                            inclusive = true
+                                        }
                                     }
-                                }}
+                                }
                             },
                             onCalendarClick = {
-                                if (navController.currentDestination?.route != Destination.Calendar.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                if (navController.currentDestination?.route != Destination.Calendar.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Calendar.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
-                                    }}
+                                    }
+                                }
                             },
                             onShopClick = {
-                                if (navController.currentDestination?.route != Destination.Shop.route){
-                                    prevDestination.value = navController.currentDestination?.route ?: "Home"
+                                if (navController.currentDestination?.route != Destination.Shop.route) {
+                                    prevDestination.value =
+                                        navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Shop.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true
                                         }
-                                    }}
+                                    }
+                                }
                             },
                             onSettingClick = {}
                         )
                     }
+
+                    PopupView(
+                        Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .padding(top= 5.dp)
+                            .navigationBarsPadding(),
+                        viewModel,
+                        navController
+                    )
                 }
             }
         }

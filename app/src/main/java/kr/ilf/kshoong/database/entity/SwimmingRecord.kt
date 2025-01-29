@@ -8,9 +8,8 @@ import androidx.room.Relation
 import kr.ilf.kshoong.database.DatabaseConst
 import java.time.Instant
 
-@Entity(tableName = DatabaseConst.TB_DAILY_RECORD)
+// 테이블 x 그냥 데이터 클래스로 사용
 data class DailyRecord(
-    @PrimaryKey(autoGenerate = false)
     val date: Instant,
     val totalActiveTime: String? = null,
     val totalDistance: String? = null,
@@ -23,20 +22,10 @@ data class DailyRecord(
     val mixed: Int = 0
 )
 
-@Entity(
-    tableName = DatabaseConst.TB_DETAIL_RECORD,
-    foreignKeys = [ForeignKey(
-        entity = DailyRecord::class,
-        parentColumns = arrayOf("date"),
-        childColumns = arrayOf("date"),
-        onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE
-    )]
-)
+@Entity(tableName = DatabaseConst.TB_DETAIL_RECORD)
 data class DetailRecord(
     @PrimaryKey(autoGenerate = false)
     val id: String,
-    val date: Instant,
     val startTime: Instant,
     val endTime: Instant,
     val activeTime: String? = null,
@@ -45,7 +34,7 @@ data class DetailRecord(
     val minHeartRate: Long? = null,
     val maxHeartRate: Long? = null,
     val avgHeartRate: Long? = null,
-    val poolLength : Int = 25,
+    val poolLength: Int = 25,
     val crawl: Int = 0,
     val backStroke: Int = 0,
     val breastStroke: Int = 0,
@@ -69,27 +58,6 @@ data class HeartRateSample(
     val time: Instant,
     val detailRecordId: String,
     val beatsPerMinute: Int
-)
-
-data class DailyRecordWithAll(
-    @Embedded val dailyRecord: DailyRecord,
-
-    @Relation(
-        parentColumn = "date",
-        entityColumn = "date",
-        entity = DetailRecord::class
-    )
-    val detailRecords: List<DetailRecordWithHeartRateSample>
-)
-
-data class DailyRecordWithDetailRecord(
-    @Embedded val dailyRecord: DailyRecord,
-
-    @Relation(
-        parentColumn = "date",
-        entityColumn = "date"
-    )
-    val detailRecords: List<DetailRecord>
 )
 
 data class DetailRecordWithHeartRateSample(
