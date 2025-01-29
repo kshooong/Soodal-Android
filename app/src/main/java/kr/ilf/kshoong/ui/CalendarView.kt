@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,13 +25,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.DisposableEffectResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -613,10 +614,26 @@ fun CalendarDetailView(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
-                        Text(text = "$startTime ~ $endTime", fontSize = 10.sp, lineHeight = 10.sp)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
+                            Text(
+                                text = "$startTime ~ $endTime",
+                                fontSize = 10.sp,
+                                lineHeight = 10.sp
+                            )
+                        }
+
+                        Button(
+                            modifier = Modifier.height(24.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(),
+                            onClick = {
+                                viewModel.setModifyRecord(it.detailRecord)
+                                viewModel.popupUiState.value = PopupUiState.MODIFY
+                            }) {
+                            Text(text = "영법 수정", fontSize = 12.sp)
+                        }
                     }
 
                     Row(modifier = Modifier.fillMaxWidth()) {
