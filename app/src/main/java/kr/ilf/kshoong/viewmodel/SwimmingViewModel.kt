@@ -2,7 +2,6 @@ package kr.ilf.kshoong.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -27,14 +26,13 @@ import kr.ilf.kshoong.database.database.SwimmingRecordDatabase
 import kr.ilf.kshoong.database.entity.DailyRecord
 import kr.ilf.kshoong.database.entity.DetailRecord
 import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
-import kr.ilf.kshoong.database.entity.HeartRateSample
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.math.roundToInt
 
 class SwimmingViewModel(
     private val application: Application,
@@ -42,6 +40,7 @@ class SwimmingViewModel(
 ) : ViewModel() {
 
     val uiState = mutableStateOf(UiState.LOADING)
+    val popupUiState = mutableStateOf(PopupUiState.NONE)
 
     val healthPermissions =
         setOf(
@@ -61,7 +60,8 @@ class SwimmingViewModel(
 
     private val changeToken = mutableStateOf<String?>(null)
 
-    private val _dailyRecords = MutableStateFlow<MutableMap<Instant, DailyRecord>>(mutableMapOf())
+    private val _dailyRecords =
+        MutableStateFlow<MutableMap<ZonedDateTime, DailyRecord>>(mutableMapOf())
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
@@ -69,6 +69,11 @@ class SwimmingViewModel(
         MutableStateFlow<List<DetailRecordWithHeartRateSample?>>(mutableListOf())
     val currentDetailRecord
         get() = _currentDetailRecord.asStateFlow()
+
+    private val _currentModifyRecord =
+        MutableStateFlow<DetailRecord?>(null)
+    val currentModifyRecord
+        get() = _currentModifyRecord.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -89,50 +94,23 @@ class SwimmingViewModel(
                 val exerciseSessions = healthConnectManager.readExerciseSessions(timeRangeFilter)
 
                 exerciseSessions.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .groupBy { it.startTime.truncatedTo(ChronoUnit.DAYS) }
-                    .forEach { (date, records) ->
-                        var totalDistance = 0
-                        var totalCalories = 0.0
-                        var totalActiveTime = Duration.ZERO
-                        val detailRecords = mutableListOf<DetailRecord>()
-                        var heartRateRecords = listOf<HeartRateSample>()
-
-                        records.forEach { session ->
-                            val detailRecordResponse =
-                                healthConnectManager.readDetailRecord(
-                                    id = session.metadata.id,
-                                    date,
-                                    session.startTime,
-                                    session.endTime
-                                )
-
-                            totalDistance += detailRecordResponse.distance?.toInt()
-                                ?: 0
-                            totalCalories += detailRecordResponse.energyBurned?.toDouble() ?: 0.0
-                            totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
-                                ?: Duration.ZERO
-
-                            detailRecords.add(detailRecordResponse)
-
-                            heartRateRecords = healthConnectManager.readHeartRates(
-                                session.metadata.id,
+                    .forEach { session ->
+                        val detailRecord =
+                            healthConnectManager.readDetailRecord(
+                                id = session.metadata.id,
                                 session.startTime,
                                 session.endTime
                             )
-                        }
 
-                        val dailyRecord = DailyRecord(
-                            date = date,
-                            totalDistance = totalDistance.toString(),
-                            totalActiveTime = totalActiveTime.toString(),
-                            totalEnergyBurned = totalCalories.toString(),
-                            mixed = totalDistance
+                        val heartRateRecords = healthConnectManager.readHeartRates(
+                            session.metadata.id,
+                            session.startTime,
+                            session.endTime
                         )
 
                         CoroutineScope(Dispatchers.IO).launch {
-                            dao?.insertDailyRecordWithAll(
-                                dailyRecord,
-                                detailRecords,
+                            dao?.insertDetailRecordWithHeartRateSamples(
+                                detailRecord,
                                 heartRateRecords
                             )
                         }
@@ -144,6 +122,7 @@ class SwimmingViewModel(
                 val deletionList = mutableListOf<String>()
                 val changeResponse = healthConnectManager.getChanges(changeToken.value!!)
 
+                // 변경사항 삭제인지 추가,업데이트인지 분기
                 do {
                     changeResponse.changes.forEach {
                         when (it) {
@@ -153,112 +132,49 @@ class SwimmingViewModel(
                     }
                 } while (changeResponse.hasMore)
 
+                // 추가,업데이트 데이터
                 changeList.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .groupBy { it.startTime.truncatedTo(ChronoUnit.DAYS) }
-                    .forEach { (date, records) ->
-                        // 변경 레코드의 날짜에 데이터가 있는지 확인
-                        val dailyRecord = withContext(Dispatchers.IO) {
-                            dao?.getDailyRecord(date)
+                    .forEach { session ->
+                        // 변경 레코드 상세 데이터 가져오기
+                        val detailRecord =
+                            healthConnectManager.readDetailRecord(
+                                id = session.metadata.id,
+                                session.startTime,
+                                session.endTime
+                            )
+
+                        // 변경 레코드의 이전 데이터가 있는지 확인
+                        val prevDetailRecord = withContext(Dispatchers.IO) {
+                            dao?.findDetailRecordById(session.metadata.id)
                         }
 
-                        // 데이터 초기값 데이터 있으면 가져오고 없으면 0
-                        var totalDistance =
-                            dailyRecord?.totalDistance?.toInt() ?: 0
-                        var totalCalories = dailyRecord?.totalEnergyBurned?.toDouble() ?: 0.0
-                        var totalActiveTime =
-                            dailyRecord?.totalActiveTime?.let { Duration.parse(it) }
-                                ?: Duration.ZERO
-                        val insertDetailRecords = mutableListOf<DetailRecord>()
-                        val updateDetailRecords = mutableListOf<DetailRecord>()
-                        val insertHeartRateRecords = mutableListOf<HeartRateSample>()
-                        val updateHeartRateRecords = mutableListOf<HeartRateSample>()
+                        withContext(Dispatchers.IO) {
+                            val heartRateRecords = healthConnectManager.readHeartRates(
+                                session.metadata.id,
+                                session.startTime,
+                                session.endTime
+                            )
 
-                        records.forEach { session ->
-                            // 변경 레코드 상세 데이터 가져오기
-                            val detailRecordResponse =
-                                healthConnectManager.readDetailRecord(
-                                    id = session.metadata.id,
-                                    date,
-                                    session.startTime,
-                                    session.endTime
-                                )
-
-                            // 변경 레코드의 이전 데이터가 있는지 확인
-                            val detailRecord = withContext(Dispatchers.IO) {
-                                dao?.findDetailRecordById(session.metadata.id)
-                            }
-
-                            if (detailRecord == null) {
-                                // 이전 데이터 없다면 데이터 더하기, insertDetailRecords 에 추가
-                                totalDistance += detailRecordResponse.distance?.toInt()?: 0
-                                totalCalories += detailRecordResponse.energyBurned?.toDouble()
-                                    ?: 0.0
-                                totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
-                                    ?: Duration.ZERO
-
-                                insertDetailRecords.add(detailRecordResponse)
-                                insertHeartRateRecords.addAll(
-                                    healthConnectManager.readHeartRates(
-                                        session.metadata.id,
-                                        session.startTime,
-                                        session.endTime
-                                    )
+                            if (prevDetailRecord == null) {
+                                dao?.insertDetailRecordWithHeartRateSamples(
+                                    detailRecord,
+                                    heartRateRecords
                                 )
                             } else {
-                                // 이전 데이터 있다면 이전 데이터 빼기 후 현재 데이터 더하기, updateDetailRecords 에 추가
-                                totalDistance -= detailRecord.distance?.toInt()
-                                    ?: 0
-                                totalCalories -= detailRecord.energyBurned?.toDouble() ?: 0.0
-                                totalActiveTime -= Duration.parse(detailRecord.activeTime)
-                                    ?: Duration.ZERO
-
-                                totalDistance += detailRecordResponse.distance?.toInt() ?: 0
-                                totalCalories += detailRecordResponse.energyBurned?.toDouble()
-                                    ?: 0.0
-                                totalActiveTime += Duration.parse(detailRecordResponse.activeTime)
-                                    ?: Duration.ZERO
-
-                                updateDetailRecords.add(detailRecordResponse)
-                                updateHeartRateRecords.addAll(
-                                    healthConnectManager.readHeartRates(
-                                        session.metadata.id,
-                                        session.startTime,
-                                        session.endTime
-                                    )
+                                dao?.updateDetailRecordWithHeartRateSamples(
+                                    detailRecord,
+                                    heartRateRecords
                                 )
-                            }
-
-                        }
-
-                        val newDailyRecord = DailyRecord(
-                            date = date,
-                            totalDistance = totalDistance.toString(),
-                            totalActiveTime = totalActiveTime.toString(),
-                            totalEnergyBurned = totalCalories.toString(),
-                            mixed = totalDistance
-                        )
-
-                        CoroutineScope(Dispatchers.IO).launch {
-                            // dailyRecord 없다면 insert, 있으면 update
-                            if (dailyRecord == null) {
-                                // dailyRecord 없다면 detail도 없을 테니 detail도 insert로직만 호출
-                                dao?.insertDailyRecordWithAll(
-                                    newDailyRecord,
-                                    insertDetailRecords,
-                                    insertHeartRateRecords
-                                )
-                            } else {
-                                dao?.updateDailyRecord(newDailyRecord)
-                                if (updateDetailRecords.isNotEmpty())
-                                    dao?.updateDetailRecords(updateDetailRecords)
-                                dao?.updateHeartRateSamples(updateHeartRateRecords)
-                                if (insertDetailRecords.isNotEmpty()) {
-                                    dao?.insertDetailRecords(insertDetailRecords)
-                                    dao?.insertHeartRateSamples(insertHeartRateRecords)
-                                }
                             }
                         }
                     }
+
+                // 삭제된 레코드 제거
+                deletionList.forEach {
+                    withContext(Dispatchers.IO) {
+                        dao?.deleteDetailRecordById(it)
+                    }
+                }
 
                 nextChangeToken = changeResponse.nextChangesToken
             }
@@ -269,15 +185,51 @@ class SwimmingViewModel(
 
             changeToken.value = nextChangeToken
             _dailyRecords.value = withContext(Dispatchers.IO) {
-                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+                val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
 
-                val start = Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
+                val start =
+                    Instant.now().minus(31, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS)
                 val end = Instant.now()
 
-                dao?.findAllByMonth(start, end)?.forEach { record ->
-                    dailyRecordsMap[record.date] = record
-                }
+                dao?.findDetailRecordsBetween(start, end)?.groupBy {
+                    ZonedDateTime.ofInstant(it.startTime, ZoneId.systemDefault())
+                        .truncatedTo(ChronoUnit.DAYS)
+                }?.forEach { (date, records) ->
+                    var totalActiveTime = Duration.ZERO
+                    var totalDistance = 0
+                    var totalEnergyBurned = 0.0
+                    var totalCrawl = 0
+                    var totalBackStroke = 0
+                    var totalBreastStroke = 0
+                    var totalButterfly = 0
+                    var totalKickBoard = 0
+                    var totalMixed = 0
 
+                    records.forEach { record ->
+                        totalActiveTime += record.activeTime?.let { Duration.parse(it) }
+                            ?: Duration.ZERO
+                        totalDistance += record.distance?.toInt() ?: 0
+                        totalEnergyBurned += record.energyBurned?.toDouble() ?: 0.0
+                        totalCrawl += record.crawl
+                        totalBackStroke += record.backStroke
+                        totalBreastStroke += record.breastStroke
+                        totalButterfly += record.butterfly
+                        totalKickBoard += record.kickBoard
+                        totalMixed += record.mixed ?: 0
+                    }
+                    dailyRecordsMap[date] = DailyRecord(
+                        date = date.toInstant(),
+                        totalActiveTime.toString(),
+                        totalDistance.toString(),
+                        totalEnergyBurned.toString(),
+                        totalCrawl,
+                        totalBackStroke,
+                        totalBreastStroke,
+                        totalButterfly,
+                        totalKickBoard,
+                        totalMixed
+                    )
+                }
                 dailyRecordsMap
             }
 
@@ -288,17 +240,53 @@ class SwimmingViewModel(
     fun updateDailyRecords(month: LocalDate) {
         viewModelScope.launch {
             _dailyRecords.value = withContext(Dispatchers.IO) {
-                val dailyRecordsMap = mutableMapOf<Instant, DailyRecord>()
+                val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
 
                 val start = month.minusMonths(1L).atStartOfDay().toInstant(ZoneOffset.UTC)
-                val end = month.withDayOfMonth(month.lengthOfMonth()).plusMonths(1L).atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
+                val end =
+                    month.withDayOfMonth(month.lengthOfMonth()).plusMonths(1L).atStartOfDay()
+                        .toInstant(ZoneOffset.UTC)
 
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
-                    ?.findAllByMonth(start, end)?.forEach { record ->
-                        dailyRecordsMap[record.date] = record
-                    }
+                    ?.findDetailRecordsBetween(start, end)?.groupBy {
+                        ZonedDateTime.ofInstant(it.startTime, ZoneId.systemDefault())
+                            .truncatedTo(ChronoUnit.DAYS)
+                    }?.forEach { (date, records) ->
+                        var totalActiveTime = Duration.ZERO
+                        var totalDistance = 0
+                        var totalEnergyBurned = 0.0
+                        var totalCrawl = 0
+                        var totalBackStroke = 0
+                        var totalBreastStroke = 0
+                        var totalButterfly = 0
+                        var totalKickBoard = 0
+                        var totalMixed = 0
 
+                        records.forEach { record ->
+                            totalActiveTime += record.activeTime?.let { Duration.parse(it) }
+                                ?: Duration.ZERO
+                            totalDistance += record.distance?.toInt() ?: 0
+                            totalEnergyBurned += record.energyBurned?.toDouble() ?: 0.0
+                            totalCrawl += record.crawl
+                            totalBackStroke += record.backStroke
+                            totalBreastStroke += record.breastStroke
+                            totalButterfly += record.butterfly
+                            totalKickBoard += record.kickBoard
+                            totalMixed += record.mixed ?: 0
+                        }
+                        dailyRecordsMap[date] = DailyRecord(
+                            date = date.toInstant(),
+                            totalActiveTime.toString(),
+                            totalDistance.toString(),
+                            totalEnergyBurned.toString(),
+                            totalCrawl,
+                            totalBackStroke,
+                            totalBreastStroke,
+                            totalButterfly,
+                            totalKickBoard,
+                            totalMixed
+                        )
+                    }
                 dailyRecordsMap
             }
         }
@@ -310,11 +298,31 @@ class SwimmingViewModel(
                 val dao = SwimmingRecordDatabase.getInstance(context = application)
                     ?.dailyRecordDao()
 
-                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(date)
+                val result = dao?.findDetailRecordsWithHeartRateSamplesByDate(
+                    date,
+                    date.plus(1, ChronoUnit.DAYS)
+                )
                 result?.let {
                     _currentDetailRecord.value = it
                 }
 
+            }
+        }
+    }
+
+    fun resetDetailRecord() {
+        _currentDetailRecord.value = emptyList()
+    }
+
+    fun setModifyRecord(record: DetailRecord?) {
+        _currentModifyRecord.value = record
+    }
+
+    fun updateDetailRecord(record: DetailRecord) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
+                    ?.updateDetailRecord(record)
             }
         }
     }
@@ -360,4 +368,10 @@ enum class UiState {
     LOADING,
     COMPLETE,
     SCROLLING
+}
+
+enum class PopupUiState {
+    NONE,
+    MODIFY,
+    WRITE
 }

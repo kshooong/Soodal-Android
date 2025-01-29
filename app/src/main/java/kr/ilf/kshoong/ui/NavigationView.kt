@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -28,6 +29,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -39,9 +43,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
@@ -51,6 +57,9 @@ import kotlinx.coroutines.delay
 import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.HealthConnectManager
 import kr.ilf.kshoong.R
+import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
+import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
 import java.time.Instant
@@ -198,6 +207,24 @@ fun NavigationView(
                         }
                     }
                 }
+
+                IconButton(
+                    modifier = Modifier
+                        .padding(bottom = 60.dp)
+                        .navigationBarsPadding()
+                        .size(50.dp)
+                        .align(Alignment.End),
+                    onClick = {
+                        viewModel.popupUiState.value = PopupUiState.MODIFY
+                    }) {
+
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
+                        modifier = modifier.size(50.dp),
+                        contentDescription = "기록 버튼",
+                        tint = Color.Unspecified
+                    )
+                }
             }
         }
 
@@ -255,17 +282,10 @@ fun NavigationView(
                 CalendarDetailView(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     viewModel = viewModel,
+//                    viewModel = PreviewViewmodel(), // preview
                     Instant.now(),
                     initialHeight
                 )
-
-                Button(
-                    modifier = Modifier
-                        .padding(bottom = 60.dp)
-                        .navigationBarsPadding()
-                        .align(Alignment.BottomEnd), onClick = { /*TODO*/ }) {
-                    Text(text = "수정")
-                }
             }
         }
 

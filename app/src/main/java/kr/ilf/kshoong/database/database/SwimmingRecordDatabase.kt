@@ -10,12 +10,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kr.ilf.kshoong.database.DatabaseConst
 import kr.ilf.kshoong.database.converter.InstantConverter
 import kr.ilf.kshoong.database.dao.SwimmingRecordDao
-import kr.ilf.kshoong.database.entity.DailyRecord
 import kr.ilf.kshoong.database.entity.DetailRecord
 import kr.ilf.kshoong.database.entity.HeartRateSample
 
 @Database(
-    entities = [DailyRecord::class, DetailRecord::class, HeartRateSample::class],
+    entities = [DetailRecord::class, HeartRateSample::class],
     version = DatabaseConst.DATABASE_VERSION,
     exportSchema = false
 )
@@ -34,7 +33,7 @@ abstract class SwimmingRecordDatabase : RoomDatabase() {
                     instance = Room.databaseBuilder(
                         context.applicationContext, SwimmingRecordDatabase::class.java,
                         "DailyRecordDatabase"
-                    ).addMigrations(migration_1_2, migration_2_3).build()
+                    ).addMigrations(MIGRATION_1_2).build()
                 }
             }
 
@@ -43,41 +42,49 @@ abstract class SwimmingRecordDatabase : RoomDatabase() {
     }
 }
 
-
-val migration_1_2 = object : Migration(1, 2) {
+val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
-            """
-            CREATE TABLE ${DatabaseConst.TB_HEARTRATE_SAMPLE} (
-                time INTEGER NOT NULL PRIMARY KEY, 
-                detailRecordId TEXT NOT NULL, 
-                beatsPerMinute INTEGER NOT NULL,
-                FOREIGN KEY(detailRecordId) REFERENCES ${DatabaseConst.TB_DETAIL_RECORD}(id) ON DELETE CASCADE ON UPDATE CASCADE
+        // 새로운 B 테이블 생성 (A에 대한 외래 키 및 date 컬럼 제거)
+        database.execSQL("""
+            CREATE TABLE ${DatabaseConst.TB_DETAIL_RECORD}_new (
+                id TEXT PRIMARY KEY NOT NULL, 
+                startTime INTEGER NOT NULL, 
+                endTime INTEGER NOT NULL, 
+                activeTime TEXT, 
+                distance TEXT, 
+                energyBurned TEXT, 
+                minHeartRate INTEGER, 
+                maxHeartRate INTEGER, 
+                avgHeartRate INTEGER, 
+                poolLength INTEGER DEFAULT 25 NOT NULL, 
+                crawl INTEGER DEFAULT 0 NOT NULL, 
+                backStroke INTEGER DEFAULT 0 NOT NULL, 
+                breastStroke INTEGER DEFAULT 0 NOT NULL, 
+                butterfly INTEGER DEFAULT 0 NOT NULL, 
+                kickBoard INTEGER DEFAULT 0 NOT NULL, 
+                mixed INTEGER DEFAULT 0 NOT NULL
             )
-        """.trimIndent()
-        )
-    }
-}
+        """.trimIndent())
 
-val migration_2_3 = object : Migration(2, 3) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+        // 기존 B 테이블의 데이터 복사 (A에 대한 외래 키 및 date 컬럼 제외)
+        database.execSQL("""
+            INSERT INTO ${DatabaseConst.TB_DETAIL_RECORD}_new (id, startTime, endTime, activeTime, distance, energyBurned, 
+                               minHeartRate, maxHeartRate, avgHeartRate, poolLength, 
+                               crawl, backStroke, breastStroke, butterfly, kickBoard, mixed)
+            SELECT id, startTime, endTime, activeTime, distance, energyBurned, 
+                   minHeartRate, maxHeartRate, avgHeartRate, poolLength, 
+                   crawl, backStroke, breastStroke, butterfly, kickBoard, 
+                   mixed
+            FROM ${DatabaseConst.TB_DETAIL_RECORD}
+        """.trimIndent())
 
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'crawl' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'backStroke' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'breastStroke' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'butterfly' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'kickBoard' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DAILY_RECORD} ADD COLUMN 'mixed' INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("UPDATE ${DatabaseConst.TB_DAILY_RECORD} SET mixed = CAST(totalDistance AS INTEGER);")
+        // 기존 B 테이블 삭제
+        database.execSQL("DROP TABLE ${DatabaseConst.TB_DETAIL_RECORD}")
 
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN poolLength INTEGER NOT NULL DEFAULT 25;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN crawl INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN backStroke INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN breastStroke INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN butterfly INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN kickBoard INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD} ADD COLUMN mixed INTEGER NOT NULL DEFAULT 0;")
-        database.execSQL("UPDATE ${DatabaseConst.TB_DETAIL_RECORD} SET mixed = CAST(distance AS INTEGER);")
+        // 새로운 B 테이블을 기존 이름으로 변경
+        database.execSQL("ALTER TABLE ${DatabaseConst.TB_DETAIL_RECORD}_new RENAME TO ${DatabaseConst.TB_DETAIL_RECORD}")
 
+        // A 테이블 삭제
+        database.execSQL("DROP TABLE IF EXISTS ${DatabaseConst.TB_DAILY_RECORD}")
     }
 }

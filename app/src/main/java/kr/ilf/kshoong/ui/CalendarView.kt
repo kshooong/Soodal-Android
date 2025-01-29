@@ -1,6 +1,7 @@
 package kr.ilf.kshoong.ui
 
 import android.content.res.Resources
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,9 +25,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -34,6 +40,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -41,18 +50,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.kshoong.R
+import kr.ilf.kshoong.database.entity.DetailRecord
+import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.kshoong.database.entity.HeartRateSample
 import kr.ilf.kshoong.ui.theme.ColorBackStroke
 import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.kshoong.ui.theme.ColorBreastStroke
@@ -78,15 +96,23 @@ import kr.ilf.kshoong.ui.theme.ColorMixEnd
 import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
 import kr.ilf.kshoong.ui.theme.ColorMixStart
 import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
-import kr.ilf.kshoong.ui.theme.notoSansKrBold
+import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
 import kr.ilf.kshoong.viewmodel.UiState
+import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
+import kotlin.time.Duration
+
+val selectedMonthSaver =
+    mapSaver(save = { mapOf("selectedMonth" to it) },
+        restore = { it["selectedMonth"] as LocalDate })
+
 
 @Composable
 fun CalendarView(
@@ -97,9 +123,23 @@ fun CalendarView(
 
     val today by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
-    val selectedMonth = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
-    val selectedDateStr = remember { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
+    val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
+        mutableStateOf(
+            LocalDate.now().withDayOfMonth(1)
+        )
+    }
+    val selectedDateStr =
+        rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
+
+    // 최초 진입 시 DetailRecord 조회, dispose 시 데이터 초기화
+    DisposableEffect(Unit) {
+        val selectedInstant = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
+            .atStartOfDay(ZoneId.systemDefault()).toInstant()
+        viewModel.findDetailRecord(selectedInstant)
+
+        onDispose { viewModel.resetDetailRecord() }
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.isScrollInProgress }.distinctUntilChanged()
@@ -150,9 +190,7 @@ fun CalendarView(
                         selectedDateStr.value = newMonth.dayOfMonth.toString()
 
                         viewModel.findDetailRecord(
-                            newMonth
-                                .atStartOfDay()
-                                .toInstant(ZoneOffset.UTC)
+                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                         )
                     }
 
@@ -161,9 +199,7 @@ fun CalendarView(
                         selectedDateStr.value = newMonth.dayOfMonth.toString()
 
                         viewModel.findDetailRecord(
-                            newMonth
-                                .atStartOfDay()
-                                .toInstant(ZoneOffset.UTC)
+                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                         )
 
                         val diffMonth =
@@ -336,7 +372,7 @@ fun DayView(
             val dailyRecords by viewModel.dailyRecords.collectAsState()
             val dailyRecord = remember {
                 derivedStateOf {
-                    dailyRecords[thisDate.atStartOfDay().toInstant(ZoneOffset.UTC)]
+                    dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
                 }
             }
 
@@ -425,7 +461,13 @@ fun DayView(
                                 "kickBoard" -> dailyRecord.value?.kickBoard
                                 else -> dailyRecord.value?.mixed
                             }
-                            Text(modifier = Modifier.padding(end = 2.dp),text = distance.toString(),lineHeight = 10.sp, fontSize = 8.sp, color = Color.White)
+                            Text(
+                                modifier = Modifier.padding(end = 2.dp),
+                                text = distance.toString(),
+                                lineHeight = 10.sp,
+                                fontSize = 8.sp,
+                                color = Color.White
+                            )
                         }
                     }
                 }
@@ -507,11 +549,15 @@ private fun CalendarHeaderView(
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
+//    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
     currentDate: Instant,
     initialHeight: Int
 ) {
-    var columnHeight by remember { mutableStateOf(initialHeight.dp) }
+    val mySaver =
+        Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
+            restore = { it.getFloat("columnHeight").dp })
+    var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
 
     Column(
         Modifier
@@ -520,10 +566,11 @@ fun CalendarDetailView(
             .fillMaxWidth()
             .height(columnHeight)
             .navigationBarsPadding()
-            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(10.dp))
-            .padding(5.dp),
+            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+            .padding(horizontal = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 조절 바
         Box(
             modifier
                 .fillMaxWidth()
@@ -543,6 +590,7 @@ fun CalendarDetailView(
             )
         }
 
+        // 데이터
         Column(
             Modifier
                 .fillMaxWidth()
@@ -552,26 +600,71 @@ fun CalendarDetailView(
             detailRecord.forEach {
                 Column(
                     Modifier
+                        .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 5.dp)
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp)
+                        .background(Color.White, shape = RoundedCornerShape(15.dp))
+                        .padding(5.dp)
                 ) {
-                    Text(
-                        text = "시작" + (it!!.detailRecord.startTime.atZone(ZoneOffset.systemDefault())
-                            .toString()
-                            ?: "기록 없음")
-                    )
-                    Text(
-                        text = "종료" + (it.detailRecord.endTime.atZone(ZoneOffset.systemDefault())
-                            .toString()
-                            ?: "기록 없음")
-                    )
-                    Text(text = "수영시간" + (it.detailRecord.activeTime?.toString() ?: " 기록 없음"))
+                    val startTime = it!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E) HH:mm"))
+                    val endTime = it.detailRecord.endTime.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
+                            Text(
+                                text = "$startTime ~ $endTime",
+                                fontSize = 10.sp,
+                                lineHeight = 10.sp
+                            )
+                        }
+
+                        Button(
+                            modifier = Modifier.height(24.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(),
+                            onClick = {
+                                viewModel.setModifyRecord(it.detailRecord)
+                                viewModel.popupUiState.value = PopupUiState.MODIFY
+                            }) {
+                            Text(text = "영법 수정", fontSize = 12.sp)
+                        }
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        val formattedDuration =
+                            Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
+                        Text(text = "수영시간: ")
+                        Text(text = formattedDuration)
+                    }
                     Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
                     Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
                     Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
                     Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
                     Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
 
+                    IconButton(
+                        modifier = Modifier
+                            .navigationBarsPadding()
+                            .size(50.dp)
+                            .align(Alignment.End),
+                        onClick = {
+                            viewModel.setModifyRecord(it.detailRecord)
+                            viewModel.popupUiState.value = PopupUiState.MODIFY
+                        }) {
+
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
+                            modifier = modifier.size(50.dp),
+                            contentDescription = "기록 버튼",
+                            tint = Color.Unspecified
+                        )
+                    }
                 }
             }
         }
@@ -579,3 +672,64 @@ fun CalendarDetailView(
 }
 
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
+
+@Preview
+@Composable
+fun DetailViewPreview() {
+//    Box(){
+//    CalendarDetailView(
+//        modifier = Modifier.align(Alignment.BottomCenter),
+//        viewModel = PreviewViewmodel(),
+//        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
+//        initialHeight = 230
+//    )}
+}
+
+class PreviewViewmodel {
+    val popupUiState = mutableStateOf(PopupUiState.NONE)
+    val currentDetailRecord: StateFlow<List<DetailRecordWithHeartRateSample?>> =
+        MutableStateFlow(
+            listOf(
+                DetailRecordWithHeartRateSample(
+                    DetailRecord(
+                        id = "123123",
+                        startTime = Instant.now().minusSeconds(22324L),
+                        endTime = Instant.now(),
+                        activeTime = "PT1H6M7.515S",
+                        distance = "1200",
+                        energyBurned = "364.23143454",
+                        minHeartRate = 140L,
+                        maxHeartRate = 190L,
+                        avgHeartRate = 160L,
+                        poolLength = 25,
+                        crawl = 0,
+                        backStroke = 0,
+                        breastStroke = 0,
+                        butterfly = 0,
+                        kickBoard = 0,
+                        mixed = 0
+                    ), emptyList<HeartRateSample>()
+                )
+            )
+        )
+
+    private val _currentModifyRecord =
+        MutableStateFlow<DetailRecord?>(null)
+
+    fun setModifyRecord(record: DetailRecord?) {
+        _currentModifyRecord.value = record
+    }
+}
+
+fun Duration.toCustomTimeString(): String {
+    val hours = this.inWholeHours
+    val minutes = this.inWholeMinutes % 60
+    val seconds = this.inWholeSeconds % 60
+
+    val parts = mutableListOf<String>()
+    if (hours > 0) parts.add("${hours}시간")
+    if (minutes > 0) parts.add("${minutes}분")
+    if (seconds > 0) parts.add("${seconds}초")
+
+    return if (parts.isNotEmpty()) parts.joinToString(" ") else "기록 없음"
+}
