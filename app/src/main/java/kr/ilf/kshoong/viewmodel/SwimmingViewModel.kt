@@ -373,5 +373,6 @@ enum class UiState {
 enum class PopupUiState {
     NONE,
     MODIFY,
-    WRITE
+    WRITE,
+    APP_FINISH
 }

@@ -66,10 +66,10 @@ class MainActivity : ComponentActivity() {
 
                 onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
                     override fun handleOnBackPressed() {
-                        if (viewModel.popupUiState.value != PopupUiState.NONE) {
-                            viewModel.popupUiState.value = PopupUiState.NONE
+                        if (viewModel.popupUiState.value == PopupUiState.NONE) {
+                            viewModel.popupUiState.value = PopupUiState.APP_FINISH
                         } else {
-                            finish()
+                            viewModel.popupUiState.value = PopupUiState.NONE
                         }
                     }
                 })
@@ -170,7 +170,7 @@ class MainActivity : ComponentActivity() {
                         Modifier
                             .fillMaxSize()
                             .statusBarsPadding()
-                            .padding(top= 5.dp)
+                            .padding(top = 5.dp)
                             .navigationBarsPadding(),
                         viewModel,
                         navController

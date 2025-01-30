@@ -1,5 +1,6 @@
 package kr.ilf.kshoong.ui
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -7,11 +8,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -34,8 +40,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kr.ilf.kshoong.Destination
 import kr.ilf.kshoong.database.entity.DetailRecord
 import kr.ilf.kshoong.viewmodel.PopupUiState
 import kr.ilf.kshoong.viewmodel.SwimmingViewModel
@@ -44,11 +50,13 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: NavHostController) {
+    val context = LocalContext.current
+
     ModifyRecordPopup(
         modifier = modifier
             .shadow(5.dp, shape = RoundedCornerShape(30.dp))
             .scrollable(rememberScrollState(), Orientation.Vertical)
-            .background(Color.White, shape = RoundedCornerShape(30.dp))
+            .background(Color.White, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
             .padding(10.dp),
         visible = viewModel.popupUiState.value == PopupUiState.MODIFY,
         onClickDone = { record ->
@@ -64,6 +72,14 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
         },
         viewModel.currentModifyRecord.collectAsState().value
     )
+
+    AppFinishPopup(
+        modifier = modifier,
+        visible = viewModel.popupUiState.value == PopupUiState.APP_FINISH,
+        onClickDone = { (context as Activity).finish() },
+        onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE },
+        null
+    )
 }
 
 @Composable
@@ -76,8 +92,8 @@ fun ModifyRecordPopup(
 ) {
     AnimatedVisibility(
         visible,
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
     ) {
         Column(
             modifier = modifier
@@ -211,8 +227,6 @@ fun ModifyRecordPopup(
                             )
                         }
                     }
-
-
                 }
 
                 Row(Modifier.align(Alignment.End)) {
@@ -237,6 +251,77 @@ fun ModifyRecordPopup(
                         Text(text = "저장")
                     }
                     Button(onClick = onClickCancel) {
+                        Text(text = "취소")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppFinishPopup(
+    modifier: Modifier,
+    visible: Boolean,
+    onClickDone: () -> Unit,
+    onClickCancel: () -> Unit,
+    record: DetailRecord?
+) {
+    // dimmed
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(
+            modifier = modifier
+                .background(Color.Black.copy(0.2f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { onClickCancel() }
+        )
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
+    ) {
+        Box(modifier, contentAlignment = Alignment.BottomCenter) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+                    .shadow(8.dp, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                    .scrollable(rememberScrollState(), Orientation.Vertical)
+                    .background(Color.White, shape = RoundedCornerShape(30.dp))
+                    .padding(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "앱을 종료하시겠습니까?", fontSize = 20.sp)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        modifier = Modifier
+                            .padding(end = 10.dp)
+                            .weight(1f),
+                        onClick = { onClickDone() }) {
+                        Text(text = "종료")
+                    }
+
+                    Button(modifier = Modifier.weight(1f), onClick = { onClickCancel() }) {
                         Text(text = "취소")
                     }
                 }
