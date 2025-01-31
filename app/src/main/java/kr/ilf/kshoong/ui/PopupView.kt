@@ -15,10 +15,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
@@ -296,8 +298,23 @@ fun AppFinishPopup(
                     .shadow(8.dp, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                     .scrollable(rememberScrollState(), Orientation.Vertical)
                     .background(Color.White, shape = RoundedCornerShape(30.dp))
-                    .padding(10.dp),
+                    .padding(20.dp),
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Button(
+                        modifier = Modifier.size(20.dp),
+                        onClick = { onClickCancel() },
+                        contentPadding = PaddingValues()
+                    ) {
+                        Text(text = "X", fontSize = 14.sp, lineHeight = 14.sp)
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -306,24 +323,13 @@ fun AppFinishPopup(
                 ) {
                     Text(text = "앱을 종료하시겠습니까?", fontSize = 20.sp)
                 }
-                Row(
+
+                Button(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        modifier = Modifier
-                            .padding(end = 10.dp)
-                            .weight(1f),
-                        onClick = { onClickDone() }) {
-                        Text(text = "종료")
-                    }
-
-                    Button(modifier = Modifier.weight(1f), onClick = { onClickCancel() }) {
-                        Text(text = "취소")
-                    }
+                        .height(50.dp),
+                    onClick = { onClickDone() }) {
+                    Text(text = "종료")
                 }
             }
         }
