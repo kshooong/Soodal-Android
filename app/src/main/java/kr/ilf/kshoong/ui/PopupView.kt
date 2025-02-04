@@ -78,9 +78,8 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
     AppFinishPopup(
         modifier = modifier,
         visible = viewModel.popupUiState.value == PopupUiState.APP_FINISH,
-        onClickDone = { (context as Activity).finish() },
-        onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE },
-        null
+        onClickDone = { (context as Activity).finishAndRemoveTask() },
+        onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE }
     )
 }
 
@@ -266,8 +265,7 @@ fun AppFinishPopup(
     modifier: Modifier,
     visible: Boolean,
     onClickDone: () -> Unit,
-    onClickCancel: () -> Unit,
-    record: DetailRecord?
+    onClickCancel: () -> Unit
 ) {
     // dimmed
     AnimatedVisibility(
