@@ -12,6 +12,9 @@
     <uses-permission android:name="android.permission.health.WRITE_SPEED" />
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.WRITE_TOTAL_CALORIES_BURNED" />
+    <!-- 헬스 커넥트 백그라운드 읽기, 30일 이전 데이터 읽기 -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 

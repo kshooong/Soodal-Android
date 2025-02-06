@@ -22,12 +22,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
@@ -186,23 +189,34 @@ fun NavigationView(
                         .horizontalScroll(rememberScrollState())
                 ) {
                     items.forEach {
-                        Column {
-                            Button(onClick = {
-                                webView.evaluateJavascript(
-                                    "getGif('$it')",
-                                    null
-                                )
-                            }) {
-                                Text(text = "get$it")
+                        Column(
+                            modifier = Modifier.padding(2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Button(modifier = Modifier.padding(bottom = 3.dp).height(30.dp),
+                                onClick = {
+                                    webView.evaluateJavascript(
+                                        "getGif('$it')",
+                                        null
+                                    )
+                                },
+                                contentPadding = PaddingValues(3.dp),
+                                shape = RoundedCornerShape(25)
+                            ) {
+                                Text(text = "get $it")
                             }
 
-                            Button(onClick = {
-                                webView.evaluateJavascript(
-                                    "deleteGif('$it')",
-                                    null
-                                )
-                            }) {
-                                Text(text = "delete$it")
+                            Button(modifier = Modifier.height(30.dp),
+                                onClick = {
+                                    webView.evaluateJavascript(
+                                        "deleteGif('$it')",
+                                        null
+                                    )
+                                },
+                                contentPadding = PaddingValues(3.dp),
+                                shape = RoundedCornerShape(25)
+                            ) {
+                                Text(text = "del $it")
                             }
                         }
                     }

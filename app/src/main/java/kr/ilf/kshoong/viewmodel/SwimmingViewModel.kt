@@ -54,6 +54,8 @@ class SwimmingViewModel(
             HealthPermission.getWritePermission(HeartRateRecord::class),
             HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
             HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND,
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
         )
     val hasAllPermissions = mutableStateOf(false)
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
@@ -373,5 +375,6 @@ enum class UiState {
 enum class PopupUiState {
     NONE,
     MODIFY,
-    WRITE
+    WRITE,
+    APP_FINISH
 }
