@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.vector.DefaultTintColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -102,21 +105,22 @@ private fun BottomBarButton(
     onClick: () -> Unit,
     isActivated: Boolean = false,
     imageResource: Int,
-    imageResourceActive: Int
+    imageResourceActive: Int,
+
 ) {
-    Button(
+    IconButton(
         modifier = modifier,
         onClick = onClick,
-        shape = RectangleShape,
-        contentPadding = PaddingValues(),
+//        shape = RectangleShape,
+//        contentPadding = PaddingValues(),
         enabled = isActivated.not(),
-        colors = ButtonColors(
+        colors = IconButtonColors(
             Color.Transparent,
             ColorBottomBarButton,
             Color.Transparent,
             ColorBottomBarButtonActive
         ),
-        interactionSource = NoRippleInteractionSource()
+//        interactionSource = NoRippleInteractionSource()
     ) {
         Column(
             Modifier.fillMaxSize(),
@@ -124,9 +128,11 @@ private fun BottomBarButton(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
+                imageVector = ImageVector.vectorResource(imageResource),
+//                imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
                 contentDescription = "home",
                 modifier = Modifier.size(19.dp),
+                tint = if(isActivated )ColorBottomBarButtonActive else ColorBottomBarButton
             )
             Text(text = title, style = MaterialTheme.typography.labelSmall)
         }
