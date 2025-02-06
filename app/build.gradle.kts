@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "kr.ilf.kshoong"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "kr.ilf.kshoong"
