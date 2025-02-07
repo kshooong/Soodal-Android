@@ -667,6 +667,10 @@ fun CalendarDetailView(
                     }
                 }
             }
+
+            detailRecord.ifEmpty {
+                Text(modifier = Modifier.padding(start = 10.dp), text = "데이터가 없습니다.")
+            }
         }
     }
 }
