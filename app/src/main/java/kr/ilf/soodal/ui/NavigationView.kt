@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.soodal.ui
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -57,14 +57,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
-import kr.ilf.kshoong.Destination
-import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.R
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
-import kr.ilf.kshoong.viewmodel.PopupUiState
-import kr.ilf.kshoong.viewmodel.SwimmingViewModel
-import kr.ilf.kshoong.viewmodel.UiState
+import kr.ilf.soodal.Destination
+import kr.ilf.soodal.HealthConnectManager
+import kr.ilf.soodal.R
+import kr.ilf.soodal.ui.theme.ColorBottomBarButton
+import kr.ilf.soodal.ui.theme.ColorBottomBarButtonActive
+import kr.ilf.soodal.viewmodel.PopupUiState
+import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 
 @Composable
@@ -314,7 +314,7 @@ fun LoadingView(
         )
 
         Text(
-            text = "KSHOONG!",
+            text = "SOODAL!",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 270.dp)
         )

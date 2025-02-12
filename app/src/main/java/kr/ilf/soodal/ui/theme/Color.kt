@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.ui.theme
+package kr.ilf.soodal.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

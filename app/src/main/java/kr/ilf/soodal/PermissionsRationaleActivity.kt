@@ -1,4 +1,4 @@
-package kr.ilf.kshoong
+package kr.ilf.soodal
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,14 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import kr.ilf.kshoong.ui.theme.KshoongTheme
+import kr.ilf.soodal.ui.theme.SoodalTheme
 
 class PermissionsRationaleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            KshoongTheme {
+            SoodalTheme {
                 Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
                     Greeting(
                         name = "Android",
@@ -41,7 +41,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    KshoongTheme {
+    SoodalTheme {
         Greeting("Android")
     }
 }

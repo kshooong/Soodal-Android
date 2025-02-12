@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "kr.ilf.kshoong"
+    namespace = "kr.ilf.soodal"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "kr.ilf.kshoong"
+        applicationId = "kr.ilf.soodal"
         minSdk = 29
         targetSdk = 34
         versionCode = 1

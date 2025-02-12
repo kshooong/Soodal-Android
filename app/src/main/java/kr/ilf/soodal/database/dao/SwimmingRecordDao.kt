@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.database.dao
+package kr.ilf.soodal.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -7,10 +7,10 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import kr.ilf.kshoong.database.DatabaseConst
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
-import kr.ilf.kshoong.database.entity.HeartRateSample
+import kr.ilf.soodal.database.DatabaseConst
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.HeartRateSample
 import java.time.Instant
 
 @Dao
