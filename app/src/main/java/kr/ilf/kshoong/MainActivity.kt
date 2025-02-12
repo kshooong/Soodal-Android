@@ -126,35 +126,11 @@ class MainActivity : ComponentActivity() {
                                 .background(ColorBottomBar)
                                 .topBorder(0.5.dp, ColorBottomBarDivider),
                             currentDestination,
-                            onHomeClick = {
-                                if (navController.currentDestination?.route != Destination.Home.route) {
-                                    prevDestination.value =
-                                        navController.currentDestination?.route ?: "Home"
-                                    navController.navigate(Destination.Home.route) {
-                                        launchSingleTop = true
-                                        popUpTo(navController.currentDestination?.route!!) {
-                                            inclusive = true
-                                        }
-                                    }
-                                }
-                            },
                             onCalendarClick = {
                                 if (navController.currentDestination?.route != Destination.Calendar.route) {
                                     prevDestination.value =
                                         navController.currentDestination?.route ?: "Home"
                                     navController.navigate(Destination.Calendar.route) {
-                                        launchSingleTop = true
-                                        popUpTo(navController.currentDestination?.route!!) {
-                                            inclusive = true
-                                        }
-                                    }
-                                }
-                            },
-                            onShopClick = {
-                                if (navController.currentDestination?.route != Destination.Shop.route) {
-                                    prevDestination.value =
-                                        navController.currentDestination?.route ?: "Home"
-                                    navController.navigate(Destination.Shop.route) {
                                         launchSingleTop = true
                                         popUpTo(navController.currentDestination?.route!!) {
                                             inclusive = true

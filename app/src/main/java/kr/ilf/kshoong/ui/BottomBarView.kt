@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
@@ -26,14 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.DefaultTintColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kr.ilf.kshoong.Destination
-import kr.ilf.kshoong.NoRippleInteractionSource
 import kr.ilf.kshoong.R
 import kr.ilf.kshoong.ui.theme.ColorBottomBar
 import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
@@ -43,9 +37,7 @@ import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
 fun BottomBarView(
     modifier: Modifier,
     currentDestination: State<String?>,
-    onHomeClick: () -> Unit,
     onCalendarClick: () -> Unit,
-    onShopClick: () -> Unit,
     onSettingClick: () -> Unit
 ) {
     Box(modifier) {
@@ -61,29 +53,11 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = buttonModifier,
-                "마이룸",
-                onClick = onHomeClick,
-                isActivated = Destination.Home.route == currentDestination.value,
-                R.drawable.ic_home,
-                R.drawable.ic_home_active
-            )
-
-            BottomBarButton(
-                modifier = buttonModifier,
                 "캘린더",
                 onClick = onCalendarClick,
                 isActivated = Destination.Calendar.route == currentDestination.value,
                 R.drawable.ic_calendar,
                 R.drawable.ic_calendar_active
-            )
-
-            BottomBarButton(
-                modifier = buttonModifier,
-                "상점",
-                onClick = onShopClick,
-                isActivated = Destination.Shop.route == currentDestination.value,
-                R.drawable.ic_shop,
-                R.drawable.ic_shop_active
             )
 
             BottomBarButton(
@@ -107,7 +81,7 @@ private fun BottomBarButton(
     imageResource: Int,
     imageResourceActive: Int,
 
-) {
+    ) {
     IconButton(
         modifier = modifier,
         onClick = onClick,
@@ -132,7 +106,7 @@ private fun BottomBarButton(
 //                imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
                 contentDescription = "home",
                 modifier = Modifier.size(19.dp),
-                tint = if(isActivated )ColorBottomBarButtonActive else ColorBottomBarButton
+                tint = if (isActivated) ColorBottomBarButtonActive else ColorBottomBarButton
             )
             Text(text = title, style = MaterialTheme.typography.labelSmall)
         }
@@ -156,9 +130,7 @@ fun BottomBarViewPreview() {
             .fillMaxWidth()
             .background(ColorBottomBar),
             remember { mutableStateOf("calendar") },
-            onHomeClick = {},
             onCalendarClick = {},
-            onShopClick = {},
             onSettingClick = {})// 상단 공간 확보
         Box(
             modifier = Modifier
