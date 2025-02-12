@@ -124,7 +124,7 @@ fun NavigationView(
                 context = context,
                 viewModel = viewModel,
                 onSyncComplete = {
-                    navController.navigate(Destination.Home.route) {
+                    navController.navigate(Destination.Calendar.route) {
                         popUpTo(Destination.Sync.route) {
                             inclusive = true
                         }
@@ -135,111 +135,6 @@ fun NavigationView(
                     viewModel.uiState.value = UiState.SCROLLING
                 }
             )
-        }
-
-        composable(
-            Destination.Home.route,
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
-            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
-            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn() },
-            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut() },
-
-            ) {
-            val url = "https://ilf.kr:8899/test/clothTest"
-
-            Column(modifier = Modifier.fillMaxSize()) {
-                AndroidView(
-                    modifier = Modifier
-                        .size(300.dp),
-                    factory = {
-                        webView.parent?.let {
-                            (it as ViewGroup).removeView(webView)
-                        }
-                        webView
-                    },
-
-                    update = { webView ->
-                        // URL이 변경되지 않은 경우에만 업데이트
-                        if (webView.url != url) {
-                            webView.loadUrl(url)
-                        }
-                    }
-                )
-
-                val items = listOf(
-                    "기본",
-                    "누더기",
-                    "루돌프",
-                    "밀집모자",
-                    "빨간조끼",
-                    "수경",
-                    "수모",
-                    "운동복",
-                    "병아리모자",
-                    "오리튜브",
-                    "미니가방",
-                    "파랑옷",
-                    "개구리모자",
-                    "개구리목도리",
-                    "묘기공머리띠"
-                )
-
-                Row(
-                    Modifier
-                        .horizontalScroll(rememberScrollState())
-                ) {
-                    items.forEach {
-                        Column(
-                            modifier = Modifier.padding(2.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Button(modifier = Modifier.padding(bottom = 3.dp).height(30.dp),
-                                onClick = {
-                                    webView.evaluateJavascript(
-                                        "getGif('$it')",
-                                        null
-                                    )
-                                },
-                                contentPadding = PaddingValues(3.dp),
-                                shape = RoundedCornerShape(25)
-                            ) {
-                                Text(text = "get $it")
-                            }
-
-                            Button(modifier = Modifier.height(30.dp),
-                                onClick = {
-                                    webView.evaluateJavascript(
-                                        "deleteGif('$it')",
-                                        null
-                                    )
-                                },
-                                contentPadding = PaddingValues(3.dp),
-                                shape = RoundedCornerShape(25)
-                            ) {
-                                Text(text = "del $it")
-                            }
-                        }
-                    }
-                }
-
-                IconButton(
-                    modifier = Modifier
-                        .padding(bottom = 60.dp)
-                        .navigationBarsPadding()
-                        .size(50.dp)
-                        .align(Alignment.End),
-                    onClick = {
-                        viewModel.popupUiState.value = PopupUiState.MODIFY
-                    }) {
-
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
-                        modifier = modifier.size(50.dp),
-                        contentDescription = "기록 버튼",
-                        tint = Color.Unspecified
-                    )
-                }
-            }
         }
 
         composable(
@@ -364,26 +259,6 @@ fun NavigationView(
                 }
             )
         }
-
-//        navigation(
-//            startDestination = Destination.Calendar.route,
-//            route = Destination.Home.route,
-//            enterTransition = { EnterTransition.None },
-//            exitTransition = { ExitTransition.None },
-        // 달력 커스텀 애니메이션
-//            enterTransition = {
-//                fadeIn(
-//                    animationSpec = tween(
-//                        300, easing = LinearEasing
-//                    )
-//                ) + slideIntoContainer(
-//                    animationSpec = tween(700, easing = CubicBezierEasing(0f, 1.20f, 0.5f, 1f)),
-//                    towards = AnimatedContentTransitionScope.SlideDirection.Up
-//                )
-//            }
-//        ) {
-//
-//        }
     }
 }
 
