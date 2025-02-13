@@ -76,20 +76,6 @@ fun NavigationView(
     prevDestination: MutableState<String>
 ) {
     val context = LocalContext.current
-    val webView = remember {
-        WebView(context).apply {
-            webViewClient = WebViewClient()
-            settings.javaScriptEnabled = true
-            settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        }
-    }
-    val shopWebView = remember {
-        WebView(context).apply {
-            webViewClient = WebViewClient()
-            settings.javaScriptEnabled = true
-            settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        }
-    }
 
     NavHost(
         modifier = modifier,
@@ -196,68 +182,6 @@ fun NavigationView(
                     initialHeight
                 )
             }
-        }
-
-        composable(
-            Destination.Shop.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Setting.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeIn()
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Setting.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeOut()
-            },
-            popEnterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Setting.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeIn()
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Setting.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeOut()
-            },
-        ) {
-            val url = "https://ilf.kr:8899/test/clothTestWithButton"
-
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize(),
-                factory = {
-                    shopWebView.parent?.let {
-                        (it as ViewGroup).removeView(shopWebView)
-                    }
-                    shopWebView
-                },
-
-                update = { shopWebView ->
-                    // URL이 변경되지 않은 경우에만 업데이트
-                    if (shopWebView.url != url) {
-                        shopWebView.loadUrl(url)
-                    }
-                }
-            )
         }
     }
 }
