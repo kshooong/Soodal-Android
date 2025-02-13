@@ -3,6 +3,7 @@ package kr.ilf.soodal.ui
 import android.content.res.Resources
 import android.os.Bundle
 import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -558,13 +559,14 @@ fun CalendarDetailView(
         Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
             restore = { it.getFloat("columnHeight").dp })
     var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
+    val animatedHeight by animateDpAsState(targetValue = columnHeight)
 
     Column(
         Modifier
             .padding(0.dp, 0.dp, 0.dp, 60.dp)
             .then(modifier)
             .fillMaxWidth()
-            .height(columnHeight)
+            .height(animatedHeight)
             .navigationBarsPadding()
             .background(ColorCalendarDetailBg, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
             .padding(horizontal = 5.dp),
@@ -576,11 +578,19 @@ fun CalendarDetailView(
                 .fillMaxWidth()
                 .height(15.dp)
                 .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+                    detectDragGestures(
+                        onDrag = { change, dragAmount ->
                         change.consume()
                         // Column의 높이를 조정
                         columnHeight = max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
-                    }
+                    }, onDragEnd = {
+                        val extendHeight = columnHeight - initialHeight.dp
+                        columnHeight = when {
+                            extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
+                            extendHeight > 230.dp -> initialHeight.dp + 305.dp
+                            else -> initialHeight.dp
+                        }
+                    })
                 }, contentAlignment = Alignment.Center
         ) {
             Box(
