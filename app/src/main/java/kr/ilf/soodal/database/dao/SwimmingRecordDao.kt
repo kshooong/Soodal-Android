@@ -18,6 +18,7 @@ interface SwimmingRecordDao {
 
 
     @Query("SELECT * FROM ${DatabaseConst.TB_DETAIL_RECORD} WHERE startTime BETWEEN :start AND :end")
+    @Transaction
     fun findDetailRecordsWithHeartRateSamplesByDate(
         start: Instant,
         end: Instant
