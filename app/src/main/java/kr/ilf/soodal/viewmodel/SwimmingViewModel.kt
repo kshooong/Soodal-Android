@@ -67,10 +67,10 @@ class SwimmingViewModel(
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
-    private val _currentDetailRecord =
-        MutableStateFlow<List<DetailRecordWithHeartRateSample?>>(mutableListOf())
-    val currentDetailRecord
-        get() = _currentDetailRecord.asStateFlow()
+    private val _currentDetailRecords =
+        MutableStateFlow<List<DetailRecordWithHeartRateSample>>(mutableListOf())
+    val currentDetailRecords
+        get() = _currentDetailRecords.asStateFlow()
 
     private val _currentModifyRecord =
         MutableStateFlow<DetailRecord?>(null)
@@ -305,7 +305,7 @@ class SwimmingViewModel(
                     date.plus(1, ChronoUnit.DAYS)
                 )
                 result?.let {
-                    _currentDetailRecord.value = it
+                    _currentDetailRecords.value = it
                 }
 
             }
@@ -313,7 +313,7 @@ class SwimmingViewModel(
     }
 
     fun resetDetailRecord() {
-        _currentDetailRecord.value = emptyList()
+        _currentDetailRecords.value = emptyList()
     }
 
     fun setModifyRecord(record: DetailRecord?) {

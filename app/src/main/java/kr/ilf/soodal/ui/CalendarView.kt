@@ -39,6 +39,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,7 +72,6 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -119,6 +120,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.time.Duration
 
 val selectedMonthSaver =
@@ -591,17 +593,18 @@ fun CalendarDetailView(
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDrag = { change, dragAmount ->
-                        change.consume()
-                        // Column의 높이를 조정
-                        columnHeight = max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
-                    }, onDragEnd = {
-                        val extendHeight = columnHeight - initialHeight.dp
-                        columnHeight = when {
-                            extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
-                            extendHeight > 230.dp -> initialHeight.dp + 305.dp
-                            else -> initialHeight.dp
-                        }
-                    })
+                            change.consume()
+                            // Column의 높이를 조정
+                            columnHeight =
+                                max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
+                        }, onDragEnd = {
+                            val extendHeight = columnHeight - initialHeight.dp
+                            columnHeight = when {
+                                extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
+                                extendHeight > 230.dp -> initialHeight.dp + 305.dp
+                                else -> initialHeight.dp
+                            }
+                        })
                 }, contentAlignment = Alignment.Center
         ) {
             Box(
@@ -617,7 +620,45 @@ fun CalendarDetailView(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            val detailRecord by viewModel.currentDetailRecord.collectAsState()
+            // 거리, 시간, 칼로리, 최고 심박, 최저 심박
+
+            val detailRecord by viewModel.currentDetailRecords.collectAsState()
+            // 새 화면
+            var totalDistance by remember { mutableIntStateOf(0) }
+            var totalTime by remember { mutableStateOf(Duration.ZERO) }
+            var totalCalories by remember { mutableDoubleStateOf(0.0) }
+            var totalMinHR by remember { mutableIntStateOf(0) }
+            var totalMaxHR by remember { mutableIntStateOf(0) }
+
+            LaunchedEffect(detailRecord) {
+                totalDistance = 0
+                totalTime = Duration.ZERO
+                totalCalories = 0.0
+                totalMinHR = 0
+                totalMaxHR = 0
+
+                detailRecord.forEach { (record, sample) ->
+                    val distance = record.distance?.toInt() ?: 0
+                    val activeTime = record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
+                    val energyBurned = record.energyBurned?.toDouble() ?: 0.0
+                    val minHR = record.minHeartRate?.toInt() ?: 0
+                    val maxHR = record.maxHeartRate?.toInt() ?: 0
+
+                    totalDistance += distance
+                    totalTime += activeTime
+                    totalCalories += energyBurned
+                    totalMinHR = if (totalMinHR == 0) minHR else min(totalMinHR, minHR)
+                    totalMaxHR = max(totalMinHR, maxHR)
+                }
+            }
+
+            Text(totalDistance.toString())
+            Text(totalTime.toString())
+            Text(totalCalories.toString())
+            Text(totalMinHR.toString())
+            Text(totalMaxHR.toString())
+
+            //
             detailRecord.forEach {
                 Column(
                     Modifier
