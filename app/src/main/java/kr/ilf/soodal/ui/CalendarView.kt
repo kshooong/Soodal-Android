@@ -28,7 +28,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -49,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -86,7 +84,6 @@ import kr.ilf.soodal.ui.theme.ColorBreastStroke
 import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorButterfly
 import kr.ilf.soodal.ui.theme.ColorButterflySecondary
-import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
 import kr.ilf.soodal.ui.theme.ColorCalendarDate
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
@@ -106,7 +103,7 @@ import kr.ilf.soodal.ui.theme.ColorMixEnd
 import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
-import kr.ilf.soodal.ui.theme.blue4
+import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -580,7 +577,7 @@ fun CalendarDetailView(
             .fillMaxWidth()
             .height(animatedHeight)
             .navigationBarsPadding()
-            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+            .background(Color.White, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
             .padding(horizontal = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -716,21 +713,32 @@ fun CalendarDetailView(
             }
 
             Column(
-                Modifier.background(
-                    Brush.linearGradient(
-                        Pair(0f, ColorCalendarBgStart),
-                        Pair(0.75f, blue4),
-                        start = Offset(0f, 0f),
-                        end = Offset(0.5f, Float.POSITIVE_INFINITY)
-                    )
-                )
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        SkyBlue6, shape = RoundedCornerShape(15.dp)
+                    ).padding(10.dp)
             ) {
                 Text(animatedCrawl.toString())
                 Text(animatedBackStroke.toString())
                 Text(animatedBreastStroke.toString())
                 Text(animatedButterfly.toString())
                 Text(animatedKickBoard.toString())
-                Text(animatedMixed.toString())
+                Box(
+                    modifier = Modifier
+                        .height(30.dp)
+                        .fillMaxWidth(animatedMixed / 1000f)
+                        .background(
+                            Brush.verticalGradient(
+                                Pair(0f, ColorMixStart),
+                                Pair(1f, ColorMixEnd)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ).padding(end = 7.dp),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                   Text(animatedMixed.toString(), color = Color.Black.copy(0.8f))
+                }
             }
             //
 

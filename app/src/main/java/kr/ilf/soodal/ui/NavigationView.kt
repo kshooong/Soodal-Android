@@ -47,7 +47,7 @@ import kr.ilf.soodal.Destination
 import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
 import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
-import kr.ilf.soodal.ui.theme.blue4
+import kr.ilf.soodal.ui.theme.Blue4
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
@@ -155,7 +155,7 @@ fun NavigationView(
                     .background(
                         Brush.linearGradient(
                             Pair(0f, ColorCalendarBgStart),
-                            Pair(0.75f, blue4),
+                            Pair(0.75f, Blue4),
                             start = Offset(0f, 0f),
                             end = Offset(0.5f, Float.POSITIVE_INFINITY)
                         )
