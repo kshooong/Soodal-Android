@@ -13,6 +13,10 @@ val Pink40 = Color(0xFF7D5260)
 
 val skyBlue4 = Color(0xFF9ED3FF)
 val blue3 = Color(0xFF499CFB)
+val blue4 = Color(0xFF9DC0FF)
+
+
+
 
 //Calendar
 //val ColorCalendarItemBgStart = Color(0x08000000)
@@ -21,6 +25,7 @@ val blue3 = Color(0xFF499CFB)
 //val ColorCalendarOnDateBg = Color(0xFFFCFCFC)
 //val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
+val ColorCalendarBgStart = Color(0xFFCBEDFF)
 val ColorCalendarItemBg = Color(0xFFE7F3FF)
 val ColorCalendarItemBorder = blue3
 val ColorCalendarOnItemBg = Color(0xFFE7F3FF)

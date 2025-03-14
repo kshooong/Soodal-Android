@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,7 +13,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,10 +27,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,14 +49,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -80,7 +77,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
 import kr.ilf.soodal.database.entity.HeartRateSample
@@ -90,6 +86,7 @@ import kr.ilf.soodal.ui.theme.ColorBreastStroke
 import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorButterfly
 import kr.ilf.soodal.ui.theme.ColorButterflySecondary
+import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
 import kr.ilf.soodal.ui.theme.ColorCalendarDate
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
@@ -109,10 +106,10 @@ import kr.ilf.soodal.ui.theme.ColorMixEnd
 import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
+import kr.ilf.soodal.ui.theme.blue4
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
-import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -131,6 +128,7 @@ val selectedMonthSaver =
 @Composable
 fun CalendarView(
     modifier: Modifier,
+    contentsBg: Color,
     viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -172,7 +170,7 @@ fun CalendarView(
     }
 
     Column(modifier = modifier) {
-        CalendarHeaderView(currentMonth)
+        CalendarHeaderView(currentMonth, contentsBg)
 
         HorizontalPager(
             state = pagerState,
@@ -180,7 +178,7 @@ fun CalendarView(
                 .padding(horizontal = 5.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .background(contentsBg, shape = RoundedCornerShape(10.dp))
                 .padding(vertical = 5.dp),
             key = { today.minusMonths(it.toLong()) },
             reverseLayout = true
@@ -511,7 +509,8 @@ fun DayView(
 
 @Composable
 private fun CalendarHeaderView(
-    currentMonth: LocalDate
+    currentMonth: LocalDate,
+    contentsBg: Color
 ) {
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
@@ -520,7 +519,7 @@ private fun CalendarHeaderView(
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier
             .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .background(contentsBg, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 15.dp),
         textAlign = TextAlign.Center
     )
@@ -529,7 +528,7 @@ private fun CalendarHeaderView(
     Row(
         modifier = Modifier
             .padding(start = 5.dp, end = 5.dp, top = 5.dp)
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .background(contentsBg, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 5.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -627,39 +626,115 @@ fun CalendarDetailView(
             var totalDistance by remember { mutableIntStateOf(0) }
             var totalTime by remember { mutableStateOf(Duration.ZERO) }
             var totalCalories by remember { mutableDoubleStateOf(0.0) }
-            var totalMinHR by remember { mutableIntStateOf(0) }
+            var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
             var totalMaxHR by remember { mutableIntStateOf(0) }
+            var totalCrawl by remember { mutableIntStateOf(0) }
+            var totalBackStroke by remember { mutableIntStateOf(0) }
+            var totalBreastStroke by remember { mutableIntStateOf(0) }
+            var totalButterfly by remember { mutableIntStateOf(0) }
+            var totalKickBoard by remember { mutableIntStateOf(0) }
+            var totalMixed by remember { mutableIntStateOf(0) }
+
+            val animatedCrawl by animateIntAsState(totalCrawl)
+            val animatedBackStroke by animateIntAsState(totalBackStroke)
+            val animatedBreastStroke by animateIntAsState(totalBreastStroke)
+            val animatedButterfly by animateIntAsState(totalButterfly)
+            val animatedKickBoard by animateIntAsState(totalKickBoard)
+            val animatedMixed by animateIntAsState(totalMixed)
 
             LaunchedEffect(detailRecord) {
-                totalDistance = 0
-                totalTime = Duration.ZERO
-                totalCalories = 0.0
-                totalMinHR = 0
-                totalMaxHR = 0
+                var tempTotalDistance = totalDistance
+                var tempTotalTime = totalTime
+                var tempTotalCalories = totalCalories
+                var tempTotalMinHR = totalMinHR
+                var tempTotalMaxHR = totalMaxHR
+                var tempTotalCrawl = totalCrawl
+                var tempTotalBackStroke = totalBackStroke
+                var tempTotalBreastStroke = totalBreastStroke
+                var tempTotalButterfly = totalButterfly
+                var tempTotalKickBoard = totalKickBoard
+                var tempTotalMixed = totalMixed
 
-                detailRecord.forEach { (record, sample) ->
-                    val distance = record.distance?.toInt() ?: 0
-                    val activeTime = record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
-                    val energyBurned = record.energyBurned?.toDouble() ?: 0.0
-                    val minHR = record.minHeartRate?.toInt() ?: 0
-                    val maxHR = record.maxHeartRate?.toInt() ?: 0
+                detailRecord.forEachIndexed { index, (record, sample) ->
+                    if (index == 0) {
+                        tempTotalDistance = 0
+                        tempTotalTime = Duration.ZERO
+                        tempTotalCalories = 0.0
+                        tempTotalMinHR = Int.MAX_VALUE
+                        tempTotalMaxHR = 0
+                        tempTotalCrawl = 0
+                        tempTotalBackStroke = 0
+                        tempTotalBreastStroke = 0
+                        tempTotalButterfly = 0
+                        tempTotalKickBoard = 0
+                        tempTotalMixed = 0
+                    }
 
-                    totalDistance += distance
-                    totalTime += activeTime
-                    totalCalories += energyBurned
-                    totalMinHR = if (totalMinHR == 0) minHR else min(totalMinHR, minHR)
-                    totalMaxHR = max(totalMinHR, maxHR)
+                    tempTotalDistance += record.distance?.toInt() ?: 0
+                    tempTotalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
+                    tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
+                    tempTotalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
+                    tempTotalMaxHR = maxOf(totalMinHR, record.maxHeartRate?.toInt() ?: 0)
+                    tempTotalCrawl += record.crawl
+                    tempTotalBackStroke += record.backStroke
+                    tempTotalBreastStroke += record.breastStroke
+                    tempTotalButterfly += record.butterfly
+                    tempTotalKickBoard += record.kickBoard
+                    tempTotalMixed += record.mixed
+                }
+
+                totalDistance = tempTotalDistance
+                totalTime = tempTotalTime
+                totalCalories = tempTotalCalories
+                totalMinHR = tempTotalMinHR
+                totalMaxHR = tempTotalMaxHR
+                totalCrawl = tempTotalCrawl
+                totalBackStroke = tempTotalBackStroke
+                totalBreastStroke = tempTotalBreastStroke
+                totalButterfly = tempTotalButterfly
+                totalKickBoard = tempTotalKickBoard
+                totalMixed = tempTotalMixed
+            }
+
+            Row {
+                Text(totalDistance.toString())
+            }
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text(totalCalories.toString())
+                    Text(totalTime.toString())
+                }
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(modifier = Modifier.padding(end = 10.dp), text = totalMinHR.toString())
+                    Text(totalMaxHR.toString())
                 }
             }
 
-            Text(totalDistance.toString())
-            Text(totalTime.toString())
-            Text(totalCalories.toString())
-            Text(totalMinHR.toString())
-            Text(totalMaxHR.toString())
-
+            Column(
+                Modifier.background(
+                    Brush.linearGradient(
+                        Pair(0f, ColorCalendarBgStart),
+                        Pair(0.75f, blue4),
+                        start = Offset(0f, 0f),
+                        end = Offset(0.5f, Float.POSITIVE_INFINITY)
+                    )
+                )
+            ) {
+                Text(animatedCrawl.toString())
+                Text(animatedBackStroke.toString())
+                Text(animatedBreastStroke.toString())
+                Text(animatedButterfly.toString())
+                Text(animatedKickBoard.toString())
+                Text(animatedMixed.toString())
+            }
             //
-            detailRecord.forEach {
+
+            /*detailRecord.forEach {
                 Column(
                     Modifier
                         .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 5.dp)
@@ -732,7 +807,7 @@ fun CalendarDetailView(
 
             detailRecord.ifEmpty {
                 Text(modifier = Modifier.padding(start = 10.dp), text = "데이터가 없습니다.")
-            }
+            }*/
         }
     }
 }
