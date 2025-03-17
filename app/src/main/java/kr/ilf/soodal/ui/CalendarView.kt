@@ -727,7 +727,11 @@ fun CalendarDetailView(
                     )
                     .padding(10.dp)
             ) {
-                var refValue = remember { 1000 }
+                var refValue by remember { mutableIntStateOf(1000) }
+                val animatedRefVal by animateIntAsState(refValue, spring(
+                    visibilityThreshold = Int.VisibilityThreshold,
+                    stiffness = 200f
+                ))
 
                 listOf(
                     Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
@@ -746,11 +750,11 @@ fun CalendarDetailView(
                 }.sortedByDescending {
                     it.first
                 }.forEachIndexed { i, it ->
-                    if (i == 0) refValue = max(refValue, it.first)
+                    if (i == 0) refValue = max(1000, it.first)
                     Box(
                         modifier = Modifier
                             .height(30.dp)
-                            .fillMaxWidth(it.second / refValue.toFloat())
+                            .fillMaxWidth(it.second / animatedRefVal.toFloat())
                             .background(
                                 it.third,
                                 shape = RoundedCornerShape(10.dp)
