@@ -16,6 +16,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +31,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -620,7 +622,22 @@ fun CalendarDetailView(
         ) {
             // 거리, 시간, 칼로리, 최고 심박, 최저 심박
 
-            val detailRecord by viewModel.currentDetailRecords.collectAsState()
+            val detailRecords by viewModel.currentDetailRecords.collectAsState()
+
+            // 임시 수정버튼
+            detailRecords.forEach {
+                Button(
+                    modifier = Modifier.height(24.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(),
+                    onClick = {
+                        viewModel.setModifyRecord(it.detailRecord)
+                        viewModel.popupUiState.value = PopupUiState.MODIFY
+                    }) {
+                    Text(text = "영법 수정", fontSize = 12.sp)
+                }
+            }
+
             // 새 화면
             var totalDistance by remember { mutableIntStateOf(0) }
             var totalTime by remember { mutableStateOf(Duration.ZERO) }
@@ -646,7 +663,7 @@ fun CalendarDetailView(
             val animatedKickBoard by animateIntAsState(totalKickBoard, animationSpec)
             val animatedMixed by animateIntAsState(totalMixed, animationSpec)
 
-            LaunchedEffect(detailRecord) {
+            LaunchedEffect(detailRecords) {
                 var tempTotalDistance = totalDistance
                 var tempTotalTime = totalTime
                 var tempTotalCalories = totalCalories
@@ -659,7 +676,7 @@ fun CalendarDetailView(
                 var tempTotalKickBoard = totalKickBoard
                 var tempTotalMixed = totalMixed
 
-                detailRecord.forEachIndexed { index, (record, sample) ->
+                detailRecords.forEachIndexed { index, (record, sample) ->
                     if (index == 0) {
                         tempTotalDistance = 0
                         tempTotalTime = Duration.ZERO
@@ -728,10 +745,12 @@ fun CalendarDetailView(
                     .padding(10.dp)
             ) {
                 var refValue by remember { mutableIntStateOf(1000) }
-                val animatedRefVal by animateIntAsState(refValue, spring(
-                    visibilityThreshold = Int.VisibilityThreshold,
-                    stiffness = 200f
-                ))
+                val animatedRefVal by animateIntAsState(
+                    refValue, spring(
+                        visibilityThreshold = Int.VisibilityThreshold,
+                        stiffness = 200f
+                    )
+                )
 
                 listOf(
                     Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
