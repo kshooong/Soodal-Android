@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -59,9 +61,11 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -607,6 +611,18 @@ fun CalendarDetailView(
                         })
                 }, contentAlignment = Alignment.Center
         ) {
+            Text(
+                text =
+                currentDate.atZone(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E)")),
+                color = Color.Black.copy(0.5f),
+                fontSize = 12.dp.toSp,
+                lineHeight = 12.dp.toSp,
+                modifier = Modifier
+                    .padding(start = 5.dp)
+                    .fillMaxWidth()
+            )
+
             Box(
                 modifier = Modifier
                     .size(width = 80.dp, height = 5.dp)
@@ -619,24 +635,10 @@ fun CalendarDetailView(
             Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
             // 거리, 시간, 칼로리, 최고 심박, 최저 심박
-
             val detailRecords by viewModel.currentDetailRecords.collectAsState()
-
-            // 임시 수정버튼
-            detailRecords.forEach {
-                Button(
-                    modifier = Modifier.height(24.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(),
-                    onClick = {
-                        viewModel.setModifyRecord(it.detailRecord)
-                        viewModel.popupUiState.value = PopupUiState.MODIFY
-                    }) {
-                    Text(text = "영법 수정", fontSize = 12.sp)
-                }
-            }
 
             // 새 화면
             var totalDistance by remember { mutableIntStateOf(0) }
@@ -695,7 +697,7 @@ fun CalendarDetailView(
                     tempTotalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
                     tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
                     tempTotalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
-                    tempTotalMaxHR = maxOf(totalMinHR, record.maxHeartRate?.toInt() ?: 0)
+                    tempTotalMaxHR = maxOf(totalMaxHR, record.maxHeartRate?.toInt() ?: 0)
                     tempTotalCrawl += record.crawl
                     tempTotalBackStroke += record.backStroke
                     tempTotalBreastStroke += record.breastStroke
@@ -717,32 +719,89 @@ fun CalendarDetailView(
                 totalMixed = tempTotalMixed
             }
 
-            Row {
-                Text(totalDistance.toString())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = totalDistance.toString() + "m",
+                    fontSize = 36.dp.toSp,
+                    lineHeight = 36.dp.toSp,
+                )
+                // 임시 수정버튼
+                detailRecords.forEach {
+                    Button(
+                        modifier = Modifier.height(24.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(),
+                        onClick = {
+                            viewModel.setModifyRecord(it.detailRecord)
+                            viewModel.popupUiState.value = PopupUiState.MODIFY
+                        }) {
+                        Text(text = "영법 수정", fontSize = 12.sp)
+                    }
+                }
             }
 
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
                 ) {
-                    Text(totalCalories.toString())
-                    Text(totalTime.toString())
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("시간")
+                        Text(totalTime.toString())
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("칼로리")
+                        Text(totalCalories.toInt().toString())
+                    }
                 }
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(modifier = Modifier.padding(end = 10.dp), text = totalMinHR.toString())
-                    Text(totalMaxHR.toString())
+                Row(
+                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("최대 심박")
+                        Text(totalMaxHR.toString())
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("최소 심박")
+                        Text(totalMinHR.toString())
+                    }
                 }
             }
 
             Column(
                 Modifier
+                    .padding(top = 5.dp)
                     .fillMaxWidth()
                     .background(
                         SkyBlue6, shape = RoundedCornerShape(15.dp)
                     )
-                    .padding(10.dp)
+                    .padding(8.dp)
             ) {
                 var refValue by remember { mutableIntStateOf(1000) }
                 val animatedRefVal by animateIntAsState(
@@ -770,18 +829,33 @@ fun CalendarDetailView(
                     it.first
                 }.forEachIndexed { i, it ->
                     if (i == 0) refValue = max(1000, it.first)
-                    Box(
-                        modifier = Modifier
-                            .height(30.dp)
-                            .fillMaxWidth(it.second / animatedRefVal.toFloat())
-                            .background(
-                                it.third,
-                                shape = RoundedCornerShape(10.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .height(30.dp)
+                                .fillMaxWidth(it.second / animatedRefVal.toFloat())
+                                .background(
+                                    it.third,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .padding(end = 7.dp),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            if (it.first >= 75) Text(
+                                it.second.toString(),
+                                lineHeight = 14.dp.toSp,
+                                fontSize = 14.dp.toSp,
+                                color = Color.Black.copy(0.8f)
                             )
-                            .padding(end = 7.dp),
-                        contentAlignment = Alignment.CenterEnd,
-                    ) {
-                        Text(it.second.toString(), color = Color.Black.copy(0.8f))
+                        }
+
+                        if (it.first < 75) Text(
+                            it.second.toString(),
+                            lineHeight = 14.dp.toSp,
+                            fontSize = 14.dp.toSp,
+                            color = Color.Black.copy(0.8f)
+                        )
                     }
                 }
             }
@@ -871,3 +945,6 @@ fun Duration.toCustomTimeString(): String {
 
     return if (parts.isNotEmpty()) parts.joinToString(" ") else "기록 없음"
 }
+
+// 시스템 설정과 상관 없이 text 크기 고정
+val Dp.toSp: TextUnit @Composable get() = with(LocalDensity.current) { this@toSp.toSp() }
