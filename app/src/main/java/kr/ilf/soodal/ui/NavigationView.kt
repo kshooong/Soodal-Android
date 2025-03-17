@@ -174,19 +174,19 @@ fun NavigationView(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     visible = detailRecord.isNotEmpty(), enter = fadeIn(
                         animationSpec = tween(
-                            200, easing = LinearEasing
+                            300, easing = LinearEasing
                         )
                     ) + slideInVertically(
                         animationSpec = tween(
-                            200,
+                            300,
                             easing = FastOutSlowInEasing
                         ), initialOffsetY = { it }),
                     exit = fadeOut(
                         animationSpec = tween(
-                            200, easing = LinearEasing
+                            300, easing = LinearEasing
                         )
                     ) + slideOutVertically(animationSpec = tween(
-                        200,
+                        300,
                         easing = FastOutSlowInEasing
                     ), targetOffsetY = { it })
                 ) {
