@@ -3,8 +3,11 @@ package kr.ilf.soodal.ui
 import android.content.res.Resources
 import android.os.Bundle
 import android.widget.Toast
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -88,7 +91,6 @@ import kr.ilf.soodal.ui.theme.ColorCalendarDate
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
 import kr.ilf.soodal.ui.theme.ColorCalendarDateDis
-import kr.ilf.soodal.ui.theme.ColorCalendarDetailBg
 import kr.ilf.soodal.ui.theme.ColorCalendarItemBg
 import kr.ilf.soodal.ui.theme.ColorCalendarItemBgDis
 import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBg
@@ -632,12 +634,17 @@ fun CalendarDetailView(
             var totalKickBoard by remember { mutableIntStateOf(0) }
             var totalMixed by remember { mutableIntStateOf(0) }
 
-            val animatedCrawl by animateIntAsState(totalCrawl)
-            val animatedBackStroke by animateIntAsState(totalBackStroke)
-            val animatedBreastStroke by animateIntAsState(totalBreastStroke)
-            val animatedButterfly by animateIntAsState(totalButterfly)
-            val animatedKickBoard by animateIntAsState(totalKickBoard)
-            val animatedMixed by animateIntAsState(totalMixed)
+            val animationSpec = spring(
+                visibilityThreshold = Int.VisibilityThreshold,
+                stiffness = Spring.StiffnessLow
+            )
+
+            val animatedCrawl by animateIntAsState(totalCrawl, animationSpec)
+            val animatedBackStroke by animateIntAsState(totalBackStroke, animationSpec)
+            val animatedBreastStroke by animateIntAsState(totalBreastStroke, animationSpec)
+            val animatedButterfly by animateIntAsState(totalButterfly, animationSpec)
+            val animatedKickBoard by animateIntAsState(totalKickBoard, animationSpec)
+            val animatedMixed by animateIntAsState(totalMixed, animationSpec)
 
             LaunchedEffect(detailRecord) {
                 var tempTotalDistance = totalDistance
@@ -717,105 +724,44 @@ fun CalendarDetailView(
                     .fillMaxWidth()
                     .background(
                         SkyBlue6, shape = RoundedCornerShape(15.dp)
-                    ).padding(10.dp)
+                    )
+                    .padding(10.dp)
             ) {
-                Text(animatedCrawl.toString())
-                Text(animatedBackStroke.toString())
-                Text(animatedBreastStroke.toString())
-                Text(animatedButterfly.toString())
-                Text(animatedKickBoard.toString())
-                Box(
-                    modifier = Modifier
-                        .height(30.dp)
-                        .fillMaxWidth(animatedMixed / 1000f)
-                        .background(
-                            Brush.verticalGradient(
-                                Pair(0f, ColorMixStart),
-                                Pair(1f, ColorMixEnd)
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        ).padding(end = 7.dp),
-                    contentAlignment = Alignment.CenterEnd,
-                ) {
-                   Text(animatedMixed.toString(), color = Color.Black.copy(0.8f))
-                }
-            }
-            //
+                var refValue = remember { 1000 }
 
-            /*detailRecord.forEach {
-                Column(
-                    Modifier
-                        .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 5.dp)
-                        .fillMaxWidth()
-                        .background(Color.White, shape = RoundedCornerShape(15.dp))
-                        .padding(5.dp)
-                ) {
-                    val startTime = it!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E) HH:mm"))
-                    val endTime = it.detailRecord.endTime.atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("HH:mm"))
-
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
-                            Text(
-                                text = "$startTime ~ $endTime",
-                                fontSize = 10.sp,
-                                lineHeight = 10.sp
-                            )
-                        }
-
-                        Button(
-                            modifier = Modifier.height(24.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(),
-                            onClick = {
-                                viewModel.setModifyRecord(it.detailRecord)
-                                viewModel.popupUiState.value = PopupUiState.MODIFY
-                            }) {
-                            Text(text = "영법 수정", fontSize = 12.sp)
-                        }
-                    }
-
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        val formattedDuration =
-                            Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
-                        Text(text = "수영시간: ")
-                        Text(text = formattedDuration)
-                    }
-                    Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
-                    Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
-
-                    IconButton(
-                        modifier = Modifier
-                            .navigationBarsPadding()
-                            .size(50.dp)
-                            .align(Alignment.End),
-                        onClick = {
-                            viewModel.setModifyRecord(it.detailRecord)
-                            viewModel.popupUiState.value = PopupUiState.MODIFY
-                        }) {
-
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
-                            modifier = modifier.size(50.dp),
-                            contentDescription = "기록 버튼",
-                            tint = Color.Unspecified
+                listOf(
+                    Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
+                    Triple(totalBackStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
+                    Triple(totalBreastStroke, animatedBreastStroke, SolidColor(ColorBreastStroke)),
+                    Triple(totalButterfly, animatedButterfly, SolidColor(ColorButterfly)),
+                    Triple(
+                        totalMixed, animatedMixed, Brush.verticalGradient(
+                            Pair(0f, ColorMixStart),
+                            Pair(1f, ColorMixEnd)
                         )
+                    ),
+                    Triple(totalKickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
+                ).filter {
+                    it.first != 0
+                }.sortedByDescending {
+                    it.first
+                }.forEachIndexed { i, it ->
+                    if (i == 0) refValue = max(refValue, it.first)
+                    Box(
+                        modifier = Modifier
+                            .height(30.dp)
+                            .fillMaxWidth(it.second / refValue.toFloat())
+                            .background(
+                                it.third,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .padding(end = 7.dp),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) {
+                        Text(it.second.toString(), color = Color.Black.copy(0.8f))
                     }
                 }
             }
-
-            detailRecord.ifEmpty {
-                Text(modifier = Modifier.padding(start = 10.dp), text = "데이터가 없습니다.")
-            }*/
         }
     }
 }
