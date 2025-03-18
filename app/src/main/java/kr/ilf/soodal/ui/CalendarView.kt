@@ -8,6 +8,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,14 +19,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -55,9 +53,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -68,15 +70,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -123,6 +116,8 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.time.Duration
 
 val selectedMonthSaver =
@@ -746,7 +741,9 @@ fun CalendarDetailView(
 
             Column {
                 Row(
-                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth(),
                 ) {
                     Row(
                         modifier = Modifier
@@ -770,7 +767,9 @@ fun CalendarDetailView(
                 }
 
                 Row(
-                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth(),
                 ) {
                     Row(
                         modifier = Modifier
@@ -863,7 +862,7 @@ fun CalendarDetailView(
     }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun LineGraph() {
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -881,6 +880,78 @@ fun LineGraph() {
         modelProducer,
         modifier = Modifier.fillMaxSize(),
     )
+}*/
+
+@Composable
+fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: BlendMode =BlendMode.Luminosity) {
+    Canvas(
+        modifier = Modifier
+            .size(size)
+            .graphicsLayer {
+                compositingStrategy = CompositingStrategy.Offscreen
+            }
+    ) {
+        val diameter = radius * 2
+        val offsetX = sqrt(diameter.value.pow(2) - radius.value.pow(2)).dp
+
+        // 첫 번째 줄 (1개)
+        drawCircle(
+            color = Color.Yellow.copy(green = 0.6f),
+            radius = circleRadius.toPx(),
+            center = Offset(center.x, center.y - diameter.toPx()),
+            blendMode = blendMode
+        )
+
+        // 두 번째 줄 (2개)
+        drawCircle(
+            color = Color.Blue,
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x - offsetX.toPx(),
+                center.y - radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        drawCircle(
+            color = Color.Cyan,
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x + offsetX.toPx(),
+                center.y - radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        // 세 번째 줄 (2개)
+        drawCircle(
+            color = Color.Green,
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x - offsetX.toPx(),
+                center.y + radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        drawCircle(
+            color = Color.Magenta,
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x + offsetX.toPx(),
+                center.y + radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        // 네 번째 줄 (1개)
+        drawCircle(
+            color = Color.Red,
+            radius = circleRadius.toPx(),
+            center = Offset(center.x, center.y + diameter.toPx()),
+            blendMode = blendMode
+        )
+    }
 }
 
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
