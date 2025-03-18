@@ -81,11 +81,8 @@ import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
 import kr.ilf.soodal.database.entity.HeartRateSample
 import kr.ilf.soodal.ui.theme.ColorBackStroke
-import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
-import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorButterfly
-import kr.ilf.soodal.ui.theme.ColorButterflySecondary
 import kr.ilf.soodal.ui.theme.ColorCalendarDate
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
@@ -97,13 +94,9 @@ import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBorder
 import kr.ilf.soodal.ui.theme.ColorCalendarToday
 import kr.ilf.soodal.ui.theme.ColorCalendarTodayBg
 import kr.ilf.soodal.ui.theme.ColorCrawl
-import kr.ilf.soodal.ui.theme.ColorCrawlSecondary
 import kr.ilf.soodal.ui.theme.ColorKickBoard
-import kr.ilf.soodal.ui.theme.ColorKickBoardSecondary
 import kr.ilf.soodal.ui.theme.ColorMixEnd
-import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
-import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
@@ -118,6 +111,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 import kotlin.time.Duration
 
 val selectedMonthSaver =
@@ -375,7 +369,6 @@ fun DayView(
                 if (today == thisDate) ColorCalendarToday else ColorCalendarDate
             else ColorCalendarDateDis
 
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -388,102 +381,43 @@ fun DayView(
                 }
             }
 
-            val boxWidths = remember {
+            val brushList = remember {
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
-                        if (record.mixed == record.totalDistance?.toInt()) {
-                            dailyRecord.value?.totalDistance?.let { totalDistance ->
-                                // mixed만 있으면 전체 거리 표시
-                                (0..totalDistance.toInt().div(1000)).map { i ->
-                                    "mixed" to if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-                                }
-                            }
-                        } else {
-                            // 거리 정보를 리스트로 변환
-                            val distances = listOf(
-                                "crawl" to record.crawl,
-                                "back" to record.backStroke,
-                                "breast" to record.breastStroke,
-                                "butterfly" to record.butterfly,
-                                "mixed" to record.mixed,
-                                "kickBoard" to record.kickBoard
-                            )
-
-                            // 가장 큰 값 4개 찾기
-                            val topDistances =
-                                distances.sortedByDescending { it.second }.take(4).toSet()
-
-                            // 원래 순서 유지하면서 필터링 및 비율 계산
-                            distances.filter { it in topDistances }
-                                .map { (type, distance) ->
-                                    type to (distance / 500f).coerceAtMost(1f)
-                                }
-                        }
-                    } ?: emptyList()
-
-                }
-            }
-
-            boxWidths.value.forEach { (type, widthRatio) ->
-                if (widthRatio > 0) {
-                    val color = if (isThisMonth) {
-                        when (type) {
-                            "crawl" -> SolidColor(ColorCrawl)
-                            "back" -> SolidColor(ColorBackStroke)
-                            "breast" -> SolidColor(ColorBreastStroke)
-                            "butterfly" -> SolidColor(ColorButterfly)
-                            "kickBoard" -> SolidColor(ColorKickBoard)
-                            else -> Brush.verticalGradient(
+                        // 거리 정보를 리스트로 변환
+                        val distances = mapOf(
+                            SolidColor(ColorCrawl) to record.crawl,
+                            SolidColor(ColorBackStroke) to record.backStroke,
+                            SolidColor(ColorBreastStroke) to record.breastStroke,
+                            SolidColor(ColorButterfly) to record.butterfly,
+                            SolidColor(ColorKickBoard) to record.kickBoard,
+                            Brush.verticalGradient(
                                 Pair(0f, ColorMixStart),
                                 Pair(1f, ColorMixEnd)
-                            )
-                        }
-                    } else {
-                        when (type) {
-                            "crawl" -> SolidColor(ColorCrawlSecondary)
-                            "back" -> SolidColor(ColorBackStrokeSecondary)
-                            "breast" -> SolidColor(ColorBreastStrokeSecondary)
-                            "butterfly" -> SolidColor(ColorButterflySecondary)
-                            "kickBoard" -> SolidColor(ColorKickBoardSecondary)
-                            else -> Brush.verticalGradient(
-                                Pair(0f, ColorMixStartSecondary),
-                                Pair(1f, ColorMixEndSecondary)
-                            )
-                        }
-                    }
+                            ) to record.mixed
+                        )
 
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 1.dp)
-                            .fillMaxWidth(widthRatio)
-                            .height(10.dp)
-                            .background(
-                                brush = color,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .align(Alignment.Start),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        if (widthRatio == 1f) {
-                            val distance = when (type) {
-                                "crawl" -> dailyRecord.value?.crawl
-                                "back" -> dailyRecord.value?.backStroke
-                                "breast" -> dailyRecord.value?.breastStroke
-                                "butterfly" -> dailyRecord.value?.butterfly
-                                "kickBoard" -> dailyRecord.value?.kickBoard
-                                else -> dailyRecord.value?.mixed
-                            }
-                            Text(
-                                modifier = Modifier.padding(end = 2.dp),
-                                text = distance.toString(),
-                                lineHeight = 10.sp,
-                                fontSize = 8.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
+                        val ratioList = distributeKeys(distances)
+                        ratioList
+                    } ?: emptyList<Brush>()
+
                 }
             }
+            val blendMode = BlendMode.Luminosity
+//                val blendMode = BlendMode.Color
+//                val blendMode = BlendMode.Hue
+
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Luminosity)
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Color)
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Hue)
+
+            if (brushList.value.isNotEmpty()) HexagonCircleGraph(
+                brushList.value,
+                60.dp,
+                5.dp,
+                8.dp,
+                BlendMode.Luminosity
+            )
         }
 
         Box(
@@ -883,20 +817,24 @@ fun LineGraph() {
 }*/
 
 @Composable
-fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: BlendMode =BlendMode.Luminosity) {
+fun HexagonCircleGraph(
+    brushList: List<Brush>,
+    size: Dp,
+    radius: Dp,
+    circleRadius: Dp,
+    blendMode: BlendMode = BlendMode.Luminosity
+) {
     Canvas(
         modifier = Modifier
             .size(size)
-            .graphicsLayer {
-                compositingStrategy = CompositingStrategy.Offscreen
-            }
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
     ) {
         val diameter = radius * 2
         val offsetX = sqrt(diameter.value.pow(2) - radius.value.pow(2)).dp
 
         // 첫 번째 줄 (1개)
         drawCircle(
-            color = Color.Yellow.copy(green = 0.6f),
+            brush = brushList[0],
             radius = circleRadius.toPx(),
             center = Offset(center.x, center.y - diameter.toPx()),
             blendMode = blendMode
@@ -904,7 +842,7 @@ fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: Blend
 
         // 두 번째 줄 (2개)
         drawCircle(
-            color = Color.Blue,
+            brush = brushList[5],
             radius = circleRadius.toPx(),
             center = Offset(
                 center.x - offsetX.toPx(),
@@ -914,7 +852,7 @@ fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: Blend
         )
 
         drawCircle(
-            color = Color.Cyan,
+            brush = brushList[1],
             radius = circleRadius.toPx(),
             center = Offset(
                 center.x + offsetX.toPx(),
@@ -925,7 +863,7 @@ fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: Blend
 
         // 세 번째 줄 (2개)
         drawCircle(
-            color = Color.Green,
+            brush = brushList[4],
             radius = circleRadius.toPx(),
             center = Offset(
                 center.x - offsetX.toPx(),
@@ -935,7 +873,7 @@ fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: Blend
         )
 
         drawCircle(
-            color = Color.Magenta,
+            brush = brushList[2],
             radius = circleRadius.toPx(),
             center = Offset(
                 center.x + offsetX.toPx(),
@@ -946,7 +884,7 @@ fun HexagonCircleLayout(size: Dp, radius: Dp, circleRadius: Dp, blendMode: Blend
 
         // 네 번째 줄 (1개)
         drawCircle(
-            color = Color.Red,
+            brush = brushList[3],
             radius = circleRadius.toPx(),
             center = Offset(center.x, center.y + diameter.toPx()),
             blendMode = blendMode
@@ -1019,3 +957,35 @@ fun Duration.toCustomTimeString(): String {
 
 // 시스템 설정과 상관 없이 text 크기 고정
 val Dp.toSp: TextUnit @Composable get() = with(LocalDensity.current) { this@toSp.toSp() }
+
+fun distributeKeys(data: Map<Brush, Int>, size: Int = 6): List<Brush> {
+    val total = data.values.sum() // 전체 합
+    val proportions = data.mapValues { (it.value * size).toDouble() / total } // 비율 계산
+
+    val intParts = proportions.mapValues { it.value.toInt() } // 정수 부분 할당
+    var remaining = size - intParts.values.sum() // 남은 개수
+
+    // 결과 리스트
+    val resultList = mutableListOf<Brush>()
+
+    // 정수 개수만큼 먼저 추가
+    for ((key, count) in intParts) {
+        repeat(count) { resultList.add(key) }
+    }
+
+    // 남은 개수를 가장 비율이 높은 순으로 채워 넣기
+    val sortedEntries = proportions.entries.sortedByDescending { it.value % 1 } // 소수점 부분 기준 정렬
+    for ((key, _) in sortedEntries) {
+        if (remaining > 0) {
+            resultList.add(key)
+            remaining--
+        } else break
+    }
+
+    val groupedList = resultList.sortedBy { resultList.indexOf(it) }.toMutableList()
+
+    val shift = Random.nextInt(0,6)
+    val finalList = groupedList.drop(shift) + groupedList.take(shift)
+
+    return finalList
+}
