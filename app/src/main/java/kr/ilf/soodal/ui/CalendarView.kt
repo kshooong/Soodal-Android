@@ -372,7 +372,8 @@ fun DayView(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.TopCenter)
+                .align(Alignment.TopCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val dailyRecords by viewModel.dailyRecords.collectAsState()
             val dailyRecord = remember {
@@ -397,7 +398,7 @@ fun DayView(
                             ) to record.mixed
                         )
 
-                        val ratioList = distributeKeys(distances)
+                        val ratioList = distributeDistance(distances)
                         ratioList
                     } ?: emptyList<Brush>()
 
@@ -411,13 +412,16 @@ fun DayView(
 //            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Color)
 //            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Hue)
 
-            if (brushList.value.isNotEmpty()) HexagonCircleGraph(
-                brushList.value,
-                60.dp,
-                5.dp,
-                8.dp,
-                BlendMode.Luminosity
-            )
+            if (brushList.value.isNotEmpty()) {
+                HexagonCircleGraph(
+                    brushList.value,
+                    36.dp,
+                    5.dp,
+                    8.dp,
+                    BlendMode.Luminosity
+                )
+                Text(dailyRecord.value!!.totalDistance!!, fontSize = 10.sp)
+            }
         }
 
         Box(
@@ -958,9 +962,9 @@ fun Duration.toCustomTimeString(): String {
 // 시스템 설정과 상관 없이 text 크기 고정
 val Dp.toSp: TextUnit @Composable get() = with(LocalDensity.current) { this@toSp.toSp() }
 
-fun distributeKeys(data: Map<Brush, Int>, size: Int = 6): List<Brush> {
-    val total = data.values.sum() // 전체 합
-    val proportions = data.mapValues { (it.value * size).toDouble() / total } // 비율 계산
+fun distributeDistance(distances: Map<Brush, Int>, size: Int = 6): List<Brush> {
+    val total = distances.values.sum() // 전체 합
+    val proportions = distances.mapValues { (it.value * size).toDouble() / total } // 비율 계산
 
     val intParts = proportions.mapValues { it.value.toInt() } // 정수 부분 할당
     var remaining = size - intParts.values.sum() // 남은 개수
@@ -984,7 +988,7 @@ fun distributeKeys(data: Map<Brush, Int>, size: Int = 6): List<Brush> {
 
     val groupedList = resultList.sortedBy { resultList.indexOf(it) }.toMutableList()
 
-    val shift = Random.nextInt(0,6)
+    val shift = Random.nextInt(0, 6)
     val finalList = groupedList.drop(shift) + groupedList.take(shift)
 
     return finalList
