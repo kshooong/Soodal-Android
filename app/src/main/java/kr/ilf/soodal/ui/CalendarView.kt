@@ -698,7 +698,7 @@ fun CalendarDetailView(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("시간")
-                        Text(totalTime.toString())
+                        Text(totalTime.toCustomTimeString())
                     }
 
                     Row(
