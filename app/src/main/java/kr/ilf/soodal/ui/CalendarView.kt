@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -32,6 +33,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -64,6 +67,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -77,6 +81,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
 import kr.ilf.soodal.database.entity.HeartRateSample
@@ -107,9 +112,11 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.time.Duration
@@ -117,7 +124,6 @@ import kotlin.time.Duration
 val selectedMonthSaver =
     mapSaver(save = { mapOf("selectedMonth" to it) },
         restore = { it["selectedMonth"] as LocalDate })
-
 
 @Composable
 fun CalendarView(
@@ -398,7 +404,7 @@ fun DayView(
                             ) to record.mixed
                         )
 
-                        val ratioList = distributeDistance(distances)
+                        val ratioList = distributeDistance(distances, 8)
                         ratioList
                     } ?: emptyList<Brush>()
 
@@ -413,13 +419,15 @@ fun DayView(
 //            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Hue)
 
             if (brushList.value.isNotEmpty()) {
-                HexagonCircleGraph(
-                    brushList.value,
-                    36.dp,
-                    5.dp,
-                    8.dp,
-                    BlendMode.Luminosity
-                )
+
+//                HexagonCircleGraph(
+//                    brushList.value,
+//                    36.dp,
+//                    5.dp,
+//                    8.dp,
+//                    BlendMode.Luminosity
+//                )
+                ShrimpIconWithBox( brushList.value, 22.dp, 13.dp, false)
                 Text(dailyRecord.value!!.totalDistance!!, fontSize = 10.sp)
             }
         }
@@ -820,6 +828,70 @@ fun LineGraph() {
     )
 }*/
 
+@Preview(widthDp = 100, heightDp = 100)
+@Composable
+fun ShrimpIconWithBoxPreview() {
+    ShrimpIconWithBox(
+        listOf(
+            SolidColor(ColorCrawl),
+            SolidColor(ColorBackStroke),
+            SolidColor(ColorBreastStroke),
+            SolidColor(ColorBreastStroke),
+            SolidColor(ColorBreastStroke),
+            SolidColor(ColorButterfly),
+            SolidColor(ColorKickBoard),
+            SolidColor(ColorKickBoard),
+            SolidColor(ColorKickBoard),
+            SolidColor(ColorKickBoard),
+            Brush.verticalGradient(
+                Pair(0f, ColorMixStart),
+                Pair(1f, ColorMixEnd)
+            ),
+            Brush.verticalGradient(
+                Pair(0f, ColorMixStart),
+                Pair(1f, ColorMixEnd)
+            )
+        ), 50.dp, 15.dp
+    )
+}
+
+@Composable
+fun ShrimpIconWithBox(brushList: List<Brush>, diameter: Dp, iconSize: Dp, isRotate: Boolean = true) {
+    Box(modifier = Modifier.size(diameter + iconSize), contentAlignment = Alignment.Center) {
+        val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
+        val offsetAngle = 360 / brushList.size.toFloat()
+
+        brushList.forEachIndexed { index, brush ->
+            val angle = index * offsetAngle
+            val radian = Math.toRadians(angle.toDouble())
+            val offsetX = radius * cos(radian).toFloat()
+            val offsetY = radius * sin(radian).toFloat()
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_pearl2),
+                contentDescription = "Shrimp",
+                modifier = Modifier
+                    .size(iconSize)
+                    .offset(offsetX.toDp(), offsetY.toDp())
+                    .graphicsLayer(
+                        rotationZ = if (isRotate) angle + 90f + 20f else 0f, // 이미지 여백을 위해 기본으로 20도 돌림
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    )
+                    .drawWithCache {
+                        onDrawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush,
+                                blendMode = BlendMode.SrcAtop
+                            )
+                        }
+                    },
+                tint = Color.Unspecified
+            )
+        }
+    }
+}
+
 @Composable
 fun HexagonCircleGraph(
     brushList: List<Brush>,
@@ -988,8 +1060,9 @@ fun distributeDistance(distances: Map<Brush, Int>, size: Int = 6): List<Brush> {
 
     val groupedList = resultList.sortedBy { resultList.indexOf(it) }.toMutableList()
 
-    val shift = Random.nextInt(0, 6)
-    val finalList = groupedList.drop(shift) + groupedList.take(shift)
+    val shift = Random.nextInt(0, size)
+//    val finalList = groupedList.drop(shift) + groupedList.take(shift)
 
-    return finalList
+//    return finalList
+    return groupedList
 }
