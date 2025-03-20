@@ -62,7 +62,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -902,13 +905,13 @@ fun IconWithPolygon(
             val offsetY = radius * sin(radian).toFloat()
 
             Icon(
-                painter = painterResource(id = R.drawable.ic_pearl2),
-                contentDescription = "Shrimp",
+                painter = painter,
+                contentDescription = "graph",
                 modifier = Modifier
                     .size(iconSize)
                     .offset(offsetX.toDp(), offsetY.toDp())
                     .graphicsLayer(
-                        rotationZ = if (isRotate) angle + 90f + 20f else 0f, // 이미지 여백을 위해 기본으로 20도 돌림
+                        rotationZ = if (isRotate) angle + 90f else 0f, // 이미지 여백을 위해 기본으로 20도 돌림
                         compositingStrategy = CompositingStrategy.Offscreen
                     )
                     .drawWithCache {
@@ -917,6 +920,54 @@ fun IconWithPolygon(
                             drawRect(
                                 brush,
                                 blendMode = BlendMode.SrcAtop
+                            )
+                        }
+                    },
+                tint = Color.Unspecified
+            )
+        }
+
+        val firstBrush = brushList.firstOrNull()
+        firstBrush?.let {
+            val radian = Math.toRadians(0.0)
+            val offsetX = radius * cos(radian).toFloat()
+            val offsetY = radius * sin(radian).toFloat()
+
+            Icon(
+                painter = painter,
+                contentDescription = "graph",
+                modifier = Modifier
+                    .size(iconSize)
+                    .offset(offsetX.toDp(), offsetY.toDp())
+                    .graphicsLayer(
+                        rotationZ = if (isRotate) 90f else 0f,
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    )
+                    .drawWithCache {
+                        onDrawWithContent {
+                            // 왼쪽 절반 그리기
+                            val (width, height) = if (isRotate) {
+                                (size.width / 2) to size.height
+                            } else {
+                                size.width to size.height / 2
+                            }
+
+                            clipRect(
+                                left = 0f,
+                                top = 0f,
+                                right = width,
+                                bottom = height
+                            ) {
+                                rotate(0f, center) {
+                                    this@onDrawWithContent.drawContent()
+                                }
+                            }
+
+                            // 오른쪽 절반 그리기 (겹치는 부분만)
+                            drawRect(
+                                firstBrush,
+                                size = size,
+                                blendMode = BlendMode.SrcIn
                             )
                         }
                     },
