@@ -181,7 +181,7 @@ fun CalendarView(
     }
 
     Column(modifier = modifier) {
-        CalendarHeaderView(currentMonth, contentsBg)
+        CalendarHeaderView(viewModel, contentsBg)
 
         HorizontalPager(
             state = pagerState,
@@ -493,20 +493,32 @@ fun DayView(
 
 @Composable
 private fun CalendarHeaderView(
-    currentMonth: LocalDate,
+    viewModel: SwimmingViewModel,
     contentsBg: Color
 ) {
+    val currentMonth by viewModel.currentMonth
+    val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
-    Text(
-        text = currentMonth.format(monthFormatter),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier
-            .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
-            .background(contentsBg, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = 15.dp),
-        textAlign = TextAlign.Center
-    )
+    Row {
+        Text(
+            text = currentMonth.format(monthFormatter),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
+                .background(contentsBg, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 15.dp),
+            textAlign = TextAlign.Center
+        )
+
+        val totalDistance = remember{ derivedStateOf { currentMonthTotal.totalDistance ?: "0 m" }}
+        val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0 kcal"}}
+        val totalMixed = remember{ derivedStateOf { currentMonthTotal.mixed }}
+
+        Text(totalDistance.value)
+        Text(totalCaloriesBurned.value)
+        Text(totalMixed.value.toString())
+    }
 
     // 요일 헤더
     Row(
