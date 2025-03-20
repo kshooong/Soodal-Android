@@ -103,6 +103,7 @@ import kr.ilf.soodal.ui.theme.ColorKickBoard
 import kr.ilf.soodal.ui.theme.ColorMixEnd
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.SkyBlue6
+import kr.ilf.soodal.ui.theme.notoSansKrBold
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -375,19 +376,51 @@ fun DayView(
                 if (today == thisDate) ColorCalendarToday else ColorCalendarDate
             else ColorCalendarDateDis
 
+        // 날짜 박스
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(15.dp)
+                .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
+                .background(dateBgColor, RoundedCornerShape(5.dp))
+        ) {
+            Text(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .align(Alignment.Center),
+                text = day, // 날짜만 표시
+                fontSize = 10.sp,
+                lineHeight = 10.sp,
+                textAlign = TextAlign.Center,
+                fontFamily = notoSansKrBold,
+                color = dateTextColor
+            )
+        }
+
+        val dailyRecords by viewModel.dailyRecords.collectAsState()
+        val dailyRecord = remember {
+            derivedStateOf {
+                dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
+            }
+        }
+
+        dailyRecord.value?.let {
+            Text(
+                modifier = Modifier.align(Alignment.TopCenter),
+                text = dailyRecord.value!!.totalDistance!!,
+                color = Color.Gray,
+                fontFamily = notoSansKrBold,
+                fontSize = 8.sp,
+                lineHeight = 8.sp
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.TopCenter),
+                .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val dailyRecords by viewModel.dailyRecords.collectAsState()
-            val dailyRecord = remember {
-                derivedStateOf {
-                    dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
-                }
-            }
-
             val brushList = remember {
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
@@ -404,7 +437,7 @@ fun DayView(
                             ) to record.mixed
                         )
 
-                        val ratioList = distributeDistance(distances, 8)
+                        val ratioList = distributeDistance(distances, 10)
                         ratioList
                     } ?: emptyList<Brush>()
 
@@ -427,28 +460,14 @@ fun DayView(
 //                    8.dp,
 //                    BlendMode.Luminosity
 //                )
-                ShrimpIconWithBox( brushList.value, 22.dp, 13.dp, false)
-                Text(dailyRecord.value!!.totalDistance!!, fontSize = 10.sp)
+                IconWithPolygon(
+                    painterResource(id = R.drawable.ic_pearl2),
+                    brushList.value,
+                    28.dp,
+                    16.dp,
+                    false
+                )
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .size(15.dp)
-                .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(dateBgColor, RoundedCornerShape(5.dp))
-        ) {
-            Text(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .align(Alignment.Center),
-                text = day, // 날짜만 표시
-                fontSize = 10.sp,
-                lineHeight = 10.sp,
-                textAlign = TextAlign.Center,
-                color = dateTextColor
-            )
         }
     }
 }
@@ -831,32 +850,47 @@ fun LineGraph() {
 @Preview(widthDp = 100, heightDp = 100)
 @Composable
 fun ShrimpIconWithBoxPreview() {
-    ShrimpIconWithBox(
-        listOf(
-            SolidColor(ColorCrawl),
-            SolidColor(ColorBackStroke),
-            SolidColor(ColorBreastStroke),
-            SolidColor(ColorBreastStroke),
-            SolidColor(ColorBreastStroke),
-            SolidColor(ColorButterfly),
-            SolidColor(ColorKickBoard),
-            SolidColor(ColorKickBoard),
-            SolidColor(ColorKickBoard),
-            SolidColor(ColorKickBoard),
-            Brush.verticalGradient(
-                Pair(0f, ColorMixStart),
-                Pair(1f, ColorMixEnd)
-            ),
-            Brush.verticalGradient(
-                Pair(0f, ColorMixStart),
-                Pair(1f, ColorMixEnd)
-            )
-        ), 50.dp, 15.dp
-    )
+    Column {
+        IconWithPolygon(
+            painterResource(id = R.drawable.ic_pearl2),
+            listOf(
+                SolidColor(ColorCrawl),
+                SolidColor(ColorBackStroke),
+                SolidColor(ColorBreastStroke),
+                SolidColor(ColorButterfly),
+                SolidColor(ColorKickBoard),
+                Brush.verticalGradient(
+                    Pair(0f, ColorMixStart),
+                    Pair(1f, ColorMixEnd)
+                )
+            ), 30.dp, 30.dp
+        )
+
+        IconWithPolygon(
+            painterResource(id = R.drawable.ic_pearl2),
+            listOf(
+                SolidColor(ColorCrawl),
+                SolidColor(ColorBackStroke),
+                SolidColor(ColorBreastStroke),
+                SolidColor(ColorButterfly),
+                SolidColor(ColorKickBoard),
+                Brush.verticalGradient(
+                    Pair(0f, ColorMixStart),
+                    Pair(1f, ColorMixEnd)
+                )
+            ), 30.dp, 30.dp, false
+        )
+    }
 }
 
 @Composable
-fun ShrimpIconWithBox(brushList: List<Brush>, diameter: Dp, iconSize: Dp, isRotate: Boolean = true) {
+fun IconWithPolygon(
+    painter: Painter,
+    brushList: List<Brush>,
+    diameter: Dp,
+    iconSize: Dp,
+    isRotate: Boolean = true
+) {
     Box(modifier = Modifier.size(diameter + iconSize), contentAlignment = Alignment.Center) {
         val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
         val offsetAngle = 360 / brushList.size.toFloat()
