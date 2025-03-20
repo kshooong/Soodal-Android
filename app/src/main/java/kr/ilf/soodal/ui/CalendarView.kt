@@ -145,7 +145,7 @@ fun CalendarView(
     val coroutineScope = rememberCoroutineScope()
 
     val today by remember { mutableStateOf(LocalDate.now()) }
-    var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    var currentMonth by viewModel.currentMonth
     val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
         mutableStateOf(
             LocalDate.now().withDayOfMonth(1)
@@ -177,7 +177,7 @@ fun CalendarView(
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
-        viewModel.updateDailyRecords(currentMonth)
+        viewModel.updateDailyRecords()
     }
 
     Column(modifier = modifier) {
@@ -1085,7 +1085,7 @@ fun DetailViewPreview() {
 
 class PreviewViewmodel {
     val popupUiState = mutableStateOf(PopupUiState.NONE)
-    val currentDetailRecord: StateFlow<List<DetailRecordWithHeartRateSample?>> =
+    val currentDetailRecord: StateFlow<List<DetailRecordWithHR?>> =
         MutableStateFlow(
             listOf(
                 DetailRecordWithHR(

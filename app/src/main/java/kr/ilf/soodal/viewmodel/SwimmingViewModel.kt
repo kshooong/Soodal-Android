@@ -62,6 +62,7 @@ class SwimmingViewModel(
 
     private val changeToken = mutableStateOf<String?>(null)
 
+    val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
     private val _dailyRecords =
         MutableStateFlow<MutableMap<ZonedDateTime, DailyRecord>>(mutableMapOf())
     val dailyRecords
@@ -237,7 +238,7 @@ class SwimmingViewModel(
         }
     }
 
-    fun updateDailyRecords(month: LocalDate) {
+    fun updateDailyRecords(month: LocalDate = currentMonth.value) {
         viewModelScope.launch {
             _dailyRecords.value = withContext(Dispatchers.IO) {
                 val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
@@ -323,6 +324,11 @@ class SwimmingViewModel(
             withContext(Dispatchers.IO) {
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
                     ?.updateDetailRecord(record)
+
+                val currentDate =
+                    record.startTime.atZone(ZoneId.systemDefault()).truncatedTo(ChronoUnit.DAYS)
+                findDetailRecord(currentDate.toInstant())
+                updateDailyRecords()
             }
         }
     }
