@@ -27,6 +27,7 @@ val Blue4 = Color(0xFF9DC0FF)
 //val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
 val ColorCalendarBgStart = Color(0xFFCBEDFF)
+val ColorCalendarBgEnd = Blue4
 val ColorCalendarItemBg = Color(0xFFE7F3FF)
 val ColorCalendarItemBorder = Blue3
 val ColorCalendarOnItemBg = Color(0xFFE7F3FF)
