@@ -63,6 +63,11 @@ class SwimmingViewModel(
     private val changeToken = mutableStateOf<String?>(null)
 
     val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
+
+    private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
+    val currentMonthTotal
+        get() = _currentMonthTotal.asStateFlow()
+
     private val _dailyRecords =
         MutableStateFlow<MutableMap<ZonedDateTime, DailyRecord>>(mutableMapOf())
     val dailyRecords
@@ -290,6 +295,50 @@ class SwimmingViewModel(
                     }
                 dailyRecordsMap
             }
+
+            updateCurrentMonthTotal()
+        }
+    }
+
+    private fun updateCurrentMonthTotal() {
+        viewModelScope.launch {
+            var totalActiveTime = Duration.ZERO
+            var totalDistance = 0
+            var totalEnergyBurned = 0.0
+            var totalCrawl = 0
+            var totalBackStroke = 0
+            var totalBreastStroke = 0
+            var totalButterfly = 0
+            var totalKickBoard = 0
+            var totalMixed = 0
+
+            _dailyRecords.value.filter {
+                it.key.toLocalDate().withDayOfMonth(1) == currentMonth.value
+            }.values.forEach { record ->
+                totalActiveTime += record.totalActiveTime?.let { Duration.parse(it) }
+                    ?: Duration.ZERO
+                totalDistance += record.totalDistance?.toInt() ?: 0
+                totalEnergyBurned += record.totalEnergyBurned?.toDouble() ?: 0.0
+                totalCrawl += record.crawl
+                totalBackStroke += record.backStroke
+                totalBreastStroke += record.breastStroke
+                totalButterfly += record.butterfly
+                totalKickBoard += record.kickBoard
+                totalMixed += record.mixed ?: 0
+            }
+
+            _currentMonthTotal.value = DailyRecord(
+                date = currentMonth.value.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                totalActiveTime.toString(),
+                totalDistance.toString(),
+                totalEnergyBurned.toString(),
+                totalCrawl,
+                totalBackStroke,
+                totalBreastStroke,
+                totalButterfly,
+                totalKickBoard,
+                totalMixed
+            )
         }
     }
 
