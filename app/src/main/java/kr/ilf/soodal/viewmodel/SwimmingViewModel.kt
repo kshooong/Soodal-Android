@@ -25,7 +25,7 @@ import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
-import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -67,13 +67,11 @@ class SwimmingViewModel(
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
-    private val _currentDetailRecords =
-        MutableStateFlow<List<DetailRecordWithHeartRateSample>>(mutableListOf())
+    private val _currentDetailRecords = MutableStateFlow<List<DetailRecordWithHR>>(mutableListOf())
     val currentDetailRecords
         get() = _currentDetailRecords.asStateFlow()
 
-    private val _currentModifyRecord =
-        MutableStateFlow<DetailRecord?>(null)
+    private val _currentModifyRecord = MutableStateFlow<DetailRecord?>(null)
     val currentModifyRecord
         get() = _currentModifyRecord.asStateFlow()
 

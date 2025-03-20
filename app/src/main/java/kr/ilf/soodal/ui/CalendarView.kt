@@ -86,7 +86,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
-import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
@@ -1088,7 +1088,7 @@ class PreviewViewmodel {
     val currentDetailRecord: StateFlow<List<DetailRecordWithHeartRateSample?>> =
         MutableStateFlow(
             listOf(
-                DetailRecordWithHeartRateSample(
+                DetailRecordWithHR(
                     DetailRecord(
                         id = "123123",
                         startTime = Instant.now().minusSeconds(22324L),

@@ -60,7 +60,7 @@ data class HeartRateSample(
     val beatsPerMinute: Int
 )
 
-data class DetailRecordWithHeartRateSample(
+data class DetailRecordWithHR(
     @Embedded val detailRecord: DetailRecord,
 
     @Relation(
