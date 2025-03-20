@@ -89,8 +89,11 @@ import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
 import kr.ilf.soodal.database.entity.HeartRateSample
 import kr.ilf.soodal.ui.theme.ColorBackStroke
+import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
+import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorButterfly
+import kr.ilf.soodal.ui.theme.ColorButterflySecondary
 import kr.ilf.soodal.ui.theme.ColorCalendarDate
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
 import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
@@ -102,9 +105,13 @@ import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBorder
 import kr.ilf.soodal.ui.theme.ColorCalendarToday
 import kr.ilf.soodal.ui.theme.ColorCalendarTodayBg
 import kr.ilf.soodal.ui.theme.ColorCrawl
+import kr.ilf.soodal.ui.theme.ColorCrawlSecondary
 import kr.ilf.soodal.ui.theme.ColorKickBoard
+import kr.ilf.soodal.ui.theme.ColorKickBoardSecondary
 import kr.ilf.soodal.ui.theme.ColorMixEnd
+import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
+import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKrBold
 import kr.ilf.soodal.viewmodel.PopupUiState
@@ -385,7 +392,7 @@ fun DayView(
                 .align(Alignment.Center)
                 .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(dateBgColor, RoundedCornerShape(5.dp))
+                .background(Color.Transparent, RoundedCornerShape(5.dp))
         ) {
             Text(
                 modifier = Modifier
@@ -424,29 +431,38 @@ fun DayView(
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val colorCrawl = if (isThisMonth) ColorCrawl else ColorCrawlSecondary
+            val colorBackStroke = if (isThisMonth) ColorBackStroke else ColorBackStrokeSecondary
+            val colorBreastStroke =
+                if (isThisMonth) ColorBreastStroke else ColorBreastStrokeSecondary
+            val colorButterfly = if (isThisMonth) ColorButterfly else ColorButterflySecondary
+            val colorKickBoard = if (isThisMonth) ColorKickBoard else ColorKickBoardSecondary
+            val colorMixStart = if (isThisMonth) ColorMixStart else ColorMixStartSecondary
+            val colorMixEnd = if (isThisMonth) ColorMixEnd else ColorMixEndSecondary
+
             val brushList = remember {
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
                         // 거리 정보를 리스트로 변환
                         val distances = mapOf(
-                            SolidColor(ColorCrawl) to record.crawl,
-                            SolidColor(ColorBackStroke) to record.backStroke,
-                            SolidColor(ColorBreastStroke) to record.breastStroke,
-                            SolidColor(ColorButterfly) to record.butterfly,
-                            SolidColor(ColorKickBoard) to record.kickBoard,
+                            SolidColor(colorCrawl) to record.crawl,
+                            SolidColor(colorBackStroke) to record.backStroke,
+                            SolidColor(colorBreastStroke) to record.breastStroke,
+                            SolidColor(colorButterfly) to record.butterfly,
+                            SolidColor(colorKickBoard) to record.kickBoard,
                             Brush.verticalGradient(
-                                Pair(0f, ColorMixStart),
-                                Pair(1f, ColorMixEnd)
+                                Pair(0f, colorMixStart),
+                                Pair(1f, colorMixEnd)
                             ) to record.mixed
                         )
 
-                        val ratioList = distributeDistance(distances, 10)
+                        val ratioList = distributeDistance(distances, 8)
                         ratioList
                     } ?: emptyList<Brush>()
 
                 }
             }
-            val blendMode = BlendMode.Luminosity
+//            val blendMode = BlendMode.Luminosity
 //                val blendMode = BlendMode.Color
 //                val blendMode = BlendMode.Hue
 
