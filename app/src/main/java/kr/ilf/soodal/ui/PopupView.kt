@@ -62,7 +62,7 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             .padding(10.dp),
         visible = viewModel.popupUiState.value == PopupUiState.MODIFY,
         onClickDone = { record ->
-            viewModel.updateDetailRecord(record)
+            viewModel.modifyDetailRecord(record)
 
             viewModel.popupUiState.value = PopupUiState.NONE
 //            navController.navigate(Destination.Calendar.route) {

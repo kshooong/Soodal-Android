@@ -320,7 +320,7 @@ class SwimmingViewModel(
         _currentModifyRecord.value = record
     }
 
-    fun updateDetailRecord(record: DetailRecord) {
+    fun modifyDetailRecord(record: DetailRecord) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
