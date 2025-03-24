@@ -127,6 +127,7 @@ import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -500,7 +501,7 @@ private fun CalendarHeaderView(
     val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
-    Row {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
         Text(
             text = currentMonth.format(monthFormatter),
             style = MaterialTheme.typography.titleMedium,
@@ -511,13 +512,14 @@ private fun CalendarHeaderView(
             textAlign = TextAlign.Center
         )
 
-        val totalDistance = remember{ derivedStateOf { currentMonthTotal.totalDistance ?: "0 m" }}
-        val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0 kcal"}}
-        val totalMixed = remember{ derivedStateOf { currentMonthTotal.mixed }}
+        val totalDistance = remember{ derivedStateOf { currentMonthTotal.totalDistance ?: "0" }}
+        val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0"}}
 
-        Text(totalDistance.value)
-        Text(totalCaloriesBurned.value)
-        Text(totalMixed.value.toString())
+        Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
+            Text(totalDistance.value + "m", color = Color.Gray, fontFamily = notoSansKrBold, fontSize = 12.sp, lineHeight = 12.sp, )
+            Text(totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal", color = Color.Gray, fontFamily = notoSansKrBold, fontSize = 12.sp, lineHeight = 12.sp, )
+        }
+
     }
 
     // 요일 헤더
