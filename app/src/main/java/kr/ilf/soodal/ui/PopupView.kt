@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -81,6 +83,53 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
         onClickDone = { (context as Activity).finishAndRemoveTask() },
         onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE }
     )
+
+    NewAlertPopup(
+        modifier = modifier.fillMaxSize().wrapContentSize().background(Color.White),
+        visible = viewModel.popupUiState.value == PopupUiState.NEW_ALERT,
+        newList = viewModel.newRecords.collectAsState().value,
+        onClickDone = {
+            viewModel.popupUiState.value = PopupUiState.MODIFY
+            viewModel.setModifyRecord(it)
+        },
+        onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE }
+    )
+}
+
+
+@Composable
+fun NewAlertPopup(
+    modifier: Modifier,
+    visible: Boolean,
+    newList: List<DetailRecord>,
+    onClickDone: (detailRecord: DetailRecord) -> Unit,
+    onClickCancel: () -> Unit
+) {
+    AnimatedVisibility(
+        visible,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
+    ) {
+        Column(
+            modifier = modifier
+        ) {
+            Text(text = "새로운 수영 기록이 있습니다.")
+
+            Text(text = "영법 정보를 입력 하시겠습니까?")
+
+            newList.forEach {
+                Row(horizontalArrangement = Arrangement.End) {
+                    Text(it.distance ?: "0")
+                    Button(onClick = { onClickDone(it) }) {
+                        Text(text = "확인")
+                    }
+                }
+            }
+            Button(onClick = onClickCancel) {
+                Text(text = "취소")
+            }
+        }
+    }
 }
 
 @Composable

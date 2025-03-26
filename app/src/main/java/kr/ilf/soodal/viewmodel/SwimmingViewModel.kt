@@ -64,6 +64,7 @@ class SwimmingViewModel(
 
     val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
 
+    // 현재 월의 총 합산 데이터
     private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
     val currentMonthTotal
         get() = _currentMonthTotal.asStateFlow()
@@ -73,13 +74,21 @@ class SwimmingViewModel(
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
+    // 선택된 날짜의 데이터
     private val _currentDetailRecords = MutableStateFlow<List<DetailRecordWithHR>>(mutableListOf())
     val currentDetailRecords
         get() = _currentDetailRecords.asStateFlow()
 
+    // 영법 수정창 데이터
     private val _currentModifyRecord = MutableStateFlow<DetailRecord?>(null)
     val currentModifyRecord
         get() = _currentModifyRecord.asStateFlow()
+
+    // 새로 추가된 데이터
+    private val _newRecords = MutableStateFlow<List<DetailRecord>>(mutableListOf())
+    val newRecords
+        get() = _newRecords.asStateFlow()
+    private val hasNewRecord = mutableStateOf(false)
 
     init {
         viewModelScope.launch {
@@ -132,48 +141,56 @@ class SwimmingViewModel(
                 do {
                     changeResponse.changes.forEach {
                         when (it) {
-                            is UpsertionChange -> changeList.add(it.record as ExerciseSessionRecord)
+                            is UpsertionChange -> {
+                                val record = it.record as ExerciseSessionRecord
+                                if (record.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL)
+                                    changeList.add(record)
+                            }
+
                             is DeletionChange -> deletionList.add(it.recordId)
                         }
                     }
                 } while (changeResponse.hasMore)
 
                 // 추가,업데이트 데이터
-                changeList.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .forEach { session ->
-                        // 변경 레코드 상세 데이터 가져오기
-                        val detailRecord =
-                            healthConnectManager.readDetailRecord(
-                                id = session.metadata.id,
-                                session.startTime,
-                                session.endTime
+                // 변경된 레코드가 있다면 hasNewSession = true
+                changeList.isNotEmpty().let { hasNewRecord.value = it }
+                changeList.forEach { session ->
+                    // 변경 레코드 상세 데이터 가져오기
+                    val detailRecord =
+                        healthConnectManager.readDetailRecord(
+                            id = session.metadata.id,
+                            session.startTime,
+                            session.endTime
+                        )
+
+                    _newRecords.value += detailRecord
+
+                    // 변경 레코드의 이전 데이터가 있는지 확인
+                    val prevDetailRecord = withContext(Dispatchers.IO) {
+                        dao?.findDetailRecordById(session.metadata.id)
+                    }
+
+                    withContext(Dispatchers.IO) {
+                        val heartRateRecords = healthConnectManager.readHeartRates(
+                            session.metadata.id,
+                            session.startTime,
+                            session.endTime
+                        )
+
+                        if (prevDetailRecord == null) {
+                            dao?.insertDetailRecordWithHeartRateSamples(
+                                detailRecord,
+                                heartRateRecords
                             )
-
-                        // 변경 레코드의 이전 데이터가 있는지 확인
-                        val prevDetailRecord = withContext(Dispatchers.IO) {
-                            dao?.findDetailRecordById(session.metadata.id)
-                        }
-
-                        withContext(Dispatchers.IO) {
-                            val heartRateRecords = healthConnectManager.readHeartRates(
-                                session.metadata.id,
-                                session.startTime,
-                                session.endTime
+                        } else {
+                            dao?.updateDetailRecordWithHeartRateSamples(
+                                detailRecord,
+                                heartRateRecords
                             )
-
-                            if (prevDetailRecord == null) {
-                                dao?.insertDetailRecordWithHeartRateSamples(
-                                    detailRecord,
-                                    heartRateRecords
-                                )
-                            } else {
-                                dao?.updateDetailRecordWithHeartRateSamples(
-                                    detailRecord,
-                                    heartRateRecords
-                                )
-                            }
                         }
                     }
+                }
 
                 // 삭제된 레코드 제거
                 deletionList.forEach {
@@ -360,6 +377,12 @@ class SwimmingViewModel(
         }
     }
 
+    fun checkAndShowNewRecordPopup() {
+        if (hasNewRecord.value) {
+            popupUiState.value = PopupUiState.NEW_ALERT
+        }
+    }
+
     fun resetDetailRecord() {
         _currentDetailRecords.value = emptyList()
     }
@@ -429,5 +452,6 @@ enum class PopupUiState {
     NONE,
     MODIFY,
     WRITE,
-    APP_FINISH
+    APP_FINISH,
+    NEW_ALERT
 }
