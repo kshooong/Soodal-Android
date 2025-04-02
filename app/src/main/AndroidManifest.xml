@@ -31,13 +31,13 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Kshoong"
+        android:theme="@style/Theme.Soodal"
         tools:targetApi="34" >
         <activity
-            android:name=".PermissionsRationaleActivity"
+            android:name="kr.ilf.soodal.PermissionsRationaleActivity"
             android:exported="false"
             android:label="@string/title_activity_permissions_rationale"
-            android:theme="@style/Theme.Kshoong" >
+            android:theme="@style/Theme.Soodal" >
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
@@ -50,7 +50,7 @@
             android:name=".ViewPermissionUsageActivity"
             android:exported="true"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
-            android:targetActivity=".PermissionsRationaleActivity" >
+            android:targetActivity="kr.ilf.soodal.PermissionsRationaleActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
 
@@ -59,10 +59,10 @@
         </activity-alias>
 
         <activity
-            android:name=".MainActivity"
+            android:name="kr.ilf.soodal.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Kshoong.Splash" >
+            android:theme="@style/Theme.Soodal.Splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

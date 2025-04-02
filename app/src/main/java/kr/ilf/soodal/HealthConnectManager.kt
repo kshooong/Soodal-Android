@@ -1,4 +1,4 @@
-package kr.ilf.kshoong
+package kr.ilf.soodal
 
 import android.content.Context
 import android.content.Intent
@@ -19,8 +19,8 @@ import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.response.ChangesResponse
 import androidx.health.connect.client.time.TimeRangeFilter
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.database.entity.HeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.database.entity.HeartRateSample
 import java.time.Instant
 
 class HealthConnectManager(private val context: Context) {

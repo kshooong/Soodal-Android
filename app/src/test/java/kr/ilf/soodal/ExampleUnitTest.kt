@@ -1,4 +1,4 @@
-package kr.ilf.kshoong
+package kr.ilf.soodal
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.database.database
+package kr.ilf.soodal.database.database
 
 import android.content.Context
 import androidx.room.Database
@@ -7,11 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import kr.ilf.kshoong.database.DatabaseConst
-import kr.ilf.kshoong.database.converter.InstantConverter
-import kr.ilf.kshoong.database.dao.SwimmingRecordDao
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.database.entity.HeartRateSample
+import kr.ilf.soodal.database.DatabaseConst
+import kr.ilf.soodal.database.converter.InstantConverter
+import kr.ilf.soodal.database.dao.SwimmingRecordDao
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.database.entity.HeartRateSample
 
 @Database(
     entities = [DetailRecord::class, HeartRateSample::class],

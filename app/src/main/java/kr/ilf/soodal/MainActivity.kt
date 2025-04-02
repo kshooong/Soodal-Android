@@ -1,4 +1,4 @@
-package kr.ilf.kshoong
+package kr.ilf.soodal
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -35,16 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import kr.ilf.kshoong.ui.BottomBarView
-import kr.ilf.kshoong.ui.NavigationView
-import kr.ilf.kshoong.ui.PopupView
-import kr.ilf.kshoong.ui.theme.ColorBottomBar
-import kr.ilf.kshoong.ui.theme.ColorBottomBarDivider
-import kr.ilf.kshoong.ui.theme.KshoongTheme
-import kr.ilf.kshoong.viewmodel.PopupUiState
-import kr.ilf.kshoong.viewmodel.SwimmingViewModel
-import kr.ilf.kshoong.viewmodel.SwimmingViewModelFactory
-import kr.ilf.kshoong.viewmodel.UiState
+import kr.ilf.soodal.ui.BottomBarView
+import kr.ilf.soodal.ui.NavigationView
+import kr.ilf.soodal.ui.PopupView
+import kr.ilf.soodal.ui.theme.ColorBottomBar
+import kr.ilf.soodal.ui.theme.ColorBottomBarDivider
+import kr.ilf.soodal.ui.theme.SoodalTheme
+import kr.ilf.soodal.viewmodel.PopupUiState
+import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.SwimmingViewModelFactory
+import kr.ilf.soodal.viewmodel.UiState
 
 class MainActivity : ComponentActivity() {
 
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            KshoongTheme {
+            SoodalTheme {
                 val viewModel: SwimmingViewModel =
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
@@ -174,7 +174,7 @@ fun Modifier.topBorder(width: Dp, color: Color): Modifier = this.then(
 @Composable
 fun Preview() {
 //    val isLoading = true
-//    KshoongTheme {
+//    SoodalTheme {
 //        if (isLoading) {
 //            LoadingVIew()
 //        } else {

@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.soodal.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +27,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kr.ilf.kshoong.Destination
-import kr.ilf.kshoong.R
-import kr.ilf.kshoong.ui.theme.ColorBottomBar
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
+import kr.ilf.soodal.R
+import kr.ilf.soodal.Destination
+import kr.ilf.soodal.ui.theme.ColorBottomBar
+import kr.ilf.soodal.ui.theme.ColorBottomBarButton
+import kr.ilf.soodal.ui.theme.ColorBottomBarButtonActive
 
 @Composable
 fun BottomBarView(
