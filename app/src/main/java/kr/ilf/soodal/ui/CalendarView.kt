@@ -113,7 +113,7 @@ import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.SkyBlue6
-import kr.ilf.soodal.ui.theme.notoSansKrBold
+import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -404,7 +404,7 @@ fun DayView(
                 fontSize = 10.sp,
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
-                fontFamily = notoSansKrBold,
+                fontFamily = notoSansKr,
                 color = dateTextColor
             )
         }
@@ -421,7 +421,7 @@ fun DayView(
                 modifier = Modifier.align(Alignment.TopCenter),
                 text = dailyRecord.value!!.totalDistance!!,
                 color = Color.Gray,
-                fontFamily = notoSansKrBold,
+                fontFamily = notoSansKr,
                 fontSize = 8.sp,
                 lineHeight = 8.sp
             )
@@ -505,9 +505,9 @@ private fun CalendarHeaderView(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
         Text(
             text = currentMonth.format(monthFormatter),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
-                .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
+                .padding(top = 10.dp, start = 5.dp, end = 5.dp)
                 .background(contentsBg, shape = RoundedCornerShape(10.dp))
                 .padding(horizontal = 15.dp),
             textAlign = TextAlign.Center
@@ -517,8 +517,8 @@ private fun CalendarHeaderView(
         val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0"}}
 
         Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
-            Text(totalDistance.value + "m", color = Color.Gray, fontFamily = notoSansKrBold, fontSize = 12.sp, lineHeight = 12.sp, )
-            Text(totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal", color = Color.Gray, fontFamily = notoSansKrBold, fontSize = 12.sp, lineHeight = 12.sp, )
+            Text(totalDistance.value + "m", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
+            Text(totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
         }
 
     }
@@ -534,7 +534,7 @@ private fun CalendarHeaderView(
         Text(
             text = "일",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
             color = Color.Red
         )
@@ -543,7 +543,7 @@ private fun CalendarHeaderView(
             Text(
                 text = it,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center
             )
         }
@@ -551,7 +551,7 @@ private fun CalendarHeaderView(
         Text(
             text = "토",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
             color = Color.Blue
         )
@@ -564,7 +564,7 @@ fun CalendarDetailView(
 //    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
     currentDate: Instant,
-    initialHeight: Int
+    initialHeight: Float
 ) {
     val mySaver =
         Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },

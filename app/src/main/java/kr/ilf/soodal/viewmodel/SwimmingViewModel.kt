@@ -240,6 +240,7 @@ class SwimmingViewModel(
                         totalKickBoard += record.kickBoard
                         totalMixed += record.mixed ?: 0
                     }
+
                     dailyRecordsMap[date] = DailyRecord(
                         date = date.toInstant(),
                         totalActiveTime.toString(),
@@ -379,7 +380,7 @@ class SwimmingViewModel(
 
     fun checkAndShowNewRecordPopup() {
         if (hasNewRecord.value) {
-            popupUiState.value = PopupUiState.NEW_ALERT
+            popupUiState.value = PopupUiState.NEW_SESSIONS
         }
     }
 
@@ -453,5 +454,6 @@ enum class PopupUiState {
     MODIFY,
     WRITE,
     APP_FINISH,
-    NEW_ALERT
+    NEW_SESSIONS,
+    NEW_SESSIONS_MODIFY
 }
