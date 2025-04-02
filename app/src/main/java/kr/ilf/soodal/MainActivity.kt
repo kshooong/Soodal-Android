@@ -1,5 +1,6 @@
 package kr.ilf.soodal
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -138,7 +139,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             },
-                            onSettingClick = {}
+                            onSettingClick = {
+                                if (BuildConfig.DEBUG)
+                                    viewModel.testNewSessionPopup()
+                            }
                         )
                     }
 
