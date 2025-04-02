@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -15,19 +17,24 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -38,12 +45,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
@@ -54,23 +64,73 @@ import java.time.format.DateTimeFormatter
 fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: NavHostController) {
     val context = LocalContext.current
 
+    // dimm
+    AnimatedVisibility(
+        visible = viewModel.popupUiState.value != PopupUiState.NONE,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(
+            modifier = modifier
+                .background(Color.Black.copy(0.2f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { /*viewModel.popupUiState.value = PopupUiState.NONE*/ }
+        )
+    }
+
+    NewSessionsPopup(
+        modifier = modifier
+            .fillMaxSize()
+            .wrapContentSize()
+            .widthIn(300.dp)
+            .fillMaxWidth(0.8f)
+            .shadow(5.dp, shape = RoundedCornerShape(25.dp))
+            .background(Color.White, shape = RoundedCornerShape(25.dp))
+            .padding(10.dp),
+        visible = viewModel.popupUiState.value in setOf(
+            PopupUiState.NEW_SESSIONS,
+            PopupUiState.NEW_SESSIONS_MODIFY
+        ),
+        newList = viewModel.newRecords.collectAsState().value,
+        onClickModify = {
+            viewModel.popupUiState.value = PopupUiState.NEW_SESSIONS_MODIFY
+            viewModel.setModifyRecord(it)
+        },
+        onClickClose = { viewModel.popupUiState.value = PopupUiState.NONE }
+    )
+
     ModifyRecordPopup(
         modifier = modifier
+            .statusBarsPadding()
+            .padding(top = 5.dp)
             .shadow(5.dp, shape = RoundedCornerShape(30.dp))
             .scrollable(rememberScrollState(), Orientation.Vertical)
             .background(Color.White, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
             .padding(10.dp),
-        visible = viewModel.popupUiState.value == PopupUiState.MODIFY,
+        visible = viewModel.popupUiState.value in setOf(
+            PopupUiState.MODIFY,
+            PopupUiState.NEW_SESSIONS_MODIFY
+        ),
         onClickDone = { record ->
-            viewModel.updateDetailRecord(record)
+            viewModel.modifyDetailRecord(record)
 
-            viewModel.popupUiState.value = PopupUiState.NONE
+            if (viewModel.popupUiState.value == PopupUiState.NEW_SESSIONS_MODIFY) {
+                viewModel.popupUiState.value = PopupUiState.NEW_SESSIONS
+            } else {
+                viewModel.popupUiState.value = PopupUiState.NONE
+            }
 //            navController.navigate(Destination.Calendar.route) {
 //                launchSingleTop = true
 //            }
         },
         onClickCancel = {
-            viewModel.popupUiState.value = PopupUiState.NONE
+            if (viewModel.popupUiState.value == PopupUiState.NEW_SESSIONS_MODIFY) {
+                viewModel.popupUiState.value = PopupUiState.NEW_SESSIONS
+            } else {
+                viewModel.popupUiState.value = PopupUiState.NONE
+            }
         },
         viewModel.currentModifyRecord.collectAsState().value
     )
@@ -81,6 +141,59 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
         onClickDone = { (context as Activity).finishAndRemoveTask() },
         onClickCancel = { viewModel.popupUiState.value = PopupUiState.NONE }
     )
+}
+
+
+@Composable
+fun NewSessionsPopup(
+    modifier: Modifier,
+    visible: Boolean,
+    newList: List<DetailRecord>,
+    onClickModify: (detailRecord: DetailRecord) -> Unit,
+    onClickClose: () -> Unit
+) {
+    AnimatedVisibility(
+        visible,
+        enter = scaleIn(),
+        exit = scaleOut()
+    ) {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
+
+            Text(modifier = Modifier.align(Alignment.CenterHorizontally), text = "새로운 수영 기록이 있어요!")
+
+            newList.forEach {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Gray.copy(0.3f), shape = RoundedCornerShape(10.dp)),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.padding(start = 6.dp)) {
+                        Text(
+                            it.startTime.atZone(ZoneId.systemDefault()).format(formatter),
+                            lineHeight = 16.sp
+                        )
+                        Text("${it.distance ?: 0}m", lineHeight = 16.sp)
+                    }
+                    IconButton(onClick = { onClickModify(it) }) {
+                        Icon(
+                            modifier = Modifier.padding(),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_modify),
+                            contentDescription = "영법 수정"
+                        )
+                    }
+                }
+            }
+            Button(onClick = onClickClose) {
+                Text(text = "닫기")
+            }
+        }
+    }
 }
 
 @Composable
@@ -267,22 +380,6 @@ fun AppFinishPopup(
     onClickDone: () -> Unit,
     onClickCancel: () -> Unit
 ) {
-    // dimmed
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(
-            modifier = modifier
-                .background(Color.Black.copy(0.2f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) { onClickCancel() }
-        )
-    }
-
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(initialOffsetY = { it }),
@@ -304,12 +401,14 @@ fun AppFinishPopup(
                         .wrapContentHeight(),
                     contentAlignment = Alignment.CenterEnd
                 ) {
-                    Button(
-                        modifier = Modifier.size(20.dp),
-                        onClick = { onClickCancel() },
-                        contentPadding = PaddingValues()
+                    IconButton(
+                        modifier = Modifier.size(24.dp),
+                        onClick = { onClickCancel() }
                     ) {
-                        Text(text = "X", fontSize = 14.sp, lineHeight = 14.sp)
+                        Icon(
+                            ImageVector.vectorResource(R.drawable.ic_close),
+                            contentDescription = "취소",
+                        )
                     }
                 }
 

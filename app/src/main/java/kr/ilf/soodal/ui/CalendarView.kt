@@ -8,6 +8,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,14 +19,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -34,6 +33,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,28 +55,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,8 +84,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
-import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
@@ -112,6 +113,7 @@ import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.SkyBlue6
+import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -121,14 +123,19 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.random.Random
 import kotlin.time.Duration
 
 val selectedMonthSaver =
     mapSaver(save = { mapOf("selectedMonth" to it) },
         restore = { it["selectedMonth"] as LocalDate })
-
 
 @Composable
 fun CalendarView(
@@ -139,7 +146,7 @@ fun CalendarView(
     val coroutineScope = rememberCoroutineScope()
 
     val today by remember { mutableStateOf(LocalDate.now()) }
-    var currentMonth by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    var currentMonth by viewModel.currentMonth
     val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
         mutableStateOf(
             LocalDate.now().withDayOfMonth(1)
@@ -149,11 +156,12 @@ fun CalendarView(
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
 
-    // 최초 진입 시 DetailRecord 조회, dispose 시 데이터 초기화
+    // 최초 진입 시 DetailRecord 조회, 새 데이터 확인 / dispose 시 데이터 초기화
     DisposableEffect(Unit) {
         val selectedInstant = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
             .atStartOfDay(ZoneId.systemDefault()).toInstant()
         viewModel.findDetailRecord(selectedInstant)
+        viewModel.checkAndShowNewRecordPopup()
 
         onDispose { viewModel.resetDetailRecord() }
     }
@@ -171,11 +179,11 @@ fun CalendarView(
 
     LaunchedEffect(pagerState.currentPage) {
         currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
-        viewModel.updateDailyRecords(currentMonth)
+        viewModel.updateDailyRecords()
     }
 
     Column(modifier = modifier) {
-        CalendarHeaderView(currentMonth, contentsBg)
+        CalendarHeaderView(viewModel, contentsBg)
 
         HorizontalPager(
             state = pagerState,
@@ -380,123 +388,13 @@ fun DayView(
                 if (today == thisDate) ColorCalendarToday else ColorCalendarDate
             else ColorCalendarDateDis
 
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-        ) {
-            val dailyRecords by viewModel.dailyRecords.collectAsState()
-            val dailyRecord = remember {
-                derivedStateOf {
-                    dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
-                }
-            }
-
-            val boxWidths = remember {
-                derivedStateOf {
-                    dailyRecord.value?.let { record ->
-                        if (record.mixed == record.totalDistance?.toInt()) {
-                            dailyRecord.value?.totalDistance?.let { totalDistance ->
-                                // mixed만 있으면 전체 거리 표시
-                                (0..totalDistance.toInt().div(1000)).map { i ->
-                                    "mixed" to if (totalDistance.toInt() - (i * 1000) >= 1000) 1f else (totalDistance.toInt() - (i * 1000)) / 1000f
-                                }
-                            }
-                        } else {
-                            // 거리 정보를 리스트로 변환
-                            val distances = listOf(
-                                "crawl" to record.crawl,
-                                "back" to record.backStroke,
-                                "breast" to record.breastStroke,
-                                "butterfly" to record.butterfly,
-                                "mixed" to record.mixed,
-                                "kickBoard" to record.kickBoard
-                            )
-
-                            // 가장 큰 값 4개 찾기
-                            val topDistances =
-                                distances.sortedByDescending { it.second }.take(4).toSet()
-
-                            // 원래 순서 유지하면서 필터링 및 비율 계산
-                            distances.filter { it in topDistances }
-                                .map { (type, distance) ->
-                                    type to (distance / 500f).coerceAtMost(1f)
-                                }
-                        }
-                    } ?: emptyList()
-
-                }
-            }
-
-            boxWidths.value.forEach { (type, widthRatio) ->
-                if (widthRatio > 0) {
-                    val color = if (isThisMonth) {
-                        when (type) {
-                            "crawl" -> SolidColor(ColorCrawl)
-                            "back" -> SolidColor(ColorBackStroke)
-                            "breast" -> SolidColor(ColorBreastStroke)
-                            "butterfly" -> SolidColor(ColorButterfly)
-                            "kickBoard" -> SolidColor(ColorKickBoard)
-                            else -> Brush.verticalGradient(
-                                Pair(0f, ColorMixStart),
-                                Pair(1f, ColorMixEnd)
-                            )
-                        }
-                    } else {
-                        when (type) {
-                            "crawl" -> SolidColor(ColorCrawlSecondary)
-                            "back" -> SolidColor(ColorBackStrokeSecondary)
-                            "breast" -> SolidColor(ColorBreastStrokeSecondary)
-                            "butterfly" -> SolidColor(ColorButterflySecondary)
-                            "kickBoard" -> SolidColor(ColorKickBoardSecondary)
-                            else -> Brush.verticalGradient(
-                                Pair(0f, ColorMixStartSecondary),
-                                Pair(1f, ColorMixEndSecondary)
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 1.dp)
-                            .fillMaxWidth(widthRatio)
-                            .height(10.dp)
-                            .background(
-                                brush = color,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .align(Alignment.Start),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        if (widthRatio == 1f) {
-                            val distance = when (type) {
-                                "crawl" -> dailyRecord.value?.crawl
-                                "back" -> dailyRecord.value?.backStroke
-                                "breast" -> dailyRecord.value?.breastStroke
-                                "butterfly" -> dailyRecord.value?.butterfly
-                                "kickBoard" -> dailyRecord.value?.kickBoard
-                                else -> dailyRecord.value?.mixed
-                            }
-                            Text(
-                                modifier = Modifier.padding(end = 2.dp),
-                                text = distance.toString(),
-                                lineHeight = 10.sp,
-                                fontSize = 8.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
+        // 날짜 박스
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
+                .align(Alignment.Center)
                 .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(dateBgColor, RoundedCornerShape(5.dp))
+                .background(Color.Transparent, RoundedCornerShape(5.dp))
         ) {
             Text(
                 modifier = Modifier
@@ -506,28 +404,124 @@ fun DayView(
                 fontSize = 10.sp,
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
+                fontFamily = notoSansKr,
                 color = dateTextColor
             )
+        }
+
+        val dailyRecords by viewModel.dailyRecords.collectAsState()
+        val dailyRecord = remember {
+            derivedStateOf {
+                dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
+            }
+        }
+
+        dailyRecord.value?.let {
+            Text(
+                modifier = Modifier.align(Alignment.TopCenter),
+                text = dailyRecord.value!!.totalDistance!!,
+                color = Color.Gray,
+                fontFamily = notoSansKr,
+                fontSize = 8.sp,
+                lineHeight = 8.sp
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val colorCrawl = if (isThisMonth) ColorCrawl else ColorCrawlSecondary
+            val colorBackStroke = if (isThisMonth) ColorBackStroke else ColorBackStrokeSecondary
+            val colorBreastStroke =
+                if (isThisMonth) ColorBreastStroke else ColorBreastStrokeSecondary
+            val colorButterfly = if (isThisMonth) ColorButterfly else ColorButterflySecondary
+            val colorKickBoard = if (isThisMonth) ColorKickBoard else ColorKickBoardSecondary
+            val colorMixStart = if (isThisMonth) ColorMixStart else ColorMixStartSecondary
+            val colorMixEnd = if (isThisMonth) ColorMixEnd else ColorMixEndSecondary
+
+            val brushList = remember {
+                derivedStateOf {
+                    dailyRecord.value?.let { record ->
+                        // 거리 정보를 리스트로 변환
+                        val distances = mapOf(
+                            SolidColor(colorCrawl) to record.crawl,
+                            SolidColor(colorBackStroke) to record.backStroke,
+                            SolidColor(colorBreastStroke) to record.breastStroke,
+                            SolidColor(colorButterfly) to record.butterfly,
+                            SolidColor(colorKickBoard) to record.kickBoard,
+                            Brush.verticalGradient(
+                                Pair(0f, colorMixStart),
+                                Pair(1f, colorMixEnd)
+                            ) to record.mixed
+                        )
+
+                        val ratioList = distributeDistance(distances, 8)
+                        ratioList
+                    } ?: emptyList<Brush>()
+
+                }
+            }
+//            val blendMode = BlendMode.Luminosity
+//                val blendMode = BlendMode.Color
+//                val blendMode = BlendMode.Hue
+
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Luminosity)
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Color)
+//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Hue)
+
+            if (brushList.value.isNotEmpty()) {
+
+//                HexagonCircleGraph(
+//                    brushList.value,
+//                    36.dp,
+//                    5.dp,
+//                    8.dp,
+//                    BlendMode.Luminosity
+//                )
+                IconWithPolygon(
+                    painterResource(id = R.drawable.ic_pearl2),
+                    brushList.value,
+                    28.dp,
+                    16.dp,
+                    false
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun CalendarHeaderView(
-    currentMonth: LocalDate,
+    viewModel: SwimmingViewModel,
     contentsBg: Color
 ) {
+    val currentMonth by viewModel.currentMonth
+    val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
-    Text(
-        text = currentMonth.format(monthFormatter),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier
-            .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
-            .background(contentsBg, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = 15.dp),
-        textAlign = TextAlign.Center
-    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+        Text(
+            text = currentMonth.format(monthFormatter),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier
+                .padding(top = 10.dp, start = 5.dp, end = 5.dp)
+                .background(contentsBg, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 15.dp),
+            textAlign = TextAlign.Center
+        )
+
+        val totalDistance = remember{ derivedStateOf { currentMonthTotal.totalDistance ?: "0" }}
+        val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0"}}
+
+        Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
+            Text(totalDistance.value + "m", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
+            Text(totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
+        }
+
+    }
 
     // 요일 헤더
     Row(
@@ -540,7 +534,7 @@ private fun CalendarHeaderView(
         Text(
             text = "일",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
             color = Color.Red
         )
@@ -549,7 +543,7 @@ private fun CalendarHeaderView(
             Text(
                 text = it,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center
             )
         }
@@ -557,7 +551,7 @@ private fun CalendarHeaderView(
         Text(
             text = "토",
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
             color = Color.Blue
         )
@@ -570,7 +564,7 @@ fun CalendarDetailView(
 //    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
     currentDate: Instant,
-    initialHeight: Int
+    initialHeight: Float
 ) {
     val mySaver =
         Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
@@ -746,7 +740,9 @@ fun CalendarDetailView(
 
             Column {
                 Row(
-                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth(),
                 ) {
                     Row(
                         modifier = Modifier
@@ -755,7 +751,7 @@ fun CalendarDetailView(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("시간")
-                        Text(totalTime.toString())
+                        Text(totalTime.toCustomTimeString())
                     }
 
                     Row(
@@ -770,7 +766,9 @@ fun CalendarDetailView(
                 }
 
                 Row(
-                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth(),
                 ) {
                     Row(
                         modifier = Modifier
@@ -863,7 +861,7 @@ fun CalendarDetailView(
     }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun LineGraph() {
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -881,6 +879,209 @@ fun LineGraph() {
         modelProducer,
         modifier = Modifier.fillMaxSize(),
     )
+}*/
+
+@Preview(widthDp = 100, heightDp = 100)
+@Composable
+fun ShrimpIconWithBoxPreview() {
+    Column {
+        IconWithPolygon(
+            painterResource(id = R.drawable.ic_pearl2),
+            listOf(
+                SolidColor(ColorCrawl),
+                SolidColor(ColorBackStroke),
+                SolidColor(ColorBreastStroke),
+                SolidColor(ColorButterfly),
+                SolidColor(ColorKickBoard),
+                Brush.verticalGradient(
+                    Pair(0f, ColorMixStart),
+                    Pair(1f, ColorMixEnd)
+                )
+            ), 30.dp, 30.dp
+        )
+
+        IconWithPolygon(
+            painterResource(id = R.drawable.ic_pearl2),
+            listOf(
+                SolidColor(ColorCrawl),
+                SolidColor(ColorBackStroke),
+                SolidColor(ColorBreastStroke),
+                SolidColor(ColorButterfly),
+                SolidColor(ColorKickBoard),
+                Brush.verticalGradient(
+                    Pair(0f, ColorMixStart),
+                    Pair(1f, ColorMixEnd)
+                )
+            ), 30.dp, 30.dp, false
+        )
+    }
+}
+
+@Composable
+fun IconWithPolygon(
+    painter: Painter,
+    brushList: List<Brush>,
+    diameter: Dp,
+    iconSize: Dp,
+    isRotate: Boolean = true
+) {
+    Box(modifier = Modifier.size(diameter + iconSize), contentAlignment = Alignment.Center) {
+        val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
+        val offsetAngle = 360 / brushList.size.toFloat()
+
+        brushList.forEachIndexed { index, brush ->
+            val angle = index * offsetAngle
+            val radian = Math.toRadians(angle.toDouble())
+            val offsetX = radius * cos(radian).toFloat()
+            val offsetY = radius * sin(radian).toFloat()
+
+            Icon(
+                painter = painter,
+                contentDescription = "graph",
+                modifier = Modifier
+                    .size(iconSize)
+                    .offset(offsetX.toDp(), offsetY.toDp())
+                    .graphicsLayer(
+                        rotationZ = if (isRotate) angle + 90f else 0f, // 이미지 여백을 위해 기본으로 20도 돌림
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    )
+                    .drawWithCache {
+                        onDrawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush,
+                                blendMode = BlendMode.SrcAtop
+                            )
+                        }
+                    },
+                tint = Color.Unspecified
+            )
+        }
+
+        val firstBrush = brushList.firstOrNull()
+        firstBrush?.let {
+            val radian = Math.toRadians(0.0)
+            val offsetX = radius * cos(radian).toFloat()
+            val offsetY = radius * sin(radian).toFloat()
+
+            Icon(
+                painter = painter,
+                contentDescription = "graph",
+                modifier = Modifier
+                    .size(iconSize)
+                    .offset(offsetX.toDp(), offsetY.toDp())
+                    .graphicsLayer(
+                        rotationZ = if (isRotate) 90f else 0f,
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    )
+                    .drawWithCache {
+                        onDrawWithContent {
+                            // 왼쪽 절반 그리기
+                            val (width, height) = if (isRotate) {
+                                (size.width / 2) to size.height
+                            } else {
+                                size.width to size.height / 2
+                            }
+
+                            clipRect(
+                                left = 0f,
+                                top = 0f,
+                                right = width,
+                                bottom = height
+                            ) {
+                                rotate(0f, center) {
+                                    this@onDrawWithContent.drawContent()
+                                }
+                            }
+
+                            // 오른쪽 절반 그리기 (겹치는 부분만)
+                            drawRect(
+                                firstBrush,
+                                size = size,
+                                blendMode = BlendMode.SrcIn
+                            )
+                        }
+                    },
+                tint = Color.Unspecified
+            )
+        }
+    }
+}
+
+@Composable
+fun HexagonCircleGraph(
+    brushList: List<Brush>,
+    size: Dp,
+    radius: Dp,
+    circleRadius: Dp,
+    blendMode: BlendMode = BlendMode.Luminosity
+) {
+    Canvas(
+        modifier = Modifier
+            .size(size)
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    ) {
+        val diameter = radius * 2
+        val offsetX = sqrt(diameter.value.pow(2) - radius.value.pow(2)).dp
+
+        // 첫 번째 줄 (1개)
+        drawCircle(
+            brush = brushList[0],
+            radius = circleRadius.toPx(),
+            center = Offset(center.x, center.y - diameter.toPx()),
+            blendMode = blendMode
+        )
+
+        // 두 번째 줄 (2개)
+        drawCircle(
+            brush = brushList[5],
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x - offsetX.toPx(),
+                center.y - radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        drawCircle(
+            brush = brushList[1],
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x + offsetX.toPx(),
+                center.y - radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        // 세 번째 줄 (2개)
+        drawCircle(
+            brush = brushList[4],
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x - offsetX.toPx(),
+                center.y + radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        drawCircle(
+            brush = brushList[2],
+            radius = circleRadius.toPx(),
+            center = Offset(
+                center.x + offsetX.toPx(),
+                center.y + radius.toPx()
+            ),
+            blendMode = blendMode
+        )
+
+        // 네 번째 줄 (1개)
+        drawCircle(
+            brush = brushList[3],
+            radius = circleRadius.toPx(),
+            center = Offset(center.x, center.y + diameter.toPx()),
+            blendMode = blendMode
+        )
+    }
 }
 
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
@@ -899,10 +1100,10 @@ fun DetailViewPreview() {
 
 class PreviewViewmodel {
     val popupUiState = mutableStateOf(PopupUiState.NONE)
-    val currentDetailRecord: StateFlow<List<DetailRecordWithHeartRateSample?>> =
+    val currentDetailRecord: StateFlow<List<DetailRecordWithHR?>> =
         MutableStateFlow(
             listOf(
-                DetailRecordWithHeartRateSample(
+                DetailRecordWithHR(
                     DetailRecord(
                         id = "123123",
                         startTime = Instant.now().minusSeconds(22324L),
@@ -948,3 +1149,36 @@ fun Duration.toCustomTimeString(): String {
 
 // 시스템 설정과 상관 없이 text 크기 고정
 val Dp.toSp: TextUnit @Composable get() = with(LocalDensity.current) { this@toSp.toSp() }
+
+fun distributeDistance(distances: Map<Brush, Int>, size: Int = 6): List<Brush> {
+    val total = distances.values.sum() // 전체 합
+    val proportions = distances.mapValues { (it.value * size).toDouble() / total } // 비율 계산
+
+    val intParts = proportions.mapValues { it.value.toInt() } // 정수 부분 할당
+    var remaining = size - intParts.values.sum() // 남은 개수
+
+    // 결과 리스트
+    val resultList = mutableListOf<Brush>()
+
+    // 정수 개수만큼 먼저 추가
+    for ((key, count) in intParts) {
+        repeat(count) { resultList.add(key) }
+    }
+
+    // 남은 개수를 가장 비율이 높은 순으로 채워 넣기
+    val sortedEntries = proportions.entries.sortedByDescending { it.value % 1 } // 소수점 부분 기준 정렬
+    for ((key, _) in sortedEntries) {
+        if (remaining > 0) {
+            resultList.add(key)
+            remaining--
+        } else break
+    }
+
+    val groupedList = resultList.sortedBy { resultList.indexOf(it) }.toMutableList()
+
+    val shift = Random.nextInt(0, size)
+//    val finalList = groupedList.drop(shift) + groupedList.take(shift)
+
+//    return finalList
+    return groupedList
+}
