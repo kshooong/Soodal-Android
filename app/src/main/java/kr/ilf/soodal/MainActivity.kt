@@ -145,8 +145,6 @@ class MainActivity : ComponentActivity() {
                     PopupView(
                         Modifier
                             .fillMaxSize()
-                            .statusBarsPadding()
-                            .padding(top = 5.dp)
                             .navigationBarsPadding(),
                         viewModel,
                         navController

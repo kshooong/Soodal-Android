@@ -9,7 +9,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kr.ilf.soodal.database.DatabaseConst
 import kr.ilf.soodal.database.entity.DetailRecord
-import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
 import java.time.Instant
 
@@ -22,7 +22,7 @@ interface SwimmingRecordDao {
     fun findDetailRecordsWithHeartRateSamplesByDate(
         start: Instant,
         end: Instant
-    ): List<DetailRecordWithHeartRateSample>
+    ): List<DetailRecordWithHR>
 
     @Transaction
     fun insertDetailRecordWithHeartRateSamples(

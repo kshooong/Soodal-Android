@@ -46,8 +46,9 @@ import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
 import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
+import kr.ilf.soodal.ui.theme.ColorCalendarBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
-import kr.ilf.soodal.ui.theme.Blue4
+import kr.ilf.soodal.ui.theme.splashTitle
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
@@ -155,7 +156,7 @@ fun NavigationView(
                     .background(
                         Brush.linearGradient(
                             Pair(0f, ColorCalendarBgStart),
-                            Pair(0.75f, Blue4),
+                            Pair(0.75f, ColorCalendarBgEnd),
                             start = Offset(0f, 0f),
                             end = Offset(0.5f, Float.POSITIVE_INFINITY)
                         )
@@ -167,7 +168,7 @@ fun NavigationView(
                         .wrapContentSize(), contentsBg = Color.Transparent, viewModel = viewModel
                 )
 
-                val initialHeight = LocalConfiguration.current.screenHeightDp - 600
+                val initialHeight = LocalConfiguration.current.screenHeightDp - 592.5f
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
                 AnimatedVisibility(
@@ -288,7 +289,7 @@ fun SyncView(
 
         Text(
             text = "Synchronizing!",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.splashTitle,
             modifier = Modifier.padding(bottom = 270.dp)
         )
     }

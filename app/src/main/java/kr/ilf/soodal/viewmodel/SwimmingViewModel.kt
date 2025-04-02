@@ -25,7 +25,7 @@ import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
-import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -62,20 +62,33 @@ class SwimmingViewModel(
 
     private val changeToken = mutableStateOf<String?>(null)
 
+    val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
+
+    // 현재 월의 총 합산 데이터
+    private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
+    val currentMonthTotal
+        get() = _currentMonthTotal.asStateFlow()
+
     private val _dailyRecords =
         MutableStateFlow<MutableMap<ZonedDateTime, DailyRecord>>(mutableMapOf())
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
-    private val _currentDetailRecords =
-        MutableStateFlow<List<DetailRecordWithHeartRateSample>>(mutableListOf())
+    // 선택된 날짜의 데이터
+    private val _currentDetailRecords = MutableStateFlow<List<DetailRecordWithHR>>(mutableListOf())
     val currentDetailRecords
         get() = _currentDetailRecords.asStateFlow()
 
-    private val _currentModifyRecord =
-        MutableStateFlow<DetailRecord?>(null)
+    // 영법 수정창 데이터
+    private val _currentModifyRecord = MutableStateFlow<DetailRecord?>(null)
     val currentModifyRecord
         get() = _currentModifyRecord.asStateFlow()
+
+    // 새로 추가된 데이터
+    private val _newRecords = MutableStateFlow<List<DetailRecord>>(mutableListOf())
+    val newRecords
+        get() = _newRecords.asStateFlow()
+    private val hasNewRecord = mutableStateOf(false)
 
     init {
         viewModelScope.launch {
@@ -128,48 +141,56 @@ class SwimmingViewModel(
                 do {
                     changeResponse.changes.forEach {
                         when (it) {
-                            is UpsertionChange -> changeList.add(it.record as ExerciseSessionRecord)
+                            is UpsertionChange -> {
+                                val record = it.record as ExerciseSessionRecord
+                                if (record.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL)
+                                    changeList.add(record)
+                            }
+
                             is DeletionChange -> deletionList.add(it.recordId)
                         }
                     }
                 } while (changeResponse.hasMore)
 
                 // 추가,업데이트 데이터
-                changeList.filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
-                    .forEach { session ->
-                        // 변경 레코드 상세 데이터 가져오기
-                        val detailRecord =
-                            healthConnectManager.readDetailRecord(
-                                id = session.metadata.id,
-                                session.startTime,
-                                session.endTime
+                // 변경된 레코드가 있다면 hasNewSession = true
+                changeList.isNotEmpty().let { hasNewRecord.value = it }
+                changeList.forEach { session ->
+                    // 변경 레코드 상세 데이터 가져오기
+                    val detailRecord =
+                        healthConnectManager.readDetailRecord(
+                            id = session.metadata.id,
+                            session.startTime,
+                            session.endTime
+                        )
+
+                    _newRecords.value += detailRecord
+
+                    // 변경 레코드의 이전 데이터가 있는지 확인
+                    val prevDetailRecord = withContext(Dispatchers.IO) {
+                        dao?.findDetailRecordById(session.metadata.id)
+                    }
+
+                    withContext(Dispatchers.IO) {
+                        val heartRateRecords = healthConnectManager.readHeartRates(
+                            session.metadata.id,
+                            session.startTime,
+                            session.endTime
+                        )
+
+                        if (prevDetailRecord == null) {
+                            dao?.insertDetailRecordWithHeartRateSamples(
+                                detailRecord,
+                                heartRateRecords
                             )
-
-                        // 변경 레코드의 이전 데이터가 있는지 확인
-                        val prevDetailRecord = withContext(Dispatchers.IO) {
-                            dao?.findDetailRecordById(session.metadata.id)
-                        }
-
-                        withContext(Dispatchers.IO) {
-                            val heartRateRecords = healthConnectManager.readHeartRates(
-                                session.metadata.id,
-                                session.startTime,
-                                session.endTime
+                        } else {
+                            dao?.updateDetailRecordWithHeartRateSamples(
+                                detailRecord,
+                                heartRateRecords
                             )
-
-                            if (prevDetailRecord == null) {
-                                dao?.insertDetailRecordWithHeartRateSamples(
-                                    detailRecord,
-                                    heartRateRecords
-                                )
-                            } else {
-                                dao?.updateDetailRecordWithHeartRateSamples(
-                                    detailRecord,
-                                    heartRateRecords
-                                )
-                            }
                         }
                     }
+                }
 
                 // 삭제된 레코드 제거
                 deletionList.forEach {
@@ -219,6 +240,7 @@ class SwimmingViewModel(
                         totalKickBoard += record.kickBoard
                         totalMixed += record.mixed ?: 0
                     }
+
                     dailyRecordsMap[date] = DailyRecord(
                         date = date.toInstant(),
                         totalActiveTime.toString(),
@@ -239,7 +261,7 @@ class SwimmingViewModel(
         }
     }
 
-    fun updateDailyRecords(month: LocalDate) {
+    fun updateDailyRecords(month: LocalDate = currentMonth.value) {
         viewModelScope.launch {
             _dailyRecords.value = withContext(Dispatchers.IO) {
                 val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
@@ -291,6 +313,50 @@ class SwimmingViewModel(
                     }
                 dailyRecordsMap
             }
+
+            updateCurrentMonthTotal()
+        }
+    }
+
+    private fun updateCurrentMonthTotal() {
+        viewModelScope.launch {
+            var totalActiveTime = Duration.ZERO
+            var totalDistance = 0
+            var totalEnergyBurned = 0.0
+            var totalCrawl = 0
+            var totalBackStroke = 0
+            var totalBreastStroke = 0
+            var totalButterfly = 0
+            var totalKickBoard = 0
+            var totalMixed = 0
+
+            _dailyRecords.value.filter {
+                it.key.toLocalDate().withDayOfMonth(1) == currentMonth.value
+            }.values.forEach { record ->
+                totalActiveTime += record.totalActiveTime?.let { Duration.parse(it) }
+                    ?: Duration.ZERO
+                totalDistance += record.totalDistance?.toInt() ?: 0
+                totalEnergyBurned += record.totalEnergyBurned?.toDouble() ?: 0.0
+                totalCrawl += record.crawl
+                totalBackStroke += record.backStroke
+                totalBreastStroke += record.breastStroke
+                totalButterfly += record.butterfly
+                totalKickBoard += record.kickBoard
+                totalMixed += record.mixed ?: 0
+            }
+
+            _currentMonthTotal.value = DailyRecord(
+                date = currentMonth.value.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                totalActiveTime.toString(),
+                totalDistance.toString(),
+                totalEnergyBurned.toString(),
+                totalCrawl,
+                totalBackStroke,
+                totalBreastStroke,
+                totalButterfly,
+                totalKickBoard,
+                totalMixed
+            )
         }
     }
 
@@ -312,6 +378,12 @@ class SwimmingViewModel(
         }
     }
 
+    fun checkAndShowNewRecordPopup() {
+        if (hasNewRecord.value) {
+            popupUiState.value = PopupUiState.NEW_SESSIONS
+        }
+    }
+
     fun resetDetailRecord() {
         _currentDetailRecords.value = emptyList()
     }
@@ -320,11 +392,16 @@ class SwimmingViewModel(
         _currentModifyRecord.value = record
     }
 
-    fun updateDetailRecord(record: DetailRecord) {
+    fun modifyDetailRecord(record: DetailRecord) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
                     ?.updateDetailRecord(record)
+
+                val currentDate =
+                    record.startTime.atZone(ZoneId.systemDefault()).truncatedTo(ChronoUnit.DAYS)
+                findDetailRecord(currentDate.toInstant())
+                updateDailyRecords()
             }
         }
     }
@@ -376,5 +453,7 @@ enum class PopupUiState {
     NONE,
     MODIFY,
     WRITE,
-    APP_FINISH
+    APP_FINISH,
+    NEW_SESSIONS,
+    NEW_SESSIONS_MODIFY
 }

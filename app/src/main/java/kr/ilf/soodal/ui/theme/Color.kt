@@ -27,6 +27,7 @@ val Blue4 = Color(0xFF9DC0FF)
 //val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
 val ColorCalendarBgStart = Color(0xFFCBEDFF)
+val ColorCalendarBgEnd = Blue4
 val ColorCalendarItemBg = Color(0xFFE7F3FF)
 val ColorCalendarItemBorder = Blue3
 val ColorCalendarOnItemBg = Color(0xFFE7F3FF)
@@ -46,6 +47,23 @@ val ColorBottomBarDivider = Color(0xFFE5E5E5)
 val ColorBottomBarButton = Color(0xFF374957)
 val ColorBottomBarButtonActive = Color(0xFF4967FB)
 
+/*val ColorCalendarBgStart = Color.White
+val ColorCalendarBgEnd = Color.White
+val ColorCalendarItemBg =Color.White
+val ColorCalendarItemBorder = Blue3
+val ColorCalendarOnItemBg =Color.White
+val ColorCalendarOnItemBorder = Blue3
+val ColorCalendarDate =Color(0xFF5E5959)
+val ColorCalendarDateBg =Color.White
+val ColorCalendarToday =Color(0xFFF9F9F9)
+val ColorCalendarTodayBg = Blue3
+val ColorCalendarDetailBg =Color.White
+
+val ColorCalendarItemBgDis =Color.White
+val ColorCalendarDateBgDis =Color.White
+val ColorCalendarDateDis =Color(0xFFBCBFD1)*/
+
+
 //val ColorCrawl = Color(0xFF84C0FF)
 //val ColorBackStroke = Color(0xFFFFD078)
 //val ColorBreastStroke= Color(0xFFBE89FF)
@@ -53,9 +71,11 @@ val ColorBottomBarButtonActive = Color(0xFF4967FB)
 //val ColorKickBoard = Color(0xFF797979)
 
 val ColorCrawl = Color(0xFF9DC0FF)
-val ColorBackStroke = Color(0xFFF4FBC3)
+//val ColorBackStroke = Color(0xFFF4FBC3)
+val ColorBackStroke = Color(0xFFFFB439)
 val ColorBreastStroke= Color(0xFFBE89FF)
-val ColorButterfly = Color(0xFFF8ABB3)
+//val ColorButterfly = Color(0xFFF8ABB3)
+val ColorButterfly = Color(0xFFFF9DA8)
 val ColorKickBoard = Color(0xFF797979)
 val ColorMixStart = Color(0xFF86F4DA)
 val ColorMixEnd = Color(0xFFA2E3FF)
