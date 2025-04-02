@@ -1,8 +1,13 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.soodal.ui
 
 import android.content.res.Resources
 import android.os.Bundle
 import android.widget.Toast
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,11 +18,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -26,8 +34,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +43,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,16 +58,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,39 +84,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.ilf.kshoong.R
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
-import kr.ilf.kshoong.database.entity.HeartRateSample
-import kr.ilf.kshoong.ui.theme.ColorBackStroke
-import kr.ilf.kshoong.ui.theme.ColorBackStrokeSecondary
-import kr.ilf.kshoong.ui.theme.ColorBreastStroke
-import kr.ilf.kshoong.ui.theme.ColorBreastStrokeSecondary
-import kr.ilf.kshoong.ui.theme.ColorButterfly
-import kr.ilf.kshoong.ui.theme.ColorButterflySecondary
-import kr.ilf.kshoong.ui.theme.ColorCalendarDate
-import kr.ilf.kshoong.ui.theme.ColorCalendarDateBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarDateBgDis
-import kr.ilf.kshoong.ui.theme.ColorCalendarDateDis
-import kr.ilf.kshoong.ui.theme.ColorCalendarDetailBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarItemBgDis
-import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBg
-import kr.ilf.kshoong.ui.theme.ColorCalendarOnItemBorder
-import kr.ilf.kshoong.ui.theme.ColorCalendarToday
-import kr.ilf.kshoong.ui.theme.ColorCalendarTodayBg
-import kr.ilf.kshoong.ui.theme.ColorCrawl
-import kr.ilf.kshoong.ui.theme.ColorCrawlSecondary
-import kr.ilf.kshoong.ui.theme.ColorKickBoard
-import kr.ilf.kshoong.ui.theme.ColorKickBoardSecondary
-import kr.ilf.kshoong.ui.theme.ColorMixEnd
-import kr.ilf.kshoong.ui.theme.ColorMixEndSecondary
-import kr.ilf.kshoong.ui.theme.ColorMixStart
-import kr.ilf.kshoong.ui.theme.ColorMixStartSecondary
-import kr.ilf.kshoong.viewmodel.PopupUiState
-import kr.ilf.kshoong.viewmodel.SwimmingViewModel
-import kr.ilf.kshoong.viewmodel.UiState
-import java.text.DecimalFormat
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.database.entity.HeartRateSample
+import kr.ilf.soodal.ui.theme.ColorBackStroke
+import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
+import kr.ilf.soodal.ui.theme.ColorBreastStroke
+import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
+import kr.ilf.soodal.ui.theme.ColorButterfly
+import kr.ilf.soodal.ui.theme.ColorButterflySecondary
+import kr.ilf.soodal.ui.theme.ColorCalendarDate
+import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
+import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
+import kr.ilf.soodal.ui.theme.ColorCalendarDateDis
+import kr.ilf.soodal.ui.theme.ColorCalendarItemBg
+import kr.ilf.soodal.ui.theme.ColorCalendarItemBgDis
+import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBg
+import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBorder
+import kr.ilf.soodal.ui.theme.ColorCalendarToday
+import kr.ilf.soodal.ui.theme.ColorCalendarTodayBg
+import kr.ilf.soodal.ui.theme.ColorCrawl
+import kr.ilf.soodal.ui.theme.ColorCrawlSecondary
+import kr.ilf.soodal.ui.theme.ColorKickBoard
+import kr.ilf.soodal.ui.theme.ColorKickBoardSecondary
+import kr.ilf.soodal.ui.theme.ColorMixEnd
+import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
+import kr.ilf.soodal.ui.theme.ColorMixStart
+import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
+import kr.ilf.soodal.ui.theme.SkyBlue6
+import kr.ilf.soodal.viewmodel.PopupUiState
+import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -107,6 +122,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.time.Duration
 
 val selectedMonthSaver =
@@ -117,6 +133,7 @@ val selectedMonthSaver =
 @Composable
 fun CalendarView(
     modifier: Modifier,
+    contentsBg: Color,
     viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -158,7 +175,7 @@ fun CalendarView(
     }
 
     Column(modifier = modifier) {
-        CalendarHeaderView(currentMonth)
+        CalendarHeaderView(currentMonth, contentsBg)
 
         HorizontalPager(
             state = pagerState,
@@ -166,7 +183,7 @@ fun CalendarView(
                 .padding(horizontal = 5.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .background(contentsBg, shape = RoundedCornerShape(10.dp))
                 .padding(vertical = 5.dp),
             key = { today.minusMonths(it.toLong()) },
             reverseLayout = true
@@ -497,7 +514,8 @@ fun DayView(
 
 @Composable
 private fun CalendarHeaderView(
-    currentMonth: LocalDate
+    currentMonth: LocalDate,
+    contentsBg: Color
 ) {
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
@@ -506,7 +524,7 @@ private fun CalendarHeaderView(
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier
             .padding(top = 15.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .background(contentsBg, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 15.dp),
         textAlign = TextAlign.Center
     )
@@ -515,7 +533,7 @@ private fun CalendarHeaderView(
     Row(
         modifier = Modifier
             .padding(start = 5.dp, end = 5.dp, top = 5.dp)
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
+            .background(contentsBg, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 5.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -558,15 +576,16 @@ fun CalendarDetailView(
         Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
             restore = { it.getFloat("columnHeight").dp })
     var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
+    val animatedHeight by animateDpAsState(targetValue = columnHeight)
 
     Column(
         Modifier
             .padding(0.dp, 0.dp, 0.dp, 60.dp)
             .then(modifier)
             .fillMaxWidth()
-            .height(columnHeight)
+            .height(animatedHeight)
             .navigationBarsPadding()
-            .background(ColorCalendarDetailBg, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+            .background(Color.White, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
             .padding(horizontal = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -576,13 +595,34 @@ fun CalendarDetailView(
                 .fillMaxWidth()
                 .height(15.dp)
                 .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        // Column의 높이를 조정
-                        columnHeight = max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
-                    }
+                    detectDragGestures(
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            // Column의 높이를 조정
+                            columnHeight =
+                                max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
+                        }, onDragEnd = {
+                            val extendHeight = columnHeight - initialHeight.dp
+                            columnHeight = when {
+                                extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
+                                extendHeight > 230.dp -> initialHeight.dp + 305.dp
+                                else -> initialHeight.dp
+                            }
+                        })
                 }, contentAlignment = Alignment.Center
         ) {
+            Text(
+                text =
+                currentDate.atZone(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E)")),
+                color = Color.Black.copy(0.5f),
+                fontSize = 12.dp.toSp,
+                lineHeight = 12.dp.toSp,
+                modifier = Modifier
+                    .padding(start = 5.dp)
+                    .fillMaxWidth()
+            )
+
             Box(
                 modifier = Modifier
                     .size(width = 80.dp, height = 5.dp)
@@ -595,84 +635,252 @@ fun CalendarDetailView(
             Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
-            val detailRecord by viewModel.currentDetailRecord.collectAsState()
-            detailRecord.forEach {
-                Column(
-                    Modifier
-                        .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 5.dp)
-                        .fillMaxWidth()
-                        .background(Color.White, shape = RoundedCornerShape(15.dp))
-                        .padding(5.dp)
-                ) {
-                    val startTime = it!!.detailRecord.startTime.atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E) HH:mm"))
-                    val endTime = it.detailRecord.endTime.atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("HH:mm"))
+            // 거리, 시간, 칼로리, 최고 심박, 최저 심박
+            val detailRecords by viewModel.currentDetailRecords.collectAsState()
 
+            // 새 화면
+            var totalDistance by remember { mutableIntStateOf(0) }
+            var totalTime by remember { mutableStateOf(Duration.ZERO) }
+            var totalCalories by remember { mutableDoubleStateOf(0.0) }
+            var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
+            var totalMaxHR by remember { mutableIntStateOf(0) }
+            var totalCrawl by remember { mutableIntStateOf(0) }
+            var totalBackStroke by remember { mutableIntStateOf(0) }
+            var totalBreastStroke by remember { mutableIntStateOf(0) }
+            var totalButterfly by remember { mutableIntStateOf(0) }
+            var totalKickBoard by remember { mutableIntStateOf(0) }
+            var totalMixed by remember { mutableIntStateOf(0) }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(text = DecimalFormat("#,###").format(it.detailRecord.distance?.toInt()) + "m")
-                            Text(
-                                text = "$startTime ~ $endTime",
-                                fontSize = 10.sp,
-                                lineHeight = 10.sp
-                            )
-                        }
+            val animationSpec = spring(
+                visibilityThreshold = Int.VisibilityThreshold,
+                stiffness = Spring.StiffnessLow
+            )
 
-                        Button(
-                            modifier = Modifier.height(24.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(),
-                            onClick = {
-                                viewModel.setModifyRecord(it.detailRecord)
-                                viewModel.popupUiState.value = PopupUiState.MODIFY
-                            }) {
-                            Text(text = "영법 수정", fontSize = 12.sp)
-                        }
+            val animatedCrawl by animateIntAsState(totalCrawl, animationSpec)
+            val animatedBackStroke by animateIntAsState(totalBackStroke, animationSpec)
+            val animatedBreastStroke by animateIntAsState(totalBreastStroke, animationSpec)
+            val animatedButterfly by animateIntAsState(totalButterfly, animationSpec)
+            val animatedKickBoard by animateIntAsState(totalKickBoard, animationSpec)
+            val animatedMixed by animateIntAsState(totalMixed, animationSpec)
+
+            LaunchedEffect(detailRecords) {
+                var tempTotalDistance = totalDistance
+                var tempTotalTime = totalTime
+                var tempTotalCalories = totalCalories
+                var tempTotalMinHR = totalMinHR
+                var tempTotalMaxHR = totalMaxHR
+                var tempTotalCrawl = totalCrawl
+                var tempTotalBackStroke = totalBackStroke
+                var tempTotalBreastStroke = totalBreastStroke
+                var tempTotalButterfly = totalButterfly
+                var tempTotalKickBoard = totalKickBoard
+                var tempTotalMixed = totalMixed
+
+                detailRecords.forEachIndexed { index, (record, sample) ->
+                    if (index == 0) {
+                        tempTotalDistance = 0
+                        tempTotalTime = Duration.ZERO
+                        tempTotalCalories = 0.0
+                        tempTotalMinHR = Int.MAX_VALUE
+                        tempTotalMaxHR = 0
+                        tempTotalCrawl = 0
+                        tempTotalBackStroke = 0
+                        tempTotalBreastStroke = 0
+                        tempTotalButterfly = 0
+                        tempTotalKickBoard = 0
+                        tempTotalMixed = 0
                     }
 
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        val formattedDuration =
-                            Duration.parse(it.detailRecord.activeTime ?: "0").toCustomTimeString()
-                        Text(text = "수영시간: ")
-                        Text(text = formattedDuration)
-                    }
-                    Text(text = "거리" + (it.detailRecord.distance?.toString() ?: " 기록 없음"))
-                    Text(text = "평균심박" + (it.detailRecord.avgHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "최고심박" + (it.detailRecord.maxHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "최저심박" + (it.detailRecord.minHeartRate?.toString() ?: " 기록 없음"))
-                    Text(text = "칼로리 소모" + (it.detailRecord.energyBurned?.toString() ?: " 기록 없음"))
+                    tempTotalDistance += record.distance?.toInt() ?: 0
+                    tempTotalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
+                    tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
+                    tempTotalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
+                    tempTotalMaxHR = maxOf(totalMaxHR, record.maxHeartRate?.toInt() ?: 0)
+                    tempTotalCrawl += record.crawl
+                    tempTotalBackStroke += record.backStroke
+                    tempTotalBreastStroke += record.breastStroke
+                    tempTotalButterfly += record.butterfly
+                    tempTotalKickBoard += record.kickBoard
+                    tempTotalMixed += record.mixed
+                }
 
-                    IconButton(
-                        modifier = Modifier
-                            .navigationBarsPadding()
-                            .size(50.dp)
-                            .align(Alignment.End),
+                totalDistance = tempTotalDistance
+                totalTime = tempTotalTime
+                totalCalories = tempTotalCalories
+                totalMinHR = tempTotalMinHR
+                totalMaxHR = tempTotalMaxHR
+                totalCrawl = tempTotalCrawl
+                totalBackStroke = tempTotalBackStroke
+                totalBreastStroke = tempTotalBreastStroke
+                totalButterfly = tempTotalButterfly
+                totalKickBoard = tempTotalKickBoard
+                totalMixed = tempTotalMixed
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = totalDistance.toString() + "m",
+                    fontSize = 36.dp.toSp,
+                    lineHeight = 36.dp.toSp,
+                )
+                // 임시 수정버튼
+                detailRecords.forEach {
+                    Button(
+                        modifier = Modifier.height(24.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(),
                         onClick = {
                             viewModel.setModifyRecord(it.detailRecord)
                             viewModel.popupUiState.value = PopupUiState.MODIFY
                         }) {
-
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.btn_edit),
-                            modifier = modifier.size(50.dp),
-                            contentDescription = "기록 버튼",
-                            tint = Color.Unspecified
-                        )
+                        Text(text = "영법 수정", fontSize = 12.sp)
                     }
                 }
             }
 
-            detailRecord.ifEmpty {
-                Text(modifier = Modifier.padding(start = 10.dp), text = "데이터가 없습니다.")
+            Column {
+                Row(
+                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("시간")
+                        Text(totalTime.toString())
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("칼로리")
+                        Text(totalCalories.toInt().toString())
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.padding(top = 5.dp).fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("최대 심박")
+                        Text(totalMaxHR.toString())
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("최소 심박")
+                        Text(totalMinHR.toString())
+                    }
+                }
+            }
+
+            Column(
+                Modifier
+                    .padding(top = 5.dp)
+                    .fillMaxWidth()
+                    .background(
+                        SkyBlue6, shape = RoundedCornerShape(15.dp)
+                    )
+                    .padding(8.dp)
+            ) {
+                var refValue by remember { mutableIntStateOf(1000) }
+                val animatedRefVal by animateIntAsState(
+                    refValue, spring(
+                        visibilityThreshold = Int.VisibilityThreshold,
+                        stiffness = 200f
+                    )
+                )
+
+                listOf(
+                    Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
+                    Triple(totalBackStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
+                    Triple(totalBreastStroke, animatedBreastStroke, SolidColor(ColorBreastStroke)),
+                    Triple(totalButterfly, animatedButterfly, SolidColor(ColorButterfly)),
+                    Triple(
+                        totalMixed, animatedMixed, Brush.verticalGradient(
+                            Pair(0f, ColorMixStart),
+                            Pair(1f, ColorMixEnd)
+                        )
+                    ),
+                    Triple(totalKickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
+                ).filter {
+                    it.first != 0
+                }.sortedByDescending {
+                    it.first
+                }.forEachIndexed { i, it ->
+                    if (i == 0) refValue = max(1000, it.first)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .height(30.dp)
+                                .fillMaxWidth(it.second / animatedRefVal.toFloat())
+                                .background(
+                                    it.third,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .padding(end = 7.dp),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            if (it.first >= 75) Text(
+                                it.second.toString(),
+                                lineHeight = 14.dp.toSp,
+                                fontSize = 14.dp.toSp,
+                                color = Color.Black.copy(0.8f)
+                            )
+                        }
+
+                        if (it.first < 75) Text(
+                            it.second.toString(),
+                            lineHeight = 14.dp.toSp,
+                            fontSize = 14.dp.toSp,
+                            color = Color.Black.copy(0.8f)
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun LineGraph() {
+    val modelProducer = remember { CartesianChartModelProducer() }
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            lineSeries { series(5, 6, 5, 2, 11, 8, 5, 2, 15, 11, 8, 13, 12, 10, 2, 7) }
+        }
+    }
+    CartesianChartHost(
+        rememberCartesianChart(
+            rememberLineCartesianLayer(),
+            startAxis = VerticalAxis.rememberStart(),
+            bottomAxis = HorizontalAxis.rememberBottom(),
+        ),
+        modelProducer,
+        modifier = Modifier.fillMaxSize(),
+    )
 }
 
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
@@ -737,3 +945,6 @@ fun Duration.toCustomTimeString(): String {
 
     return if (parts.isNotEmpty()) parts.joinToString(" ") else "기록 없음"
 }
+
+// 시스템 설정과 상관 없이 text 크기 고정
+val Dp.toSp: TextUnit @Composable get() = with(LocalDensity.current) { this@toSp.toSp() }

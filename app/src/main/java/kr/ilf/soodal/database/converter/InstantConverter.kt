@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.database.converter
+package kr.ilf.soodal.database.converter
 
 import androidx.room.TypeConverter
 import java.time.Instant

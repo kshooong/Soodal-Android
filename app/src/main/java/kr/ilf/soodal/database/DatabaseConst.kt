@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.database
+package kr.ilf.soodal.database
 
 object DatabaseConst {
     const val DATABASE_VERSION = 2

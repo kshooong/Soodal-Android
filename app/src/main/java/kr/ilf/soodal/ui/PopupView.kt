@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.soodal.ui
 
 import android.app.Activity
 import android.widget.Toast
@@ -44,9 +44,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.viewmodel.PopupUiState
-import kr.ilf.kshoong.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.viewmodel.PopupUiState
+import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 

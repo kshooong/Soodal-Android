@@ -1,70 +1,55 @@
-package kr.ilf.kshoong.ui
+package kr.ilf.soodal.ui
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.view.ViewGroup
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.magnifier
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
-import kr.ilf.kshoong.Destination
-import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.R
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButton
-import kr.ilf.kshoong.ui.theme.ColorBottomBarButtonActive
-import kr.ilf.kshoong.viewmodel.PopupUiState
-import kr.ilf.kshoong.viewmodel.SwimmingViewModel
-import kr.ilf.kshoong.viewmodel.UiState
+import kr.ilf.soodal.Destination
+import kr.ilf.soodal.HealthConnectManager
+import kr.ilf.soodal.R
+import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
+import kr.ilf.soodal.ui.theme.Blue4
+import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 
 @Composable
@@ -76,20 +61,6 @@ fun NavigationView(
     prevDestination: MutableState<String>
 ) {
     val context = LocalContext.current
-    val webView = remember {
-        WebView(context).apply {
-            webViewClient = WebViewClient()
-            settings.javaScriptEnabled = true
-            settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        }
-    }
-    val shopWebView = remember {
-        WebView(context).apply {
-            webViewClient = WebViewClient()
-            settings.javaScriptEnabled = true
-            settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        }
-    }
 
     NavHost(
         modifier = modifier,
@@ -181,83 +152,54 @@ fun NavigationView(
             Box(
                 Modifier
                     .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            Pair(0f, ColorCalendarBgStart),
+                            Pair(0.75f, Blue4),
+                            start = Offset(0f, 0f),
+                            end = Offset(0.5f, Float.POSITIVE_INFINITY)
+                        )
+                    )
                     .statusBarsPadding()
-                    .background(Color.Transparent)
             ) {
-                CalendarView(modifier = Modifier.wrapContentSize(), viewModel = viewModel)
+                CalendarView(
+                    modifier = Modifier
+                        .wrapContentSize(), contentsBg = Color.Transparent, viewModel = viewModel
+                )
 
                 val initialHeight = LocalConfiguration.current.screenHeightDp - 600
 
-                CalendarDetailView(
+                val detailRecord by viewModel.currentDetailRecords.collectAsState()
+                AnimatedVisibility(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    viewModel = viewModel,
+                    visible = detailRecord.isNotEmpty(), enter = fadeIn(
+                        animationSpec = tween(
+                            300, easing = LinearEasing
+                        )
+                    ) + slideInVertically(
+                        animationSpec = tween(
+                            300,
+                            easing = FastOutSlowInEasing
+                        ), initialOffsetY = { it }),
+                    exit = fadeOut(
+                        animationSpec = tween(
+                            300, easing = LinearEasing
+                        )
+                    ) + slideOutVertically(animationSpec = tween(
+                        300,
+                        easing = FastOutSlowInEasing
+                    ), targetOffsetY = { it })
+                ) {
+                    CalendarDetailView(
+                        modifier = Modifier,
+                        viewModel = viewModel,
 //                    viewModel = PreviewViewmodel(), // preview
-                    Instant.now(),
-                    initialHeight
-                )
-            }
-        }
-
-        composable(
-            Destination.Shop.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Setting.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeIn()
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Setting.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeOut()
-            },
-            popEnterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Setting.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeIn()
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Setting.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeOut()
-            },
-        ) {
-            val url = "https://ilf.kr:8899/test/clothTestWithButton"
-
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize(),
-                factory = {
-                    shopWebView.parent?.let {
-                        (it as ViewGroup).removeView(shopWebView)
-                    }
-                    shopWebView
-                },
-
-                update = { shopWebView ->
-                    // URL이 변경되지 않은 경우에만 업데이트
-                    if (shopWebView.url != url) {
-                        shopWebView.loadUrl(url)
-                    }
+                        Instant.now(),
+                        initialHeight
+                    )
                 }
-            )
+
+            }
         }
     }
 }
@@ -314,7 +256,7 @@ fun LoadingView(
         )
 
         Text(
-            text = "KSHOONG!",
+            text = "SOODAL!",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 270.dp)
         )

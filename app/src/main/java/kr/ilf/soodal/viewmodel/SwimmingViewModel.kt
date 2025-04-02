@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.viewmodel
+package kr.ilf.soodal.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
@@ -21,11 +21,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.ilf.kshoong.HealthConnectManager
-import kr.ilf.kshoong.database.database.SwimmingRecordDatabase
-import kr.ilf.kshoong.database.entity.DailyRecord
-import kr.ilf.kshoong.database.entity.DetailRecord
-import kr.ilf.kshoong.database.entity.DetailRecordWithHeartRateSample
+import kr.ilf.soodal.HealthConnectManager
+import kr.ilf.soodal.database.database.SwimmingRecordDatabase
+import kr.ilf.soodal.database.entity.DailyRecord
+import kr.ilf.soodal.database.entity.DetailRecord
+import kr.ilf.soodal.database.entity.DetailRecordWithHeartRateSample
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -67,10 +67,10 @@ class SwimmingViewModel(
     val dailyRecords
         get() = _dailyRecords.asStateFlow()
 
-    private val _currentDetailRecord =
-        MutableStateFlow<List<DetailRecordWithHeartRateSample?>>(mutableListOf())
-    val currentDetailRecord
-        get() = _currentDetailRecord.asStateFlow()
+    private val _currentDetailRecords =
+        MutableStateFlow<List<DetailRecordWithHeartRateSample>>(mutableListOf())
+    val currentDetailRecords
+        get() = _currentDetailRecords.asStateFlow()
 
     private val _currentModifyRecord =
         MutableStateFlow<DetailRecord?>(null)
@@ -89,7 +89,7 @@ class SwimmingViewModel(
             var nextChangeToken: String? = null
 
             if (changeToken.value == null) {
-                val startOfDay = ZonedDateTime.now().minusDays(120L).truncatedTo(ChronoUnit.DAYS)
+                val startOfDay = ZonedDateTime.now().minusDays(365L).truncatedTo(ChronoUnit.DAYS)
                 val now = Instant.now()
                 val timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), now)
 
@@ -305,7 +305,7 @@ class SwimmingViewModel(
                     date.plus(1, ChronoUnit.DAYS)
                 )
                 result?.let {
-                    _currentDetailRecord.value = it
+                    _currentDetailRecords.value = it
                 }
 
             }
@@ -313,7 +313,7 @@ class SwimmingViewModel(
     }
 
     fun resetDetailRecord() {
-        _currentDetailRecord.value = emptyList()
+        _currentDetailRecords.value = emptyList()
     }
 
     fun setModifyRecord(record: DetailRecord?) {

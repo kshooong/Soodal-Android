@@ -1,4 +1,4 @@
-package kr.ilf.kshoong
+package kr.ilf.soodal
 
 sealed class Destination(val route: String) {
     data object Loading : Destination("loading")

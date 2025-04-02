@@ -1,11 +1,11 @@
-package kr.ilf.kshoong.database.entity
+package kr.ilf.soodal.database.entity
 
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import kr.ilf.kshoong.database.DatabaseConst
+import kr.ilf.soodal.database.DatabaseConst
 import java.time.Instant
 
 // 테이블 x 그냥 데이터 클래스로 사용

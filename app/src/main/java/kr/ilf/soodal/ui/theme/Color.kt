@@ -1,4 +1,4 @@
-package kr.ilf.kshoong.ui.theme
+package kr.ilf.soodal.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -11,8 +11,13 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 
-val skyBlue4 = Color(0xFF9ED3FF)
-val blue3 = Color(0xFF499CFB)
+val SkyBlue4 = Color(0xFF9ED3FF)
+val SkyBlue6 = Color(0xFFE7F3FF)
+val Blue3 = Color(0xFF499CFB)
+val Blue4 = Color(0xFF9DC0FF)
+
+
+
 
 //Calendar
 //val ColorCalendarItemBgStart = Color(0x08000000)
@@ -21,14 +26,15 @@ val blue3 = Color(0xFF499CFB)
 //val ColorCalendarOnDateBg = Color(0xFFFCFCFC)
 //val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
+val ColorCalendarBgStart = Color(0xFFCBEDFF)
 val ColorCalendarItemBg = Color(0xFFE7F3FF)
-val ColorCalendarItemBorder = blue3
+val ColorCalendarItemBorder = Blue3
 val ColorCalendarOnItemBg = Color(0xFFE7F3FF)
-val ColorCalendarOnItemBorder = blue3
+val ColorCalendarOnItemBorder = Blue3
 val ColorCalendarDate = Color(0xFF5E5959)
 val ColorCalendarDateBg = Color(0xFFF9F9F9)
 val ColorCalendarToday = Color(0xFFF9F9F9)
-val ColorCalendarTodayBg = blue3
+val ColorCalendarTodayBg = Blue3
 val ColorCalendarDetailBg = Color(0xFFEDEDED)
 
 val ColorCalendarItemBgDis = Color(0xFFF4F4F4)
