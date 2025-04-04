@@ -1,8 +1,11 @@
 package kr.ilf.soodal.ui
 
 import android.content.res.Resources
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
@@ -73,6 +76,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -831,10 +835,17 @@ fun ResizeBar(
     initialHeight: Dp,
     maxHeight: Dp
 ) {
+    val scope = rememberCoroutineScope()
     val velocityTracker = remember { VelocityTracker() } // 속도 추적기
+    var currentHeight by remember { mutableStateOf(initialHeight) }
+    val animatable = remember { Animatable(initialValue = initialHeight, Dp.VectorConverter,Dp.VisibilityThreshold) }
+
+    LaunchedEffect(animatable.value) {
+        detailHeight.value = animatable.value
+    }
 
     Box(
-        modifier
+        modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectDragGestures(
@@ -842,26 +853,46 @@ fun ResizeBar(
                         change.consume()
                         velocityTracker.addPosition(change.uptimeMillis, change.position) // 위치 기록
 
-                        // 현재 높이 조절
-                        detailHeight.value = max(
+                        // 현재 높이 조절 (실시간 변경)
+                        val newHeight = max(
                             initialHeight, // 최소 크기 제한
-                            detailHeight.value - dragAmount.y.toDp()
+                            min(
+                                maxHeight,
+                                animatable.value - dragAmount.y.toDp()
+                            )
                         )
+                        scope.launch {
+                            animatable.snapTo(newHeight)
+                        }
                     },
                     onDragEnd = {
                         val velocity = velocityTracker.calculateVelocity().y  // Y축 속도(px/s)
+                        Log.d("ResizeBar", "velocity: $velocity")
                         val thresholdVelocity = 500f  // 임계 속도 (px/s)
-                        val extendHeight = detailHeight.value - initialHeight
-                        val halfPoint = (maxHeight - initialHeight) / 2
+                        val range = maxHeight - initialHeight
+                        val thirtyPercent = range * 0.3f
 
-                        detailHeight.value = when {
+                        val targetHeight = when {
                             // 빠르게 위로 스와이프 → 최대 크기
                             velocity < -thresholdVelocity -> maxHeight
                             // 빠르게 아래로 스와이프 → 초기 크기
                             velocity > thresholdVelocity -> initialHeight
-                            // 절반 이상이면 최대 크기, 아니면 초기 크기로 스냅
-                            extendHeight > halfPoint -> maxHeight
-                            else -> initialHeight
+                            // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
+                            currentHeight == initialHeight && animatable.value > initialHeight + thirtyPercent -> maxHeight
+                            // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
+                            currentHeight == maxHeight && animatable.value < maxHeight - thirtyPercent -> initialHeight
+                            else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
+                        }
+
+                        currentHeight = targetHeight
+                        Log.d("ResizeBar", "currentHeight: $currentHeight")
+
+                        scope.launch {
+                            animatable.animateTo(
+                                targetHeight, spring(
+                                    stiffness = Spring.StiffnessMediumLow
+                                )
+                            )
                         }
                     }
                 )
@@ -880,6 +911,7 @@ fun ResizeBar(
         )
     }
 }
+
 
 /*@Preview
 @Composable
