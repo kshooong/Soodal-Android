@@ -1,11 +1,9 @@
 package kr.ilf.soodal.ui
 
 import android.content.res.Resources
-import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,7 +45,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -155,6 +151,7 @@ fun CalendarView(
     val selectedDateStr =
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
+    pagerState.currentPageOffsetFraction
 
     // 최초 진입 시 DetailRecord 조회, 새 데이터 확인 / dispose 시 데이터 초기화
     DisposableEffect(Unit) {
@@ -563,66 +560,14 @@ fun CalendarDetailView(
     modifier: Modifier,
 //    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
-    currentDate: Instant,
-    initialHeight: Float
+    resizeBar: @Composable (Modifier) ->Unit
 ) {
-    val mySaver =
-        Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
-            restore = { it.getFloat("columnHeight").dp })
-    var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
-    val animatedHeight by animateDpAsState(targetValue = columnHeight)
-
     Column(
-        Modifier
-            .padding(0.dp, 0.dp, 0.dp, 60.dp)
-            .then(modifier)
-            .fillMaxWidth()
-            .height(animatedHeight)
-            .navigationBarsPadding()
-            .background(Color.White, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
-            .padding(horizontal = 5.dp),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 조절 바
-        Box(
-            modifier
-                .fillMaxWidth()
-                .height(15.dp)
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            // Column의 높이를 조정
-                            columnHeight =
-                                max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
-                        }, onDragEnd = {
-                            val extendHeight = columnHeight - initialHeight.dp
-                            columnHeight = when {
-                                extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
-                                extendHeight > 230.dp -> initialHeight.dp + 305.dp
-                                else -> initialHeight.dp
-                            }
-                        })
-                }, contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text =
-                currentDate.atZone(ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E)")),
-                color = Color.Black.copy(0.5f),
-                fontSize = 12.dp.toSp,
-                lineHeight = 12.dp.toSp,
-                modifier = Modifier
-                    .padding(start = 5.dp)
-                    .fillMaxWidth()
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(width = 80.dp, height = 5.dp)
-                    .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
-            )
-        }
+        resizeBar(Modifier)
 
         // 데이터
         Column(
@@ -858,6 +803,47 @@ fun CalendarDetailView(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ResizeBar(
+    modifier: Modifier,
+    detailHeight: MutableState<Dp>,
+    initialHeight: Float
+) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(15.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        // Column의 높이를 조정
+                        detailHeight.value =
+                            max(
+                                15.dp.toPx(),
+                                detailHeight.value.toPx() - dragAmount.y
+                            ).toDp()
+                    }, onDragEnd = {
+                        val extendHeight = detailHeight.value - initialHeight.dp
+                        detailHeight.value = when {
+                            extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
+                            extendHeight > 230.dp -> initialHeight.dp + 305.dp
+                            else -> initialHeight.dp
+                        }
+                    })
+            }, contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 80.dp, height = 5.dp)
+                .background(
+                    Color.Gray.copy(alpha = 0.6f),
+                    RoundedCornerShape(50)
+                )
+        )
     }
 }
 
