@@ -14,7 +14,6 @@ composeBom = "2024.04.01"
 roomRersion = "2.6.1"
 navVersion = "2.8.4"
 splashscreen = "1.0.1"
-vico = "2.1.0-alpha.4"
 
 [libraries]
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
@@ -38,13 +37,6 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomRersion" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
-
-# vico
-vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
-# For `compose`. Creates a `ChartStyle` based on an M2 Material Theme.
-vico-compose-m2 = { group = "com.patrykandpatrick.vico", name = "compose-m2", version.ref = "vico" }
-# For `compose`. Creates a `ChartStyle` based on an M3 Material Theme.
-vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
