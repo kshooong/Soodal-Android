@@ -1,7 +1,9 @@
 package kr.ilf.soodal.ui
 
+import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -9,6 +11,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,10 +21,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -30,14 +37,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -51,7 +66,6 @@ import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
 import kr.ilf.soodal.ui.theme.splashTitle
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
-import java.time.Instant
 
 @Composable
 fun NavigationView(
@@ -163,47 +177,87 @@ fun NavigationView(
                     )
                     .statusBarsPadding()
             ) {
+                val calendarHeight = remember { mutableFloatStateOf(0f) }
+                val density = LocalDensity.current
+
                 CalendarView(
                     modifier = Modifier
-                        .wrapContentSize(), contentsBg = Color.Transparent, viewModel = viewModel
+                        .wrapContentSize()
+                        .onGloballyPositioned { coordinates ->
+                            calendarHeight.floatValue =
+                                with(density) { coordinates.size.height.toDp().value }
+                        }, contentsBg = Color.Transparent, viewModel = viewModel
                 )
 
-                val initialHeight = LocalConfiguration.current.screenHeightDp - 592.5f
+                val initialHeight =
+                    LocalConfiguration.current.screenHeightDp - calendarHeight.floatValue - 60
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
+
                 AnimatedVisibility(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    visible = detailRecord.isNotEmpty(), enter = fadeIn(
-                        animationSpec = tween(
-                            300, easing = LinearEasing
-                        )
-                    ) + slideInVertically(
-                        animationSpec = tween(
-                            300,
-                            easing = FastOutSlowInEasing
-                        ), initialOffsetY = { it }),
-                    exit = fadeOut(
-                        animationSpec = tween(
-                            300, easing = LinearEasing
-                        )
-                    ) + slideOutVertically(animationSpec = tween(
-                        300,
-                        easing = FastOutSlowInEasing
-                    ), targetOffsetY = { it })
+                    visible = detailRecord.isNotEmpty(), enter = UpEnterTransition,
+                    exit = DownExitTransition
                 ) {
+                    val mySaver = Saver<Dp, Bundle>(
+                        save = { Bundle().apply { putFloat("detailHeight", it.value) } },
+                        restore = { it.getFloat("detailHeight").dp }
+                    )
+                    val detailHeight = rememberSaveable(stateSaver = mySaver) {
+                        mutableStateOf(initialHeight.dp)
+                    }
+                    val animatedHeight by animateDpAsState(targetValue = detailHeight.value)
+
                     CalendarDetailView(
-                        modifier = Modifier,
+                        Modifier
+                            .padding(0.dp, 0.dp, 0.dp, 60.dp)
+                            .fillMaxWidth()
+                            .height(animatedHeight)
+                            .navigationBarsPadding()
+                            .background(
+                                Color.White,
+                                shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp)
+                            )
+                            .padding(horizontal = 5.dp),
                         viewModel = viewModel,
 //                    viewModel = PreviewViewmodel(), // preview
-                        Instant.now(),
-                        initialHeight
+                        resizeBar = { resizeBarModifier ->
+                            ResizeBar(
+                                resizeBarModifier,
+                                detailHeight,
+                                initialHeight
+                            )
+                        }
                     )
                 }
-
             }
         }
     }
 }
+
+// 글로벌 EnterTransition 변수
+private val UpEnterTransition: EnterTransition = fadeIn(
+    animationSpec = tween(
+        300, easing = LinearEasing
+    )
+) + slideInVertically(
+    animationSpec = tween(
+        300,
+        easing = FastOutSlowInEasing
+    ), initialOffsetY = { it }
+)
+
+// 글로벌 ExitTransition 변수
+private val DownExitTransition: ExitTransition = fadeOut(
+    animationSpec = tween(
+        300, easing = LinearEasing
+    )
+) + slideOutVertically(
+    animationSpec = tween(
+        300,
+        easing = FastOutSlowInEasing
+    ), targetOffsetY = { it }
+)
 
 @Composable
 fun LoadingView(
@@ -227,7 +281,7 @@ fun LoadingView(
                 if (viewModel.checkPermissions()) {
                     setChangeToken()
                 } else {
-                    // 종료
+                    (context as Activity).finishAndRemoveTask()
                 }
             }
 
@@ -241,7 +295,7 @@ fun LoadingView(
             setChangeToken()
         }
     } else {
-        // 종료
+        (context as Activity).finishAndRemoveTask()
     }
 
     Box(
