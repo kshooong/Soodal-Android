@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -177,20 +178,20 @@ fun NavigationView(
                     )
                     .statusBarsPadding()
             ) {
-                val calendarHeight = remember { mutableFloatStateOf(0f) }
+                var calendarHeight by remember { mutableFloatStateOf(0f) }
                 val density = LocalDensity.current
 
                 CalendarView(
                     modifier = Modifier
                         .wrapContentSize()
                         .onGloballyPositioned { coordinates ->
-                            calendarHeight.floatValue =
+                            calendarHeight =
                                 with(density) { coordinates.size.height.toDp().value }
                         }, contentsBg = Color.Transparent, viewModel = viewModel
                 )
 
                 val initialHeight =
-                    LocalConfiguration.current.screenHeightDp - calendarHeight.floatValue - 60
+                    LocalConfiguration.current.screenHeightDp - calendarHeight - 60
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
@@ -216,7 +217,10 @@ fun NavigationView(
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
-                                shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp)
+                                shape = ShapeDefaults.ExtraLarge.copy(
+                                    bottomStart = CornerSize(0.0.dp),
+                                    bottomEnd = CornerSize(0.0.dp)
+                                )
                             )
                             .padding(horizontal = 5.dp),
                         viewModel = viewModel,
@@ -225,7 +229,8 @@ fun NavigationView(
                             ResizeBar(
                                 resizeBarModifier,
                                 detailHeight,
-                                initialHeight
+                                initialHeight.dp,
+                                (calendarHeight + initialHeight - 5).dp
                             )
                         }
                     )
