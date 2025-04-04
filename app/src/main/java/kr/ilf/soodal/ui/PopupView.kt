@@ -155,7 +155,7 @@ fun NewSessionsPopup(
     AnimatedVisibility(
         visible,
         enter = scaleIn(),
-        exit = scaleOut()
+        exit = scaleOut() + fadeOut()
     ) {
         Column(
             modifier = modifier,

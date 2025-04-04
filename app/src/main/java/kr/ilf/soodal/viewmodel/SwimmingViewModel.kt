@@ -423,6 +423,28 @@ class SwimmingViewModel(
 
         return changeToken.value
     }
+
+    fun testNewSessionPopup() {
+        // 임시 NewPopup Test
+
+        _newRecords.value += DetailRecord(
+            id = "testNew01",
+            startTime = Instant.now().minusSeconds(86400),
+            endTime = Instant.now().minusSeconds(83700),
+            distance = "1200"
+        )
+        _newRecords.value += DetailRecord(
+            id = "testNew02",
+            startTime = Instant.now().minusSeconds(80000),
+            endTime = Instant.now().minusSeconds(76000),
+            distance = "1400"
+        )
+
+        hasNewRecord.value = true
+        popupUiState.value = PopupUiState.NEW_SESSIONS
+        // Test 끝
+
+    }
 }
 
 class SwimmingViewModelFactory(
