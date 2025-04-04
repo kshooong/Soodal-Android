@@ -11,7 +11,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -207,13 +206,12 @@ fun NavigationView(
                     val detailHeight = rememberSaveable(stateSaver = mySaver) {
                         mutableStateOf(initialHeight.dp)
                     }
-                    val animatedHeight by animateDpAsState(targetValue = detailHeight.value)
 
                     CalendarDetailView(
                         Modifier
                             .padding(0.dp, 0.dp, 0.dp, 60.dp)
                             .fillMaxWidth()
-                            .height(animatedHeight)
+                            .height(detailHeight.value)
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
