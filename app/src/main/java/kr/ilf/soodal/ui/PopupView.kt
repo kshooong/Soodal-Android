@@ -53,6 +53,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.viewmodel.PopupUiState
@@ -93,7 +96,7 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             PopupUiState.NEW_SESSIONS,
             PopupUiState.NEW_SESSIONS_MODIFY
         ),
-        newList = viewModel.newRecords.collectAsState().value,
+        newMap = viewModel.newRecords.collectAsState().value,
         onClickModify = {
             viewModel.popupUiState.value = PopupUiState.NEW_SESSIONS_MODIFY
             viewModel.setModifyRecord(it)
@@ -117,6 +120,13 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             viewModel.modifyDetailRecord(record)
 
             if (viewModel.popupUiState.value == PopupUiState.NEW_SESSIONS_MODIFY) {
+                viewModel.removeNewRecord(record.id)
+
+                viewModel.newRecords.value.ifEmpty {
+                    viewModel.popupUiState.value = PopupUiState.NONE
+                    return@ModifyRecordPopup
+                }
+
                 viewModel.popupUiState.value = PopupUiState.NEW_SESSIONS
             } else {
                 viewModel.popupUiState.value = PopupUiState.NONE
@@ -148,7 +158,7 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
 fun NewSessionsPopup(
     modifier: Modifier,
     visible: Boolean,
-    newList: List<DetailRecord>,
+    newMap: Map<String, DetailRecord>,
     onClickModify: (detailRecord: DetailRecord) -> Unit,
     onClickClose: () -> Unit
 ) {
@@ -165,7 +175,7 @@ fun NewSessionsPopup(
 
             Text(modifier = Modifier.align(Alignment.CenterHorizontally), text = "새로운 수영 기록이 있어요!")
 
-            newList.forEach {
+            newMap.forEach { (id, record) ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,12 +185,12 @@ fun NewSessionsPopup(
                 ) {
                     Column(modifier = Modifier.padding(start = 6.dp)) {
                         Text(
-                            it.startTime.atZone(ZoneId.systemDefault()).format(formatter),
+                            record.startTime.atZone(ZoneId.systemDefault()).format(formatter),
                             lineHeight = 16.sp
                         )
-                        Text("${it.distance ?: 0}m", lineHeight = 16.sp)
+                        Text("${record.distance ?: 0}m", lineHeight = 16.sp)
                     }
-                    IconButton(onClick = { onClickModify(it) }) {
+                    IconButton(onClick = { onClickModify(record) }) {
                         Icon(
                             modifier = Modifier.padding(),
                             imageVector = ImageVector.vectorResource(R.drawable.ic_modify),
@@ -200,7 +210,7 @@ fun NewSessionsPopup(
 fun ModifyRecordPopup(
     modifier: Modifier,
     visible: Boolean,
-    onClickDone: (DetailRecord) -> Unit,
+    onClickDone: suspend (DetailRecord) -> Unit,
     onClickCancel: () -> Unit,
     record: DetailRecord?
 ) {
@@ -357,7 +367,7 @@ fun ModifyRecordPopup(
                                 kickBoard = kick.intValue,
                                 mixed = mixed.intValue
                             )
-                            onClickDone(detailRecord)
+                            CoroutineScope(Dispatchers.Default).launch { onClickDone(detailRecord) }
                         } else {
                             Toast.makeText(context, "총 거리가 다릅니다.", Toast.LENGTH_SHORT).show()
                         }
