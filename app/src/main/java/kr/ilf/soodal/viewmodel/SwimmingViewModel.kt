@@ -85,7 +85,7 @@ class SwimmingViewModel(
         get() = _currentModifyRecord.asStateFlow()
 
     // 새로 추가된 데이터
-    private val _newRecords = MutableStateFlow<List<DetailRecord>>(mutableListOf())
+    private val _newRecords = MutableStateFlow<MutableMap<String, DetailRecord>>(mutableMapOf())
     val newRecords
         get() = _newRecords.asStateFlow()
     private val hasNewRecord = mutableStateOf(false)
@@ -164,7 +164,7 @@ class SwimmingViewModel(
                             session.endTime
                         )
 
-                    _newRecords.value += detailRecord
+                    _newRecords.value[detailRecord.id] = detailRecord
 
                     // 변경 레코드의 이전 데이터가 있는지 확인
                     val prevDetailRecord = withContext(Dispatchers.IO) {
@@ -406,6 +406,12 @@ class SwimmingViewModel(
         }
     }
 
+    suspend fun removeNewRecord(id: String):Int {
+        withContext(viewModelScope.coroutineContext) {
+            _newRecords.value = _newRecords.value.filterNot { it.key == id }.toMutableMap()
+        }
+    }
+
     fun checkPermissions(): Boolean {
         viewModelScope.launch {
             hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)
@@ -427,13 +433,13 @@ class SwimmingViewModel(
     fun testNewSessionPopup() {
         // 임시 NewPopup Test
 
-        _newRecords.value += DetailRecord(
+        _newRecords.value["testNew01"] = DetailRecord(
             id = "testNew01",
             startTime = Instant.now().minusSeconds(86400),
             endTime = Instant.now().minusSeconds(83700),
             distance = "1200"
         )
-        _newRecords.value += DetailRecord(
+        _newRecords.value["testNew02"] = DetailRecord(
             id = "testNew02",
             startTime = Instant.now().minusSeconds(80000),
             endTime = Instant.now().minusSeconds(76000),
