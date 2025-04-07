@@ -29,12 +29,14 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -110,7 +112,12 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
             .padding(top = 5.dp)
             .shadow(5.dp, shape = RoundedCornerShape(30.dp))
             .scrollable(rememberScrollState(), Orientation.Vertical)
-            .background(Color.White, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+            .background(
+                Color.White, shape = ShapeDefaults.ExtraLarge.copy(
+                    bottomStart = CornerSize(0.0.dp),
+                    bottomEnd = CornerSize(0.0.dp)
+                )
+            )
             .padding(10.dp),
         visible = viewModel.popupUiState.value in setOf(
             PopupUiState.MODIFY,
