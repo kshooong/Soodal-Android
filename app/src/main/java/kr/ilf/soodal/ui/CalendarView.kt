@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -585,7 +586,7 @@ fun CalendarDetailView(
     resizeBar: @Composable (Modifier) -> Unit
 ) {
     Box(
-        modifier = modifier
+        modifier = modifier.clipToBounds()
     ) {
         // 조절 바
         resizeBar(Modifier)
@@ -595,6 +596,7 @@ fun CalendarDetailView(
             Modifier
                 .padding(top = 20.dp)
                 .fillMaxWidth()
+                .wrapContentHeight(Alignment.Top,unbounded = true)
 //                .verticalScroll(rememberScrollState())
                 .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
         ) {
