@@ -1,11 +1,12 @@
 package kr.ilf.soodal.ui
 
 import android.content.res.Resources
-import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -19,9 +20,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,9 +30,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +47,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -67,6 +65,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -76,6 +75,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -155,6 +156,7 @@ fun CalendarView(
     val selectedDateStr =
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
+    pagerState.currentPageOffsetFraction
 
     // 최초 진입 시 DetailRecord 조회, 새 데이터 확인 / dispose 시 데이터 초기화
     DisposableEffect(Unit) {
@@ -502,7 +504,11 @@ private fun CalendarHeaderView(
     val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
     // 년, 월
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
         Text(
             text = currentMonth.format(monthFormatter),
             style = MaterialTheme.typography.headlineMedium,
@@ -513,12 +519,25 @@ private fun CalendarHeaderView(
             textAlign = TextAlign.Center
         )
 
-        val totalDistance = remember{ derivedStateOf { currentMonthTotal.totalDistance ?: "0" }}
-        val totalCaloriesBurned = remember{ derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0"}}
+        val totalDistance = remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
+        val totalCaloriesBurned =
+            remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
 
         Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
-            Text(totalDistance.value + "m", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
-            Text(totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal", color = Color.Gray, fontFamily = notoSansKr, fontSize = 12.sp, lineHeight = 12.sp, )
+            Text(
+                totalDistance.value + "m",
+                color = Color.Gray,
+                fontFamily = notoSansKr,
+                fontSize = 12.sp,
+                lineHeight = 12.sp,
+            )
+            Text(
+                totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal",
+                color = Color.Gray,
+                fontFamily = notoSansKr,
+                fontSize = 12.sp,
+                lineHeight = 12.sp,
+            )
         }
 
     }
@@ -563,73 +582,21 @@ fun CalendarDetailView(
     modifier: Modifier,
 //    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
-    currentDate: Instant,
-    initialHeight: Float
+    resizeBar: @Composable (Modifier) -> Unit
 ) {
-    val mySaver =
-        Saver<Dp, Bundle>(save = { Bundle().apply { putFloat("columnHeight", it.value) } },
-            restore = { it.getFloat("columnHeight").dp })
-    var columnHeight by rememberSaveable(stateSaver = mySaver) { mutableStateOf(initialHeight.dp) }
-    val animatedHeight by animateDpAsState(targetValue = columnHeight)
-
-    Column(
-        Modifier
-            .padding(0.dp, 0.dp, 0.dp, 60.dp)
-            .then(modifier)
-            .fillMaxWidth()
-            .height(animatedHeight)
-            .navigationBarsPadding()
-            .background(Color.White, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
-            .padding(horizontal = 5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier
     ) {
         // 조절 바
-        Box(
-            modifier
-                .fillMaxWidth()
-                .height(15.dp)
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            // Column의 높이를 조정
-                            columnHeight =
-                                max(15.dp.toPx(), columnHeight.toPx() - dragAmount.y).toDp()
-                        }, onDragEnd = {
-                            val extendHeight = columnHeight - initialHeight.dp
-                            columnHeight = when {
-                                extendHeight > 80.dp && extendHeight <= 230.dp -> initialHeight.dp + 155.dp
-                                extendHeight > 230.dp -> initialHeight.dp + 305.dp
-                                else -> initialHeight.dp
-                            }
-                        })
-                }, contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text =
-                currentDate.atZone(ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("yyyy.MM.dd(E)")),
-                color = Color.Black.copy(0.5f),
-                fontSize = 12.dp.toSp,
-                lineHeight = 12.dp.toSp,
-                modifier = Modifier
-                    .padding(start = 5.dp)
-                    .fillMaxWidth()
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(width = 80.dp, height = 5.dp)
-                    .background(Color.Gray.copy(alpha = 0.6f), RoundedCornerShape(50))
-            )
-        }
+        resizeBar(Modifier)
 
         // 데이터
         Column(
             Modifier
+                .padding(top = 20.dp)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp, vertical = 5.dp)
+//                .verticalScroll(rememberScrollState())
+                .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
         ) {
             // 거리, 시간, 칼로리, 최고 심박, 최저 심박
             val detailRecords by viewModel.currentDetailRecords.collectAsState()
@@ -860,6 +827,91 @@ fun CalendarDetailView(
         }
     }
 }
+
+@Composable
+fun ResizeBar(
+    modifier: Modifier = Modifier,
+    detailHeight: MutableState<Dp>,
+    initialHeight: Dp,
+    maxHeight: Dp
+) {
+    val scope = rememberCoroutineScope()
+    val velocityTracker = remember { VelocityTracker() } // 속도 추적기
+    var currentHeight by remember { mutableStateOf(initialHeight) }
+    val animatable = remember { Animatable(initialValue = initialHeight, Dp.VectorConverter,Dp.VisibilityThreshold) }
+
+    LaunchedEffect(animatable.value) {
+        detailHeight.value = animatable.value
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        velocityTracker.addPosition(change.uptimeMillis, change.position) // 위치 기록
+
+                        // 현재 높이 조절 (실시간 변경)
+                        val newHeight = max(
+                            initialHeight, // 최소 크기 제한
+                            min(
+                                maxHeight,
+                                animatable.value - dragAmount.y.toDp()
+                            )
+                        )
+                        scope.launch {
+                            animatable.snapTo(newHeight)
+                        }
+                    },
+                    onDragEnd = {
+                        val velocity = velocityTracker.calculateVelocity().y  // Y축 속도(px/s)
+                        Log.d("ResizeBar", "velocity: $velocity")
+                        val thresholdVelocity = 500f  // 임계 속도 (px/s)
+                        val range = maxHeight - initialHeight
+                        val thirtyPercent = range * 0.3f
+
+                        val targetHeight = when {
+                            // 빠르게 위로 스와이프 → 최대 크기
+                            velocity < -thresholdVelocity -> maxHeight
+                            // 빠르게 아래로 스와이프 → 초기 크기
+                            velocity > thresholdVelocity -> initialHeight
+                            // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
+                            currentHeight == initialHeight && animatable.value > initialHeight + thirtyPercent -> maxHeight
+                            // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
+                            currentHeight == maxHeight && animatable.value < maxHeight - thirtyPercent -> initialHeight
+                            else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
+                        }
+
+                        currentHeight = targetHeight
+                        Log.d("ResizeBar", "currentHeight: $currentHeight")
+
+                        scope.launch {
+                            animatable.animateTo(
+                                targetHeight, spring(
+                                    stiffness = Spring.StiffnessMediumLow
+                                )
+                            )
+                        }
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(5.dp)
+                .size(width = 80.dp, height = 5.dp)
+                .background(
+                    Color.Gray.copy(alpha = 0.6f),
+                    RoundedCornerShape(50)
+                )
+                .align(Alignment.TopCenter)
+        )
+    }
+}
+
 
 /*@Preview
 @Composable
