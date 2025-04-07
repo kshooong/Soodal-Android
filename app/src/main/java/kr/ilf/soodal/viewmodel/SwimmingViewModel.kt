@@ -406,7 +406,7 @@ class SwimmingViewModel(
         }
     }
 
-    suspend fun removeNewRecord(id: String):Int {
+    suspend fun removeNewRecord(id: String) {
         withContext(viewModelScope.coroutineContext) {
             _newRecords.value = _newRecords.value.filterNot { it.key == id }.toMutableMap()
         }
