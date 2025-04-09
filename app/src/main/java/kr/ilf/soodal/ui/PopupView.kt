@@ -40,6 +40,7 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -51,7 +52,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -233,8 +233,6 @@ fun ModifyRecordPopup(
                 val rowModifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                val textModifier = Modifier.width(50.dp)
-                val textFieldModifier = Modifier.width(200.dp)
                 val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
                 val startTime = record.startTime.atZone(ZoneId.systemDefault())
                     .format(formatter)
@@ -257,106 +255,15 @@ fun ModifyRecordPopup(
                     Column(
                         rowModifier
                     ) {
+                        val poolLength = record.poolLength
                         Text(text = "수영 시간 $startTime ~ $endTime")
                         Text(text = "총 거리 ${record.distance}")
-
-                        Row(
-                            rowModifier,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                modifier = textModifier,
-                                text = "자유형",
-                                textAlign = TextAlign.Center
-                            )
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = crawl.intValue.toString(),
-                                onValueChange = {
-                                    crawl.intValue = if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-
-                        Row(
-                            rowModifier
-                        ) {
-                            Text(modifier = textModifier, text = "배영")
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = back.intValue.toString(),
-                                onValueChange = {
-                                    back.intValue = if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-
-                        Row(
-                            rowModifier
-                        ) {
-                            Text(modifier = textModifier, text = "평영")
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = breast.intValue.toString(),
-                                onValueChange = {
-                                    breast.intValue =
-                                        if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-
-                        }
-
-                        Row(
-                            rowModifier
-                        ) {
-                            Text(modifier = textModifier, text = "접영")
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = butterfly.intValue.toString(),
-                                onValueChange = {
-                                    butterfly.intValue =
-                                        if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-
-                        Row(
-                            rowModifier
-                        ) {
-                            Text(modifier = textModifier, text = "혼영")
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = mixed.intValue.toString(),
-                                onValueChange = {
-                                    mixed.intValue = if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                            )
-                        }
-
-                        Row(
-                            rowModifier
-                        ) {
-                            Text(modifier = textModifier, text = "킥판")
-                            TextField(
-                                modifier = textFieldModifier,
-                                value = kick.intValue.toString(),
-                                onValueChange = {
-                                    kick.intValue = if (it.toIntOrNull() != null) it.toInt() else 0
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
+                        DistanceRow(rowModifier, crawl, poolLength, "자유형")
+                        DistanceRow(rowModifier, back, poolLength, "배영")
+                        DistanceRow(rowModifier, breast, poolLength, "평영")
+                        DistanceRow(rowModifier, butterfly, poolLength, "접영")
+                        DistanceRow(rowModifier, mixed, poolLength, "혼영")
+                        DistanceRow(rowModifier, kick, poolLength, "킥판")
                     }
                 }
 
@@ -387,6 +294,34 @@ fun ModifyRecordPopup(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DistanceRow(
+    modifier: Modifier,
+    distance: MutableIntState,
+    poolLength: Int,
+    title: String
+) {
+    Row(modifier) {
+        Text(modifier = Modifier.width(50.dp), text = title)
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = distance.intValue.toString(),
+            onValueChange = { value ->
+                val intValue = value.toIntOrNull() ?: 0
+                distance.intValue = intValue.coerceAtLeast(0)
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true
+        )
+        Button(onClick = {
+            distance.intValue = (distance.intValue - poolLength).coerceAtLeast(0)
+        }) {
+            Text("-")
+        }
+        Button(onClick = { distance.intValue += poolLength }) { Text("+") }
     }
 }
 
