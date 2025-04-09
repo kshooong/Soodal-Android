@@ -266,10 +266,9 @@ class SwimmingViewModel(
             _dailyRecords.value = withContext(Dispatchers.IO) {
                 val dailyRecordsMap = mutableMapOf<ZonedDateTime, DailyRecord>()
 
-                val start = month.minusMonths(1L).atStartOfDay().toInstant(ZoneOffset.UTC)
-                val end =
-                    month.withDayOfMonth(month.lengthOfMonth()).plusMonths(1L).atStartOfDay()
-                        .toInstant(ZoneOffset.UTC)
+                val start = month.minusDays(40L).atStartOfDay().toInstant(ZoneOffset.UTC)
+                val end = month.withDayOfMonth(month.lengthOfMonth()).plusDays(40L)
+                    .atStartOfDay().toInstant(ZoneOffset.UTC)
 
                 SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
                     ?.findDetailRecordsBetween(start, end)?.groupBy {
