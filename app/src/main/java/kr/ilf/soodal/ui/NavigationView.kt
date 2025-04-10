@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -63,7 +64,6 @@ import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
 import kr.ilf.soodal.ui.theme.ColorCalendarBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
-import kr.ilf.soodal.ui.theme.splashTitle
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
 
@@ -314,9 +314,16 @@ fun LoadingView(
         )
 
         Text(
-            text = "SOODAL!",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 270.dp)
+            text = "수 달",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 280.dp)
+        )
+        Text(
+            text = "영     력",
+            color = Color.Gray,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 220.dp)
         )
     }
 }
@@ -344,10 +351,29 @@ fun SyncView(
             modifier = Modifier.size(288.dp)
         )
 
+//        Text(
+//            text = "Synchronizing!",
+//            style = MaterialTheme.typography.splashTitle,
+//            modifier = Modifier.padding(bottom = 270.dp)
+//        )
         Text(
-            text = "Synchronizing!",
-            style = MaterialTheme.typography.splashTitle,
-            modifier = Modifier.padding(bottom = 270.dp)
+            text = "수 달",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 280.dp)
+        )
+        Text(
+            text = "영     력",
+            color = Color.Gray,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 220.dp)
+        )
+
+        Text(
+            text = "동기화 중",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 280.dp)
         )
     }
 }
