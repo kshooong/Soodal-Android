@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -773,7 +774,7 @@ fun IconWithPolygon(
     iconSize: Dp,
     isRotate: Boolean = true
 ) {
-    Box(modifier = Modifier.size(diameter + iconSize), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.size(diameter + iconSize).clipToBounds(), contentAlignment = Alignment.Center) {
         val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
         val offsetAngle = 360 / brushList.size.toFloat()
 
