@@ -75,8 +75,6 @@ import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
-import kr.ilf.soodal.ui.DayView
-import kr.ilf.soodal.ui.IconWithPolygon
 import kr.ilf.soodal.ui.distributeDistance
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
@@ -276,7 +274,7 @@ fun CalendarView(
             } else {
                 val month = today.minusMonths(it.toLong())
 
-                kr.ilf.soodal.ui.test.MonthView(
+                MonthView(
                     viewModel,
                     month,
                     selectedMonth,
