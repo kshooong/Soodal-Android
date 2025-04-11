@@ -2,7 +2,8 @@ package kr.ilf.soodal.ui.test
 
 import android.content.res.Resources
 import android.widget.Toast
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -127,7 +128,7 @@ fun CalendarView(
     viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var calendarMode by remember { mutableStateOf(CalendarUiState.MONTH_MODE) }
+    var calendarMode by viewModel.calendarUiState
 
     val today by remember { mutableStateOf(LocalDate.now()) }
     val todayWeek = remember { today.minusDays(today.dayOfWeek.value - 3L) }
@@ -138,6 +139,7 @@ fun CalendarView(
             LocalDate.now().withDayOfMonth(1)
         )
     }
+    var animationCount by viewModel.animationCount
     val selectedDateStr =
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
     val pagerState =
@@ -153,6 +155,23 @@ fun CalendarView(
         viewModel.checkAndShowNewRecordPopup()
 
         onDispose { viewModel.resetDetailRecord() }
+    }
+
+    LaunchedEffect(animationCount) {
+        if (animationCount >= 5) {
+            if (calendarMode == CalendarUiState.TO_WEEK) {
+                calendarMode = CalendarUiState.WEEK_MODE
+                pagerState.scrollToPage(
+                    ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
+                )
+
+            } else if (calendarMode == CalendarUiState.TO_MONTH) {
+                calendarMode = CalendarUiState.MONTH_MODE
+//                val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+//                pagerState.scrollToPage(monthDifference)
+            }
+            viewModel.animationCount.intValue = 0
+        }
     }
 
     LaunchedEffect(pagerState) {
@@ -194,18 +213,13 @@ fun CalendarView(
         CalendarHeaderView(viewModel, contentsBg)
         Button(onClick = {
             if (calendarMode == CalendarUiState.WEEK_MODE) {
-                calendarMode = CalendarUiState.MONTH_MODE
+                calendarMode = CalendarUiState.TO_MONTH
                 val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
                 coroutineScope.launch {
                     pagerState.scrollToPage(monthDifference)
                 }
-            } else {
-                calendarMode = CalendarUiState.WEEK_MODE
-                coroutineScope.launch {
-                    pagerState.scrollToPage(
-                        ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
-                    )
-                }
+            } else if (calendarMode == CalendarUiState.MONTH_MODE) {
+                calendarMode = CalendarUiState.TO_WEEK
             }
         }) { Text("Mode") }
 
@@ -215,7 +229,6 @@ fun CalendarView(
                 .padding(horizontal = 5.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .animateContentSize()
                 .background(contentsBg, shape = RoundedCornerShape(10.dp))
                 .padding(vertical = 5.dp),
             key = {
@@ -229,7 +242,7 @@ fun CalendarView(
 
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 val week = todayWeek.minusWeeks(it.toLong())
-                val isCurrentWeek = week == todayWeek
+                val isCurrentWeek = week == currentWeek
                 val daysInMonth = week.lengthOfMonth()
                 val firstDayOfMonth = week.withDayOfMonth(1)
                 val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
@@ -382,15 +395,40 @@ private fun weekView(
     isCurrentWeek: Boolean
 ): Int {
     var dayCounter1 = dayCounter
+    var calendarUiState by viewModel.calendarUiState
+    var height by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
+    var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
+
+    LaunchedEffect(calendarUiState) {
+        height = when (calendarUiState) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 70.dp
+            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 70.dp else 0.dp
+        }
+
+        paddingV = when (calendarUiState) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 2.5.dp
+            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 2.5.dp else 0.dp
+        }
+    }
+
+    val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
+    val animatedHeight by animateDpAsState(
+        height,
+        animationSpec = tween(),
+        finishedListener = { _ ->
+            viewModel.animationCount.intValue += 1
+        })
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 5.dp, vertical = 2.5.dp)
+            .wrapContentHeight()
+            .padding(horizontal = 7.5.dp, vertical = animatedPadding),
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         val dayViewModifier = Modifier
             .weight(1f)
-            .padding(horizontal = 2.5.dp)
-            .height(70.dp)
+            .height(animatedHeight)
 
         for (day in 0..6) {
             if (week == 0 && day < firstDayOfWeek) {
