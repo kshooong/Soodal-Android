@@ -226,6 +226,7 @@ fun CalendarView(
 
         HorizontalPager(
             state = pagerState,
+            userScrollEnabled = calendarMode == CalendarUiState.WEEK_MODE || calendarMode == CalendarUiState.MONTH_MODE,
             modifier = Modifier
                 .padding(horizontal = 5.dp)
                 .fillMaxWidth()
@@ -246,7 +247,8 @@ fun CalendarView(
                 val isCurrentWeek = week == currentWeek
                 val daysInMonth = week.lengthOfMonth()
                 val firstDayOfMonth = week.withDayOfMonth(1)
-                val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
+                val firstDayOfWeek =
+                    (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
                 val prevMonth = week.minusMonths(1)
                 val daysInPrevMonth = prevMonth.lengthOfMonth()
                 val weekOfMonth = getWeekOfMonth(week) - 1
@@ -279,7 +281,8 @@ fun CalendarView(
                 ) { newMonth ->
                     when {
                         newMonth.isAfter(today) -> {
-                            Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT)
+                                .show()
                         }
 
                         newMonth.withDayOfMonth(1)
@@ -306,7 +309,10 @@ fun CalendarView(
                             )
 
                             val diffMonth =
-                                ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth)
+                                ChronoUnit.MONTHS.between(
+                                    newMonth.withDayOfMonth(1),
+                                    currentMonth
+                                )
                                     .toInt()
                             CoroutineScope(Dispatchers.Main).launch {
                                 withContext(coroutineScope.coroutineContext) {
@@ -774,7 +780,12 @@ fun IconWithPolygon(
     iconSize: Dp,
     isRotate: Boolean = true
 ) {
-    Box(modifier = Modifier.size(diameter + iconSize).clipToBounds(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .size(diameter + iconSize)
+            .clipToBounds(),
+        contentAlignment = Alignment.Center
+    ) {
         val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
         val offsetAngle = 360 / brushList.size.toFloat()
 
