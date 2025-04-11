@@ -63,6 +63,8 @@ class SwimmingViewModel(
     private val changeToken = mutableStateOf<String?>(null)
 
     val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
+    val currentWeek =
+        mutableStateOf(LocalDate.now().minusDays(LocalDate.now().dayOfWeek.value + 3L))
 
     // 현재 월의 총 합산 데이터
     private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
@@ -474,6 +476,13 @@ enum class UiState {
     LOADING,
     COMPLETE,
     SCROLLING
+}
+
+enum class CalendarUiState {
+    WEEK_MODE,
+    MONTH_MODE,
+    TO_WEEK,
+    TO_MONTH
 }
 
 enum class PopupUiState {
