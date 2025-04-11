@@ -75,6 +75,9 @@ import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
+import kr.ilf.soodal.ui.DayView
+import kr.ilf.soodal.ui.IconWithPolygon
+import kr.ilf.soodal.ui.distributeDistance
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
@@ -100,6 +103,7 @@ import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.notoSansKr
+import kr.ilf.soodal.ui.toDp
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
@@ -278,39 +282,39 @@ fun CalendarView(
                     selectedMonth,
                     selectedDateStr,
                     today
-                ) { newMonth ->
+                ) { clickedDate ->
                     when {
-                        newMonth.isAfter(today) -> {
+                        clickedDate.isAfter(today) -> {
                             Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
-                        newMonth.withDayOfMonth(1)
+                        clickedDate.withDayOfMonth(1)
                             .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
                             Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
-                        newMonth.month == currentMonth.month -> {
-                            selectedMonth.value = newMonth
-                            selectedDateStr.value = newMonth.dayOfMonth.toString()
+                        clickedDate.month == currentMonth.month -> {
+                            selectedMonth.value = clickedDate
+                            selectedDateStr.value = clickedDate.dayOfMonth.toString()
 
                             viewModel.findDetailRecord(
-                                newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
+                                clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
                         }
 
                         else -> {
-                            selectedMonth.value = newMonth
-                            selectedDateStr.value = newMonth.dayOfMonth.toString()
+                            selectedMonth.value = clickedDate
+                            selectedDateStr.value = clickedDate.dayOfMonth.toString()
 
                             viewModel.findDetailRecord(
-                                newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
+                                clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
 
                             val diffMonth =
                                 ChronoUnit.MONTHS.between(
-                                    newMonth.withDayOfMonth(1),
+                                    clickedDate.withDayOfMonth(1),
                                     currentMonth
                                 )
                                     .toInt()
@@ -323,6 +327,8 @@ fun CalendarView(
                             }
                         }
                     }
+
+                    currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
                 }
             }
         }
@@ -365,8 +371,16 @@ fun MonthView(
 
         // 주 단위로 날짜를 표시
         for (week in 0..5) { // 최대 6주까지 표시
-            val isCurrentWeek = currentWeek.month == month.month && currentWeek.year == month.year
-                    && week == getWeekOfMonth(currentWeek) - 1
+            val isCurrentWeek =
+                if (currentWeek.month == month.month && currentWeek.year == month.year) {
+                    week == (getWeekOfMonth(currentWeek) - 1)
+                } else {
+                    val selectedDate =
+                        selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
+
+                    currentWeek.dayOfMonth < 4 && week == (getWeekOfMonth(selectedDate) - 1)
+
+                }
 
             dayCounter = weekView(
                 week,
