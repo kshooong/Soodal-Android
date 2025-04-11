@@ -248,7 +248,7 @@ fun CalendarView(
 }
 
 @Composable
-fun MonthView(
+private fun MonthView(
     viewModel: SwimmingViewModel,
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
@@ -361,7 +361,7 @@ fun MonthView(
 }
 
 @Composable
-fun DayView(
+private fun DayView(
     modifier: Modifier,
     viewModel: SwimmingViewModel,
     month: LocalDate,
@@ -972,7 +972,7 @@ fun ShrimpIconWithBoxPreview() {
 }
 
 @Composable
-fun IconWithPolygon(
+private fun IconWithPolygon(
     painter: Painter,
     brushList: List<Brush>,
     diameter: Dp,
