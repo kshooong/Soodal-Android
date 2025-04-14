@@ -260,7 +260,7 @@ fun CalendarView(
 
                 val dayCounter = (1 + weekOfMonth * 7 - firstDayOfWeek).coerceAtLeast(1)
 
-                weekView(
+                WeekView(
                     weekOfMonth,
                     firstDayOfWeek,
                     daysInPrevMonth,
@@ -272,7 +272,8 @@ fun CalendarView(
                     daysInMonth,
                     selectedDateStr,
                     selectedMonth,
-                    isCurrentWeek
+                    isCurrentWeek,
+                    {}
                 )
             } else {
                 val month = today.minusMonths(it.toLong())
@@ -383,7 +384,7 @@ fun MonthView(
 
                 }
 
-            dayCounter = weekView(
+            WeekView(
                 week,
                 firstDayOfWeek,
                 daysInPrevMonth,
@@ -395,14 +396,15 @@ fun MonthView(
                 daysInMonth,
                 selectedDateStr,
                 selectedMonth,
-                isCurrentWeek
+                isCurrentWeek,
+                updateDayCounter = { dayCounter = it }
             )
         }
     }
 }
 
 @Composable
-private fun weekView(
+private fun WeekView(
     week: Int,
     firstDayOfWeek: Int,
     daysInPrevMonth: Int,
@@ -410,14 +412,15 @@ private fun weekView(
     month: LocalDate,
     today: LocalDate,
     onDateClick: (LocalDate) -> Unit,
-    dayCounter: Int,
+    dayCounterStart: Int,
     daysInMonth: Int,
     selectedDateStr: MutableState<String>,
     selectedMonth: MutableState<LocalDate>,
-    isCurrentWeek: Boolean
-): Int {
-    var dayCounter1 = dayCounter
-    var calendarUiState by viewModel.calendarUiState
+    isCurrentWeek: Boolean,
+    updateDayCounter: (Int) -> Unit
+) {
+    var dayCounter = dayCounterStart
+    val calendarUiState by viewModel.calendarUiState
     var height by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
     var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
 
@@ -469,25 +472,25 @@ private fun weekView(
                     onDateClick = onDateClick
                 )
 
-            } else if (dayCounter1 > daysInMonth) {
+            } else if (dayCounter > daysInMonth) {
                 // 다음 달 날짜 표시
                 DayView(
                     modifier = dayViewModifier.background(
                         ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
                     ),
                     viewModel = viewModel,
-                    month = month.plusMonths(1L).withDayOfMonth(dayCounter1 - daysInMonth),
-                    day = (dayCounter1 - daysInMonth).toString(),
+                    month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
+                    day = (dayCounter - daysInMonth).toString(),
                     today = today,
                     isThisMonth = false,
                     onDateClick = onDateClick
                 )
 
-                dayCounter1++
+                updateDayCounter(++dayCounter)
             } else {
                 // 이번 달 날짜 표시
                 if (week > 0 || day >= firstDayOfWeek) {
-                    val sameDate = dayCounter1.toString() == selectedDateStr.value
+                    val sameDate = dayCounter.toString() == selectedDateStr.value
                     val sameMonth = month.month == selectedMonth.value.month
                     val borderColor = if (sameDate && sameMonth) {
                         ColorCalendarOnItemBorder
@@ -512,20 +515,18 @@ private fun weekView(
                                 RoundedCornerShape(8.dp)
                             ),
                         viewModel = viewModel,
-                        month = month.withDayOfMonth(dayCounter1),
-                        day = dayCounter1.toString(),
+                        month = month.withDayOfMonth(dayCounter),
+                        day = dayCounter.toString(),
                         today = today,
                         isThisMonth = true,
                         onDateClick = onDateClick
                     )
 
-                    dayCounter1++
+                    updateDayCounter(++dayCounter)
                 }
             }
         }
     }
-
-    return dayCounter1
 }
 
 @Composable
