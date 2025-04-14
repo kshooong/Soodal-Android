@@ -212,15 +212,18 @@ fun CalendarView(
         viewModel.updateDailyRecords()
     }
 
+    LaunchedEffect(calendarMode) {
+        if (calendarMode == CalendarUiState.TO_MONTH) {
+            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+            pagerState.scrollToPage(monthDifference)
+        }
+    }
+
     Column(modifier = modifier) {
         CalendarHeaderView(viewModel, contentsBg)
         Button(onClick = {
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 calendarMode = CalendarUiState.TO_MONTH
-                val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
-                coroutineScope.launch {
-                    pagerState.scrollToPage(monthDifference)
-                }
             } else if (calendarMode == CalendarUiState.MONTH_MODE) {
                 calendarMode = CalendarUiState.TO_WEEK
             }
