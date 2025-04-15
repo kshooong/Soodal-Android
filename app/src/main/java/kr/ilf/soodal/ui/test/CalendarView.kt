@@ -1,26 +1,18 @@
-package kr.ilf.soodal.ui
+package kr.ilf.soodal.ui.test
 
 import android.content.res.Resources
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -42,8 +34,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,9 +55,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -76,8 +63,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -90,6 +75,7 @@ import kr.ilf.soodal.R
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
+import kr.ilf.soodal.ui.distributeDistance
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBackStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
@@ -114,8 +100,9 @@ import kr.ilf.soodal.ui.theme.ColorMixEnd
 import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
-import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
+import kr.ilf.soodal.ui.toDp
+import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -126,8 +113,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -146,18 +131,24 @@ fun CalendarView(
     viewModel: SwimmingViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
+    var calendarMode by viewModel.calendarUiState
 
     val today by remember { mutableStateOf(LocalDate.now()) }
+    val todayWeek = remember { today.minusDays(today.dayOfWeek.value - 3L) }
     var currentMonth by viewModel.currentMonth
+    var currentWeek by viewModel.currentWeek
     val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
         mutableStateOf(
             LocalDate.now().withDayOfMonth(1)
         )
     }
+    var animationCount by viewModel.animationCount
     val selectedDateStr =
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
-    val pagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
-    pagerState.currentPageOffsetFraction
+    val pagerState =
+        rememberPagerState(
+            0,
+            pageCount = { if (calendarMode == CalendarUiState.WEEK_MODE) 50 else 12 }) // 12달 간의 달력 제공
 
     // 최초 진입 시 DetailRecord 조회, 새 데이터 확인 / dispose 시 데이터 초기화
     DisposableEffect(Unit) {
@@ -167,6 +158,23 @@ fun CalendarView(
         viewModel.checkAndShowNewRecordPopup()
 
         onDispose { viewModel.resetDetailRecord() }
+    }
+
+    LaunchedEffect(animationCount) {
+        if (animationCount >= 5) {
+            if (calendarMode == CalendarUiState.TO_WEEK) {
+                calendarMode = CalendarUiState.WEEK_MODE
+                pagerState.scrollToPage(
+                    ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
+                )
+
+            } else if (calendarMode == CalendarUiState.TO_MONTH) {
+                calendarMode = CalendarUiState.MONTH_MODE
+//                val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+//                pagerState.scrollToPage(monthDifference)
+            }
+            viewModel.animationCount.intValue = 0
+        }
     }
 
     LaunchedEffect(pagerState) {
@@ -181,74 +189,166 @@ fun CalendarView(
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
+        if ((calendarMode == CalendarUiState.WEEK_MODE)) {
+            currentWeek = todayWeek
+                .minusWeeks(pagerState.currentPage.toLong())
+            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+            currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
+        } else {
+            currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
+
+            // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
+            if (selectedMonth.value.year == currentMonth.year && selectedMonth.value.month == currentMonth.month) {
+                val selectedDate = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
+                val selectedWeek = selectedDate.minusDays(selectedDate.dayOfWeek.value - 3L)
+                currentWeek = selectedWeek
+            } else {
+                // 바뀐 월의 첫 번째 주를 currentWeek으로 설정
+                val tempWeek = currentMonth.minusDays(currentMonth.dayOfWeek.value - 3L)
+                currentWeek = if (tempWeek.dayOfMonth > 4) tempWeek.plusWeeks(1L) else tempWeek
+            }
+        }
+
         viewModel.updateDailyRecords()
+    }
+
+    LaunchedEffect(calendarMode) {
+        if (calendarMode == CalendarUiState.TO_MONTH) {
+            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+            pagerState.scrollToPage(monthDifference)
+        }
     }
 
     Column(modifier = modifier) {
         CalendarHeaderView(viewModel, contentsBg)
+        Button(onClick = {
+            if (calendarMode == CalendarUiState.WEEK_MODE) {
+                calendarMode = CalendarUiState.TO_MONTH
+            } else if (calendarMode == CalendarUiState.MONTH_MODE) {
+                calendarMode = CalendarUiState.TO_WEEK
+            }
+        }) { Text("Mode") }
 
         HorizontalPager(
             state = pagerState,
+            userScrollEnabled = calendarMode == CalendarUiState.WEEK_MODE || calendarMode == CalendarUiState.MONTH_MODE,
             modifier = Modifier
                 .padding(horizontal = 5.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(contentsBg, shape = RoundedCornerShape(10.dp))
                 .padding(vertical = 5.dp),
-            key = { today.minusMonths(it.toLong()) },
+            key = {
+                if (calendarMode == CalendarUiState.WEEK_MODE) today.minusWeeks(it.toLong()) else today.minusMonths(
+                    it.toLong()
+                )
+            },
             reverseLayout = true
         ) {
-            val month = today.minusMonths(it.toLong())
             val context = LocalContext.current
 
-            MonthView(viewModel, month, selectedMonth, selectedDateStr, today) { newMonth ->
-                when {
-                    newMonth.isAfter(today) -> {
-                        Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                    }
+            if (calendarMode == CalendarUiState.WEEK_MODE) {
+                val week = todayWeek.minusWeeks(it.toLong())
+                val isCurrentWeek = week == currentWeek
+                val daysInMonth = week.lengthOfMonth()
+                val firstDayOfMonth = week.withDayOfMonth(1)
+                val firstDayOfWeek =
+                    (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturday
+                val prevMonth = week.minusMonths(1)
+                val daysInPrevMonth = prevMonth.lengthOfMonth()
+                val weekOfMonth = getWeekOfMonth(week) - 1
 
-                    newMonth.withDayOfMonth(1)
-                        .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
-                        Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT).show()
-                    }
+                val dayCounter = (1 + weekOfMonth * 7 - firstDayOfWeek).coerceAtLeast(1)
 
-                    newMonth.month == currentMonth.month -> {
-                        selectedMonth.value = newMonth
-                        selectedDateStr.value = newMonth.dayOfMonth.toString()
+                WeekView(
+                    weekOfMonth,
+                    firstDayOfWeek,
+                    daysInPrevMonth,
+                    viewModel,
+                    week,
+                    today,
+                    { Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show() },
+                    dayCounter,
+                    daysInMonth,
+                    selectedDateStr,
+                    selectedMonth,
+                    isCurrentWeek,
+                    {}
+                )
+            } else {
+                val month = today.minusMonths(it.toLong())
 
-                        viewModel.findDetailRecord(
-                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
-                        )
-                    }
+                MonthView(
+                    viewModel,
+                    month,
+                    selectedMonth,
+                    selectedDateStr,
+                    today
+                ) { clickedDate ->
+                    when {
+                        clickedDate.isAfter(today) -> {
+                            Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                        }
 
-                    else -> {
-                        selectedMonth.value = newMonth
-                        selectedDateStr.value = newMonth.dayOfMonth.toString()
+                        clickedDate.withDayOfMonth(1)
+                            .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
+                            Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT)
+                                .show()
+                        }
 
-                        viewModel.findDetailRecord(
-                            newMonth.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
-                        )
+                        clickedDate.month == currentMonth.month -> {
+                            selectedMonth.value = clickedDate
+                            selectedDateStr.value = clickedDate.dayOfMonth.toString()
 
-                        val diffMonth =
-                            ChronoUnit.MONTHS.between(newMonth.withDayOfMonth(1), currentMonth)
-                                .toInt()
-                        CoroutineScope(Dispatchers.Main).launch {
-                            withContext(coroutineScope.coroutineContext) {
-                                val target = pagerState.currentPage + diffMonth
+                            viewModel.findDetailRecord(
+                                clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
+                            )
+                        }
 
-                                pagerState.animateScrollToPage(target)
+                        else -> {
+                            selectedMonth.value = clickedDate
+                            selectedDateStr.value = clickedDate.dayOfMonth.toString()
+
+                            viewModel.findDetailRecord(
+                                clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
+                            )
+
+                            val diffMonth =
+                                ChronoUnit.MONTHS.between(
+                                    clickedDate.withDayOfMonth(1),
+                                    currentMonth
+                                )
+                                    .toInt()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                withContext(coroutineScope.coroutineContext) {
+                                    val target = pagerState.currentPage + diffMonth
+
+                                    pagerState.animateScrollToPage(target)
+                                }
                             }
                         }
                     }
+
+                    currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
                 }
             }
         }
     }
 }
 
+private fun getWeekOfMonth(date: LocalDate): Int {
+    val firstDayOfMonth = date.withDayOfMonth(1)
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek
+    val dayOfMonth = date.dayOfMonth
+
+    val offset = firstDayOfWeek.value
+
+    return (dayOfMonth + offset - 1) / 7 + 1
+}
+
 @Composable
-private fun MonthView(
+fun MonthView(
     viewModel: SwimmingViewModel,
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
@@ -261,8 +361,6 @@ private fun MonthView(
     val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturda
     val prevMonth = month.minusMonths(1)
     val daysInPrevMonth = prevMonth.lengthOfMonth()
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
 
     Column(
         modifier = Modifier
@@ -271,89 +369,160 @@ private fun MonthView(
     ) {
         // 날짜 표시
         var dayCounter = 1
+        val currentWeek by viewModel.currentWeek
 
         // 주 단위로 날짜를 표시
         for (week in 0..5) { // 최대 6주까지 표시
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 5.dp, vertical = 2.5.dp)
-            ) {
-                val dayViewModifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 2.5.dp)
-                    .height(70.dp)
+            val isCurrentWeek =
+                if (currentWeek.month == month.month && currentWeek.year == month.year) {
+                    week == (getWeekOfMonth(currentWeek) - 1)
+                } else {
+                    val selectedDate =
+                        selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
 
-                for (day in 0..6) {
-                    if (week == 0 && day < firstDayOfWeek) {
-                        // 이전 달 날짜 표시
-                        val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
+                    currentWeek.dayOfMonth < 4 && week == (getWeekOfMonth(selectedDate) - 1)
 
-                        DayView(
-                            modifier = dayViewModifier.background(
-                                ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
-                            ),
-                            viewModel = viewModel,
-                            month = month.minusMonths(1L).withDayOfMonth(prevDay),
-                            day = prevDay.toString(),
-                            today = today,
-                            isThisMonth = false,
-                            onDateClick = onDateClick
-                        )
+                }
 
-                    } else if (dayCounter > daysInMonth) {
-                        // 다음 달 날짜 표시
-                        DayView(
-                            modifier = dayViewModifier.background(
-                                ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
-                            ),
-                            viewModel = viewModel,
-                            month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
-                            day = (dayCounter - daysInMonth).toString(),
-                            today = today,
-                            isThisMonth = false,
-                            onDateClick = onDateClick
-                        )
+            WeekView(
+                week,
+                firstDayOfWeek,
+                daysInPrevMonth,
+                viewModel,
+                month,
+                today,
+                onDateClick,
+                dayCounter,
+                daysInMonth,
+                selectedDateStr,
+                selectedMonth,
+                isCurrentWeek,
+                updateDayCounter = { dayCounter = it }
+            )
+        }
+    }
+}
 
-                        dayCounter++
+@Composable
+private fun WeekView(
+    week: Int,
+    firstDayOfWeek: Int,
+    daysInPrevMonth: Int,
+    viewModel: SwimmingViewModel,
+    month: LocalDate,
+    today: LocalDate,
+    onDateClick: (LocalDate) -> Unit,
+    dayCounterStart: Int,
+    daysInMonth: Int,
+    selectedDateStr: MutableState<String>,
+    selectedMonth: MutableState<LocalDate>,
+    isCurrentWeek: Boolean,
+    updateDayCounter: (Int) -> Unit
+) {
+    var dayCounter = dayCounterStart
+    val calendarUiState by viewModel.calendarUiState
+    var height by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
+    var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
+
+    LaunchedEffect(calendarUiState) {
+        height = when (calendarUiState) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 70.dp
+            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 70.dp else 0.dp
+        }
+
+        paddingV = when (calendarUiState) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 2.5.dp
+            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 2.5.dp else 0.dp
+        }
+    }
+
+    val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
+    val animatedHeight by animateDpAsState(
+        height,
+        animationSpec = tween(),
+        finishedListener = { _ ->
+            viewModel.animationCount.intValue += 1
+        })
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(horizontal = 7.5.dp, vertical = animatedPadding),
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        val dayViewModifier = Modifier
+            .weight(1f)
+            .height(animatedHeight)
+
+        for (day in 0..6) {
+            if (week == 0 && day < firstDayOfWeek) {
+                // 이전 달 날짜 표시
+                val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
+
+                DayView(
+                    modifier = dayViewModifier.background(
+                        ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
+                    ),
+                    viewModel = viewModel,
+                    month = month.minusMonths(1L).withDayOfMonth(prevDay),
+                    day = prevDay.toString(),
+                    today = today,
+                    isThisMonth = false,
+                    onDateClick = onDateClick
+                )
+
+            } else if (dayCounter > daysInMonth) {
+                // 다음 달 날짜 표시
+                DayView(
+                    modifier = dayViewModifier.background(
+                        ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
+                    ),
+                    viewModel = viewModel,
+                    month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
+                    day = (dayCounter - daysInMonth).toString(),
+                    today = today,
+                    isThisMonth = false,
+                    onDateClick = onDateClick
+                )
+
+                updateDayCounter(++dayCounter)
+            } else {
+                // 이번 달 날짜 표시
+                if (week > 0 || day >= firstDayOfWeek) {
+                    val sameDate = dayCounter.toString() == selectedDateStr.value
+                    val sameMonth = month.month == selectedMonth.value.month
+                    val borderColor = if (sameDate && sameMonth) {
+                        ColorCalendarOnItemBorder
                     } else {
-                        // 이번 달 날짜 표시
-                        if (week > 0 || day >= firstDayOfWeek) {
-                            val sameDate = dayCounter.toString() == selectedDateStr.value
-                            val sameMonth = month.month == selectedMonth.value.month
-                            val borderColor = if (sameDate && sameMonth) {
-                                ColorCalendarOnItemBorder
-                            } else {
-                                Color.Transparent
-                            }
-
-                            val bgColor = if (sameDate && sameMonth) {
-                                ColorCalendarOnItemBg
-                            } else {
-                                ColorCalendarItemBg
-                            }
-
-                            DayView(
-                                modifier = dayViewModifier
-                                    .background(
-                                        bgColor, shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        borderColor,
-                                        RoundedCornerShape(8.dp)
-                                    ),
-                                viewModel = viewModel,
-                                month = month.withDayOfMonth(dayCounter),
-                                day = dayCounter.toString(),
-                                today = today,
-                                isThisMonth = true,
-                                onDateClick = onDateClick
-                            )
-
-                            dayCounter++
-                        }
+                        Color.Transparent
                     }
+
+                    val bgColor = if (sameDate && sameMonth) {
+                        ColorCalendarOnItemBg
+                    } else {
+                        ColorCalendarItemBg
+                    }
+
+                    DayView(
+                        modifier = dayViewModifier
+                            .background(
+                                bgColor, shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                1.5.dp,
+                                borderColor,
+                                RoundedCornerShape(8.dp)
+                            ),
+                        viewModel = viewModel,
+                        month = month.withDayOfMonth(dayCounter),
+                        day = dayCounter.toString(),
+                        today = today,
+                        isThisMonth = true,
+                        onDateClick = onDateClick
+                    )
+
+                    updateDayCounter(++dayCounter)
                 }
             }
         }
@@ -361,7 +530,7 @@ private fun MonthView(
 }
 
 @Composable
-private fun DayView(
+fun DayView(
     modifier: Modifier,
     viewModel: SwimmingViewModel,
     month: LocalDate,
@@ -467,23 +636,8 @@ private fun DayView(
 
                 }
             }
-//            val blendMode = BlendMode.Luminosity
-//                val blendMode = BlendMode.Color
-//                val blendMode = BlendMode.Hue
-
-//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Luminosity)
-//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Color)
-//            HexagonCircleGraph(70.dp, 10.dp, 15.dp, BlendMode.Hue)
 
             if (brushList.value.isNotEmpty()) {
-
-//                HexagonCircleGraph(
-//                    brushList.value,
-//                    36.dp,
-//                    5.dp,
-//                    8.dp,
-//                    BlendMode.Luminosity
-//                )
                 IconWithPolygon(
                     painterResource(id = R.drawable.ic_pearl2),
                     brushList.value,
@@ -578,362 +732,25 @@ private fun CalendarHeaderView(
     }
 }
 
-@Composable
-fun CalendarDetailView(
-    modifier: Modifier,
-//    viewModel: PreviewViewmodel, // Preview 용
-    viewModel: SwimmingViewModel,
-    resizeBar: @Composable (Modifier) -> Unit
-) {
-    Box(
-        modifier = modifier.clipToBounds()
-    ) {
-        // 조절 바
-        resizeBar(Modifier)
+private fun calculateMonthDifference(currentDate: LocalDate, targetDate: LocalDate): Int {
+    val currentMonth = currentDate.monthValue
+    val targetMonth = targetDate.monthValue
+    val currentYear = currentDate.year
+    val targetYear = targetDate.year
 
-        // 데이터
-        Column(
-            Modifier
-                .padding(top = 20.dp)
-                .fillMaxWidth()
-                .wrapContentHeight(Alignment.Top,unbounded = true)
-//                .verticalScroll(rememberScrollState())
-                .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
-        ) {
-            // 거리, 시간, 칼로리, 최고 심박, 최저 심박
-            val detailRecords by viewModel.currentDetailRecords.collectAsState()
+    var monthDifference = currentMonth - targetMonth
+    val yearDifference = currentYear - targetYear
 
-            // 새 화면
-            var totalDistance by remember { mutableIntStateOf(0) }
-            var totalTime by remember { mutableStateOf(Duration.ZERO) }
-            var totalCalories by remember { mutableDoubleStateOf(0.0) }
-            var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
-            var totalMaxHR by remember { mutableIntStateOf(0) }
-            var totalCrawl by remember { mutableIntStateOf(0) }
-            var totalBackStroke by remember { mutableIntStateOf(0) }
-            var totalBreastStroke by remember { mutableIntStateOf(0) }
-            var totalButterfly by remember { mutableIntStateOf(0) }
-            var totalKickBoard by remember { mutableIntStateOf(0) }
-            var totalMixed by remember { mutableIntStateOf(0) }
-
-            val animationSpec = spring(
-                visibilityThreshold = Int.VisibilityThreshold,
-                stiffness = Spring.StiffnessLow
-            )
-
-            val animatedCrawl by animateIntAsState(totalCrawl, animationSpec)
-            val animatedBackStroke by animateIntAsState(totalBackStroke, animationSpec)
-            val animatedBreastStroke by animateIntAsState(totalBreastStroke, animationSpec)
-            val animatedButterfly by animateIntAsState(totalButterfly, animationSpec)
-            val animatedKickBoard by animateIntAsState(totalKickBoard, animationSpec)
-            val animatedMixed by animateIntAsState(totalMixed, animationSpec)
-
-            LaunchedEffect(detailRecords) {
-                var tempTotalDistance = totalDistance
-                var tempTotalTime = totalTime
-                var tempTotalCalories = totalCalories
-                var tempTotalMinHR = totalMinHR
-                var tempTotalMaxHR = totalMaxHR
-                var tempTotalCrawl = totalCrawl
-                var tempTotalBackStroke = totalBackStroke
-                var tempTotalBreastStroke = totalBreastStroke
-                var tempTotalButterfly = totalButterfly
-                var tempTotalKickBoard = totalKickBoard
-                var tempTotalMixed = totalMixed
-
-                detailRecords.forEachIndexed { index, (record, sample) ->
-                    if (index == 0) {
-                        tempTotalDistance = 0
-                        tempTotalTime = Duration.ZERO
-                        tempTotalCalories = 0.0
-                        tempTotalMinHR = Int.MAX_VALUE
-                        tempTotalMaxHR = 0
-                        tempTotalCrawl = 0
-                        tempTotalBackStroke = 0
-                        tempTotalBreastStroke = 0
-                        tempTotalButterfly = 0
-                        tempTotalKickBoard = 0
-                        tempTotalMixed = 0
-                    }
-
-                    tempTotalDistance += record.distance?.toInt() ?: 0
-                    tempTotalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
-                    tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
-                    tempTotalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
-                    tempTotalMaxHR = maxOf(totalMaxHR, record.maxHeartRate?.toInt() ?: 0)
-                    tempTotalCrawl += record.crawl
-                    tempTotalBackStroke += record.backStroke
-                    tempTotalBreastStroke += record.breastStroke
-                    tempTotalButterfly += record.butterfly
-                    tempTotalKickBoard += record.kickBoard
-                    tempTotalMixed += record.mixed
-                }
-
-                totalDistance = tempTotalDistance
-                totalTime = tempTotalTime
-                totalCalories = tempTotalCalories
-                totalMinHR = tempTotalMinHR
-                totalMaxHR = tempTotalMaxHR
-                totalCrawl = tempTotalCrawl
-                totalBackStroke = tempTotalBackStroke
-                totalBreastStroke = tempTotalBreastStroke
-                totalButterfly = tempTotalButterfly
-                totalKickBoard = tempTotalKickBoard
-                totalMixed = tempTotalMixed
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = totalDistance.toString() + "m",
-                    fontSize = 36.dp.toSp,
-                    lineHeight = 36.dp.toSp,
-                )
-                // 임시 수정버튼
-                detailRecords.forEach {
-                    Button(
-                        modifier = Modifier.height(24.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(),
-                        onClick = {
-                            viewModel.setModifyRecord(it.detailRecord)
-                            viewModel.popupUiState.value = PopupUiState.MODIFY
-                        }) {
-                        Text(text = "영법 수정", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            Column {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("시간")
-                        Text(totalTime.toCustomTimeString())
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("칼로리")
-                        Text(totalCalories.toInt().toString())
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("최대 심박")
-                        Text(totalMaxHR.toString())
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("최소 심박")
-                        Text(totalMinHR.toString())
-                    }
-                }
-            }
-
-            Column(
-                Modifier
-                    .padding(top = 5.dp)
-                    .fillMaxWidth()
-                    .background(
-                        SkyBlue6, shape = RoundedCornerShape(15.dp)
-                    )
-                    .padding(8.dp)
-            ) {
-                var refValue by remember { mutableIntStateOf(1000) }
-                val animatedRefVal by animateIntAsState(
-                    refValue, spring(
-                        visibilityThreshold = Int.VisibilityThreshold,
-                        stiffness = 200f
-                    )
-                )
-
-                listOf(
-                    Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
-                    Triple(totalBackStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
-                    Triple(totalBreastStroke, animatedBreastStroke, SolidColor(ColorBreastStroke)),
-                    Triple(totalButterfly, animatedButterfly, SolidColor(ColorButterfly)),
-                    Triple(
-                        totalMixed, animatedMixed, Brush.verticalGradient(
-                            Pair(0f, ColorMixStart),
-                            Pair(1f, ColorMixEnd)
-                        )
-                    ),
-                    Triple(totalKickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
-                ).filter {
-                    it.first != 0
-                }.sortedByDescending {
-                    it.first
-                }.forEachIndexed { i, it ->
-                    if (i == 0) refValue = max(1000, it.first)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .height(30.dp)
-                                .fillMaxWidth(it.second / animatedRefVal.toFloat())
-                                .background(
-                                    it.third,
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .padding(end = 7.dp),
-                            contentAlignment = Alignment.CenterEnd,
-                        ) {
-                            if (it.first >= 75) Text(
-                                it.second.toString(),
-                                lineHeight = 14.dp.toSp,
-                                fontSize = 14.dp.toSp,
-                                color = Color.Black.copy(0.8f)
-                            )
-                        }
-
-                        if (it.first < 75) Text(
-                            it.second.toString(),
-                            lineHeight = 14.dp.toSp,
-                            fontSize = 14.dp.toSp,
-                            color = Color.Black.copy(0.8f)
-                        )
-                    }
-                }
-            }
-        }
+    if (yearDifference > 0) {
+        monthDifference += yearDifference * 12
     }
+
+    if (monthDifference < 0) {
+        monthDifference += 12
+    }
+
+    return monthDifference % 12
 }
-
-@Composable
-fun ResizeBar(
-    modifier: Modifier = Modifier,
-    detailHeight: MutableState<Dp>,
-    initialHeight: Dp,
-    maxHeight: Dp
-) {
-    val scope = rememberCoroutineScope()
-    val velocityTracker = remember { VelocityTracker() } // 속도 추적기
-    var currentHeight by remember { mutableStateOf(initialHeight) }
-    val animatable = remember { Animatable(initialValue = initialHeight, Dp.VectorConverter,Dp.VisibilityThreshold) }
-
-    LaunchedEffect(animatable.value) {
-        detailHeight.value = animatable.value
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        velocityTracker.addPosition(change.uptimeMillis, change.position) // 위치 기록
-
-                        // 현재 높이 조절 (실시간 변경)
-                        val newHeight = max(
-                            initialHeight, // 최소 크기 제한
-                            min(
-                                maxHeight,
-                                animatable.value - dragAmount.y.toDp()
-                            )
-                        )
-                        scope.launch {
-                            animatable.snapTo(newHeight)
-                        }
-                    },
-                    onDragEnd = {
-                        val velocity = velocityTracker.calculateVelocity().y  // Y축 속도(px/s)
-                        Log.d("ResizeBar", "velocity: $velocity")
-                        val thresholdVelocity = 500f  // 임계 속도 (px/s)
-                        val range = maxHeight - initialHeight
-                        val thirtyPercent = range * 0.3f
-
-                        val targetHeight = when {
-                            // 빠르게 위로 스와이프 → 최대 크기
-                            velocity < -thresholdVelocity -> maxHeight
-                            // 빠르게 아래로 스와이프 → 초기 크기
-                            velocity > thresholdVelocity -> initialHeight
-                            // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
-                            currentHeight == initialHeight && animatable.value > initialHeight + thirtyPercent -> maxHeight
-                            // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
-                            currentHeight == maxHeight && animatable.value < maxHeight - thirtyPercent -> initialHeight
-                            else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
-                        }
-
-                        currentHeight = targetHeight
-                        Log.d("ResizeBar", "currentHeight: $currentHeight")
-
-                        scope.launch {
-                            animatable.animateTo(
-                                targetHeight, spring(
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            )
-                        }
-                    }
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(5.dp)
-                .size(width = 80.dp, height = 5.dp)
-                .background(
-                    Color.Gray.copy(alpha = 0.6f),
-                    RoundedCornerShape(50)
-                )
-                .align(Alignment.TopCenter)
-        )
-    }
-}
-
-
-/*@Preview
-@Composable
-fun LineGraph() {
-    val modelProducer = remember { CartesianChartModelProducer() }
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            lineSeries { series(5, 6, 5, 2, 11, 8, 5, 2, 15, 11, 8, 13, 12, 10, 2, 7) }
-        }
-    }
-    CartesianChartHost(
-        rememberCartesianChart(
-            rememberLineCartesianLayer(),
-            startAxis = VerticalAxis.rememberStart(),
-            bottomAxis = HorizontalAxis.rememberBottom(),
-        ),
-        modelProducer,
-        modifier = Modifier.fillMaxSize(),
-    )
-}*/
 
 @Preview(widthDp = 100, heightDp = 100)
 @Composable
@@ -972,14 +789,19 @@ fun ShrimpIconWithBoxPreview() {
 }
 
 @Composable
-private fun IconWithPolygon(
+fun IconWithPolygon(
     painter: Painter,
     brushList: List<Brush>,
     diameter: Dp,
     iconSize: Dp,
     isRotate: Boolean = true
 ) {
-    Box(modifier = Modifier.size(diameter + iconSize), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .size(diameter + iconSize)
+            .clipToBounds(),
+        contentAlignment = Alignment.Center
+    ) {
         val radius = with(LocalDensity.current) { diameter.toPx() / 2 }
         val offsetAngle = 360 / brushList.size.toFloat()
 
