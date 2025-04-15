@@ -2,6 +2,7 @@ package kr.ilf.soodal.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -38,9 +39,10 @@ class SwimmingViewModel(
     private val application: Application,
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
-
     val uiState = mutableStateOf(UiState.LOADING)
+    val calendarUiState = mutableStateOf(CalendarUiState.MONTH_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
+    val animationCount = mutableIntStateOf(0)
 
     val healthPermissions =
         setOf(
@@ -58,11 +60,13 @@ class SwimmingViewModel(
             HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
         )
     val hasAllPermissions = mutableStateOf(false)
+
     val permissionsContract = healthConnectManager.requestPermissionActivityContract()
 
     private val changeToken = mutableStateOf<String?>(null)
-
     val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
+    val currentWeek =
+        mutableStateOf(LocalDate.now().minusDays(LocalDate.now().dayOfWeek.value + 3L))
 
     // 현재 월의 총 합산 데이터
     private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
@@ -474,6 +478,13 @@ enum class UiState {
     LOADING,
     COMPLETE,
     SCROLLING
+}
+
+enum class CalendarUiState {
+    WEEK_MODE,
+    MONTH_MODE,
+    TO_WEEK,
+    TO_MONTH
 }
 
 enum class PopupUiState {
