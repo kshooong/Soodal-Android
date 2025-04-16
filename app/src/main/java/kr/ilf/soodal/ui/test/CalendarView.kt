@@ -1,8 +1,10 @@
 package kr.ilf.soodal.ui.test
 
 import android.content.res.Resources
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -34,6 +36,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -134,24 +139,24 @@ fun CalendarView(
     var calendarMode by viewModel.calendarUiState
 
     val today by remember { mutableStateOf(LocalDate.now()) }
-    val todayWeek = remember { today.minusDays(today.dayOfWeek.value - 3L) }
+    val todayWeek = remember { today.minusDays(today.dayOfWeek.value - 3L) } // 오늘이 있는 주의 수요일
     var currentMonth by viewModel.currentMonth
-    var currentWeek by viewModel.currentWeek
+    var currentWeek by viewModel.currentWeek // 선택된 날이 있는 주의 수요일
     val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
         mutableStateOf(
             LocalDate.now().withDayOfMonth(1)
         )
     }
-    var animationCount by viewModel.animationCount
+    val animationCount by viewModel.animationCount
     val selectedDateStr =
         rememberSaveable() { mutableStateOf(LocalDate.now().dayOfMonth.toString()) }
-    val pagerState =
-        rememberPagerState(
-            0,
-            pageCount = { if (calendarMode == CalendarUiState.WEEK_MODE) 50 else 12 }) // 12달 간의 달력 제공
+    val monthPagerState = rememberPagerState(0, pageCount = { 12 }) // 12달 간의 달력 제공
+    var initialWeekPage by remember { mutableIntStateOf(0) }
+    val weekPagerState = rememberPagerState(initialWeekPage, pageCount = { 52 }) // 12달 간의 달력 제공
 
     // 최초 진입 시 DetailRecord 조회, 새 데이터 확인 / dispose 시 데이터 초기화
     DisposableEffect(Unit) {
+        calendarMode = CalendarUiState.MONTH_MODE
         val selectedInstant = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
             .atStartOfDay(ZoneId.systemDefault()).toInstant()
         viewModel.findDetailRecord(selectedInstant)
@@ -160,42 +165,30 @@ fun CalendarView(
         onDispose { viewModel.resetDetailRecord() }
     }
 
-    LaunchedEffect(animationCount) {
-        if (animationCount >= 5) {
-            if (calendarMode == CalendarUiState.TO_WEEK) {
-                calendarMode = CalendarUiState.WEEK_MODE
-                pagerState.scrollToPage(
-                    ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
-                )
-
-            } else if (calendarMode == CalendarUiState.TO_MONTH) {
-                calendarMode = CalendarUiState.MONTH_MODE
-//                val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
-//                pagerState.scrollToPage(monthDifference)
-            }
-            viewModel.animationCount.intValue = 0
-        }
-    }
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.isScrollInProgress }.distinctUntilChanged()
+    LaunchedEffect(monthPagerState) {
+        snapshotFlow { monthPagerState.isScrollInProgress }.distinctUntilChanged()
             .collect {
-                if (pagerState.isScrollInProgress) {
+                if (monthPagerState.isScrollInProgress) {
                     viewModel.uiState.value = UiState.SCROLLING
                 } else {
                     viewModel.uiState.value = UiState.COMPLETE
+
                 }
             }
     }
 
-    LaunchedEffect(pagerState.currentPage) {
+    LaunchedEffect(weekPagerState.currentPage) {
+        Log.d("weekPagerState", "currentPage: ${weekPagerState.currentPage}")
+    }
+
+    LaunchedEffect(monthPagerState.currentPage) {
         if ((calendarMode == CalendarUiState.WEEK_MODE)) {
             currentWeek = todayWeek
-                .minusWeeks(pagerState.currentPage.toLong())
+                .minusWeeks(monthPagerState.currentPage.toLong())
             val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
             currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
         } else {
-            currentMonth = today.withDayOfMonth(1).minusMonths(pagerState.currentPage.toLong())
+            currentMonth = today.withDayOfMonth(1).minusMonths(monthPagerState.currentPage.toLong())
 
             // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
             if (selectedMonth.value.year == currentMonth.year && selectedMonth.value.month == currentMonth.month) {
@@ -212,10 +205,23 @@ fun CalendarView(
         viewModel.updateDailyRecords()
     }
 
-    LaunchedEffect(calendarMode) {
-        if (calendarMode == CalendarUiState.TO_MONTH) {
-            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
-            pagerState.scrollToPage(monthDifference)
+    LaunchedEffect(animationCount) {
+        // 표시될 주를 제외한 5주의 애니메이션이 종료되면 동작
+        if (animationCount >= 5) {
+            if (calendarMode == CalendarUiState.TO_WEEK) {
+//                launch {
+//                    weekPagerState.scrollToPage(
+//                        ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
+//                    )
+//                }
+                calendarMode = CalendarUiState.WEEK_MODE
+
+            } else if (calendarMode == CalendarUiState.TO_MONTH) {
+                calendarMode = CalendarUiState.MONTH_MODE
+//                val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+//                pagerState.scrollToPage(monthDifference)
+            }
+            viewModel.animationCount.intValue = 0
         }
     }
 
@@ -230,7 +236,7 @@ fun CalendarView(
         }) { Text("Mode") }
 
         HorizontalPager(
-            state = pagerState,
+            state = if (calendarMode == CalendarUiState.WEEK_MODE) weekPagerState else monthPagerState,
             userScrollEnabled = calendarMode == CalendarUiState.WEEK_MODE || calendarMode == CalendarUiState.MONTH_MODE,
             modifier = Modifier
                 .padding(horizontal = 5.dp)
@@ -286,17 +292,20 @@ fun CalendarView(
                     today
                 ) { clickedDate ->
                     when {
+                        // 오늘보다 이후
                         clickedDate.isAfter(today) -> {
                             Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
+                        // 1년보다 이전
                         clickedDate.withDayOfMonth(1)
                             .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
                             Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT)
                                 .show()
                         }
 
+                        // 현재 달
                         clickedDate.month == currentMonth.month -> {
                             selectedMonth.value = clickedDate
                             selectedDateStr.value = clickedDate.dayOfMonth.toString()
@@ -304,8 +313,18 @@ fun CalendarView(
                             viewModel.findDetailRecord(
                                 clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
+
+                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
+
+                            val weekTarget =
+                                ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
+                            coroutineScope.launch {
+                                initialWeekPage = weekTarget
+                                weekPagerState.scrollToPage(weekTarget)
+                            }
                         }
 
+                        // 전,다음달
                         else -> {
                             selectedMonth.value = clickedDate
                             selectedDateStr.value = clickedDate.dayOfMonth.toString()
@@ -322,15 +341,19 @@ fun CalendarView(
                                     .toInt()
                             CoroutineScope(Dispatchers.Main).launch {
                                 withContext(coroutineScope.coroutineContext) {
-                                    val target = pagerState.currentPage + diffMonth
+                                    val monthTarget = monthPagerState.currentPage + diffMonth
+                                    val weekTarget =
+                                        ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
 
-                                    pagerState.animateScrollToPage(target)
+                                    monthPagerState.animateScrollToPage(monthTarget)
+                                    initialWeekPage = weekTarget
+                                    weekPagerState.scrollToPage(weekTarget)
                                 }
                             }
+
+                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
                         }
                     }
-
-                    currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
                 }
             }
         }
@@ -421,22 +444,33 @@ private fun WeekView(
 ) {
     var dayCounter = dayCounterStart
     val calendarUiState by viewModel.calendarUiState
+
     var height by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
     var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
+    var alpha by remember { mutableFloatStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 1f else 0f) }
 
     LaunchedEffect(calendarUiState) {
-        height = when (calendarUiState) {
-            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 70.dp
-            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 70.dp else 0.dp
-        }
+        when (calendarUiState) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> {
+                height = 70.dp
+                paddingV = 2.5.dp
+                alpha = 1f
+            }
 
-        paddingV = when (calendarUiState) {
-            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 2.5.dp
-            CalendarUiState.TO_WEEK -> if (isCurrentWeek) 2.5.dp else 0.dp
+            CalendarUiState.TO_WEEK -> if (isCurrentWeek) {
+                height = 70.dp
+                paddingV = 2.5.dp
+                alpha = 1f
+            } else {
+                height = 0.dp
+                paddingV = 0.dp
+                alpha = 0f
+            }
         }
     }
 
     val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
+    val animatedAlpha by animateFloatAsState(alpha, animationSpec = tween())
     val animatedHeight by animateDpAsState(
         height,
         animationSpec = tween(),
@@ -448,12 +482,17 @@ private fun WeekView(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
+            .background(
+                if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp)
+            )
             .padding(horizontal = 7.5.dp, vertical = animatedPadding),
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         val dayViewModifier = Modifier
             .weight(1f)
             .height(animatedHeight)
+            .alpha(animatedAlpha)
 
         for (day in 0..6) {
             if (week == 0 && day < firstDayOfWeek) {
