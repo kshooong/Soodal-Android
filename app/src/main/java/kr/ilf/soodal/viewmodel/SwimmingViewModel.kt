@@ -40,7 +40,7 @@ class SwimmingViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
     val uiState = mutableStateOf(UiState.LOADING)
-    val calendarUiState = mutableStateOf(CalendarUiState.MONTH_MODE)
+    val calendarUiState = mutableStateOf(CalendarUiState.WEEK_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
     val animationCount = mutableIntStateOf(0)
 
