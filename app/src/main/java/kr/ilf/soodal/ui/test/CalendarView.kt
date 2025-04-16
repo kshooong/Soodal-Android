@@ -1,7 +1,6 @@
 package kr.ilf.soodal.ui.test
 
 import android.content.res.Resources
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -178,16 +177,19 @@ fun CalendarView(
     }
 
     LaunchedEffect(weekPagerState.currentPage) {
-        Log.d("weekPagerState", "currentPage: ${weekPagerState.currentPage}")
+        if ((calendarMode == CalendarUiState.WEEK_MODE)) {
+            currentWeek = todayWeek.minusWeeks(weekPagerState.currentPage.toLong())
+
+            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+            currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
+            coroutineScope.launch {
+                monthPagerState.scrollToPage(monthDifference)
+            }
+        }
     }
 
     LaunchedEffect(monthPagerState.currentPage) {
-        if ((calendarMode == CalendarUiState.WEEK_MODE)) {
-            currentWeek = todayWeek
-                .minusWeeks(monthPagerState.currentPage.toLong())
-            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
-            currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
-        } else {
+        if ((calendarMode == CalendarUiState.MONTH_MODE)) {
             currentMonth = today.withDayOfMonth(1).minusMonths(monthPagerState.currentPage.toLong())
 
             // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
@@ -199,6 +201,12 @@ fun CalendarView(
                 // 바뀐 월의 첫 번째 주를 currentWeek으로 설정
                 val tempWeek = currentMonth.minusDays(currentMonth.dayOfWeek.value - 3L)
                 currentWeek = if (tempWeek.dayOfMonth > 4) tempWeek.plusWeeks(1L) else tempWeek
+            }
+
+            val weekTarget = ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
+            coroutineScope.launch {
+                initialWeekPage = weekTarget
+                weekPagerState.scrollToPage(weekTarget)
             }
         }
 
