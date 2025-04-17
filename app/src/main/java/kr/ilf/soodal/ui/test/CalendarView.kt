@@ -2,6 +2,7 @@ package kr.ilf.soodal.ui.test
 
 import android.content.res.Resources
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -451,14 +452,14 @@ private fun WeekView(
     updateDayCounter: (Int) -> Unit
 ) {
     var dayCounter = dayCounterStart
-    val calendarUiState by viewModel.calendarUiState
+    val calendarMode by viewModel.calendarUiState
 
-    var height by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
-    var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
-    var alpha by remember { mutableFloatStateOf(if (isCurrentWeek || calendarUiState == CalendarUiState.MONTH_MODE || calendarUiState == CalendarUiState.WEEK_MODE) 1f else 0f) }
+    var height by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
+    var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
+    var alpha by remember { mutableFloatStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 1f else 0f) }
 
-    LaunchedEffect(calendarUiState) {
-        when (calendarUiState) {
+    LaunchedEffect(calendarMode) {
+        when (calendarMode) {
             CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> {
                 height = 70.dp
                 paddingV = 2.5.dp
@@ -505,31 +506,74 @@ private fun WeekView(
         for (day in 0..6) {
             if (week == 0 && day < firstDayOfWeek) {
                 // 이전 달 날짜 표시
+                val preMonth = month.minusMonths(1L)
                 val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
+                var bgColor = ColorCalendarItemBgDis
+                var borderColor = Color.Transparent
+                val isThisMonth = calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek
+
+                if (isThisMonth) {
+                    val sameDate = prevDay.toString() == selectedDateStr.value
+                    val sameMonth = preMonth.month == selectedMonth.value.month
+                    if (sameDate && sameMonth) {
+                        borderColor = ColorCalendarOnItemBorder
+                        bgColor = ColorCalendarOnItemBg
+                    } else {
+                        bgColor = ColorCalendarItemBg
+                    }
+                }
+
+                val animatedBgColor by animateColorAsState(bgColor, animationSpec = tween())
 
                 DayView(
-                    modifier = dayViewModifier.background(
-                        ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
-                    ),
+                    modifier = dayViewModifier
+                        .background(animatedBgColor, shape = RoundedCornerShape(8.dp))
+                        .border(
+                            1.5.dp,
+                            borderColor,
+                            RoundedCornerShape(8.dp)
+                        ),
                     viewModel = viewModel,
-                    month = month.minusMonths(1L).withDayOfMonth(prevDay),
+                    month = preMonth.withDayOfMonth(prevDay),
                     day = prevDay.toString(),
                     today = today,
-                    isThisMonth = false,
+                    isThisMonth = isThisMonth,
                     onDateClick = onDateClick
                 )
 
             } else if (dayCounter > daysInMonth) {
+                val nextMonth = month.plusMonths(1L)
+                val nextDay = dayCounter - daysInMonth
+                var bgColor = ColorCalendarItemBgDis
+                var borderColor = Color.Transparent
+                val isThisMonth = calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek
+
+                if (isThisMonth) {
+                    val sameDate = nextDay.toString() == selectedDateStr.value
+                    val sameMonth = nextMonth.month == selectedMonth.value.month
+                    if (sameDate && sameMonth) {
+                        borderColor = ColorCalendarOnItemBorder
+                        bgColor = ColorCalendarOnItemBg
+                    } else {
+                        bgColor = ColorCalendarItemBg
+                    }
+                }
+
+                val animatedBgColor by animateColorAsState(bgColor, animationSpec = tween())
                 // 다음 달 날짜 표시
                 DayView(
-                    modifier = dayViewModifier.background(
-                        ColorCalendarItemBgDis, shape = RoundedCornerShape(8.dp)
-                    ),
+                    modifier = dayViewModifier
+                        .background(animatedBgColor, shape = RoundedCornerShape(8.dp))
+                        .border(
+                            1.5.dp,
+                            borderColor,
+                            RoundedCornerShape(8.dp)
+                        ),
                     viewModel = viewModel,
-                    month = month.plusMonths(1L).withDayOfMonth(dayCounter - daysInMonth),
-                    day = (dayCounter - daysInMonth).toString(),
+                    month = nextMonth.withDayOfMonth(nextDay),
+                    day = nextDay.toString(),
                     today = today,
-                    isThisMonth = false,
+                    isThisMonth = isThisMonth,
                     onDateClick = onDateClick
                 )
 
@@ -553,9 +597,7 @@ private fun WeekView(
 
                     DayView(
                         modifier = dayViewModifier
-                            .background(
-                                bgColor, shape = RoundedCornerShape(8.dp)
-                            )
+                            .background(bgColor, shape = RoundedCornerShape(8.dp))
                             .border(
                                 1.5.dp,
                                 borderColor,
@@ -607,6 +649,8 @@ fun DayView(
                 if (today == thisDate) ColorCalendarToday else ColorCalendarDate
             else ColorCalendarDateDis
 
+        val animatedTextColor by animateColorAsState(dateTextColor, animationSpec = tween())
+
         // 날짜 박스
         Box(
             modifier = Modifier
@@ -624,7 +668,7 @@ fun DayView(
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
                 fontFamily = notoSansKr,
-                color = dateTextColor
+                color = animatedTextColor
             )
         }
 
@@ -661,19 +705,27 @@ fun DayView(
             val colorMixStart = if (isThisMonth) ColorMixStart else ColorMixStartSecondary
             val colorMixEnd = if (isThisMonth) ColorMixEnd else ColorMixEndSecondary
 
-            val brushList = remember {
+            val animatedColorCrawl by animateColorAsState(colorCrawl, animationSpec = tween())
+            val animatedColorBackStroke by animateColorAsState(colorBackStroke, animationSpec = tween())
+            val animatedColorBreastStroke by animateColorAsState(colorBreastStroke, animationSpec = tween())
+            val animatedColorButterfly by animateColorAsState(colorButterfly, animationSpec = tween())
+            val animatedColorKickBoard by animateColorAsState(colorKickBoard, animationSpec = tween())
+            val animatedColorMixStart by animateColorAsState(colorMixStart, animationSpec = tween())
+            val animatedColorMixEnd by animateColorAsState(colorMixEnd, animationSpec = tween())
+
+            val brushList = remember(isThisMonth) {
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
                         // 거리 정보를 리스트로 변환
                         val distances = mapOf(
-                            SolidColor(colorCrawl) to record.crawl,
-                            SolidColor(colorBackStroke) to record.backStroke,
-                            SolidColor(colorBreastStroke) to record.breastStroke,
-                            SolidColor(colorButterfly) to record.butterfly,
-                            SolidColor(colorKickBoard) to record.kickBoard,
+                            SolidColor(animatedColorCrawl) to record.crawl,
+                            SolidColor(animatedColorBackStroke) to record.backStroke,
+                            SolidColor(animatedColorBreastStroke) to record.breastStroke,
+                            SolidColor(animatedColorButterfly) to record.butterfly,
+                            SolidColor(animatedColorKickBoard) to record.kickBoard,
                             Brush.verticalGradient(
-                                Pair(0f, colorMixStart),
-                                Pair(1f, colorMixEnd)
+                                Pair(0f, animatedColorMixStart),
+                                Pair(1f, animatedColorMixEnd)
                             ) to record.mixed
                         )
 
