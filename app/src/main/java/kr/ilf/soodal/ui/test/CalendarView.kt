@@ -264,7 +264,7 @@ fun CalendarView(
 
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 val week = todayWeek.minusWeeks(it.toLong())
-                val isCurrentWeek = week == currentWeek
+                val isCurrentWeek = week in currentWeek.minusWeeks(1) .. currentWeek.plusWeeks(1)
                 val daysInMonth = week.lengthOfMonth()
                 val firstDayOfMonth = week.withDayOfMonth(1)
                 val firstDayOfWeek =
