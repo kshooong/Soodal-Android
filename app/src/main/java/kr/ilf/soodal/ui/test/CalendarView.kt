@@ -282,14 +282,45 @@ fun CalendarView(
                     viewModel,
                     week,
                     today,
-                    { Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show() },
                     dayCounter,
                     daysInMonth,
                     selectedDateStr,
                     selectedMonth,
                     isCurrentWeek,
                     {}
-                )
+                ) { clickedDate ->
+                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
+                    when {
+                        // 오늘보다 이후
+                        clickedDate.isAfter(today) -> {
+                            Toast.makeText(context, "오늘 이후는 선택할 수 없습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+
+                        // 1년보다 이전
+                        clickedDate.withDayOfMonth(1)
+                            .isBefore(today.withDayOfMonth(1).minusMonths(11L)) -> {
+                            Toast.makeText(context, "12달보다 이전은 선택할 수 없습니다", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+
+                        // 현재 달
+                        else -> {
+                            selectedMonth.value = clickedDate
+                            selectedDateStr.value = clickedDate.dayOfMonth.toString()
+
+                            viewModel.findDetailRecord(
+                                clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
+                            )
+
+                            val monthDifference = calculateMonthDifference(todayWeek, clickedDate)
+                            currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
+                            coroutineScope.launch {
+                                monthPagerState.scrollToPage(monthDifference)
+                            }
+                        }
+                    }
+                }
             } else {
                 val month = today.minusMonths(it.toLong())
 
@@ -323,7 +354,8 @@ fun CalendarView(
                                 clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
 
-                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
+                            currentWeek =
+                                clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
 
                             val weekTarget =
                                 ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
@@ -360,7 +392,8 @@ fun CalendarView(
                                 }
                             }
 
-                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
+                            currentWeek =
+                                clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
                         }
                     }
                 }
@@ -422,13 +455,13 @@ fun MonthView(
                 viewModel,
                 month,
                 today,
-                onDateClick,
                 dayCounter,
                 daysInMonth,
                 selectedDateStr,
                 selectedMonth,
                 isCurrentWeek,
-                updateDayCounter = { dayCounter = it }
+                updateDayCounter = { dayCounter = it },
+                onDateClick
             )
         }
     }
@@ -442,13 +475,13 @@ private fun WeekView(
     viewModel: SwimmingViewModel,
     month: LocalDate,
     today: LocalDate,
-    onDateClick: (LocalDate) -> Unit,
     dayCounterStart: Int,
     daysInMonth: Int,
     selectedDateStr: MutableState<String>,
     selectedMonth: MutableState<LocalDate>,
     isCurrentWeek: Boolean,
-    updateDayCounter: (Int) -> Unit
+    updateDayCounter: (Int) -> Unit,
+    onDateClick: (LocalDate) -> Unit
 ) {
     var dayCounter = dayCounterStart
     val calendarMode by viewModel.calendarUiState
@@ -705,11 +738,26 @@ fun DayView(
             val colorMixEnd = if (isThisMonth) ColorMixEnd else ColorMixEndSecondary
 
             val animatedColorCrawl by animateColorAsState(colorCrawl, animationSpec = tween())
-            val animatedColorBackStroke by animateColorAsState(colorBackStroke, animationSpec = tween())
-            val animatedColorBreastStroke by animateColorAsState(colorBreastStroke, animationSpec = tween())
-            val animatedColorButterfly by animateColorAsState(colorButterfly, animationSpec = tween())
-            val animatedColorKickBoard by animateColorAsState(colorKickBoard, animationSpec = tween())
-            val animatedColorMixStart by animateColorAsState(colorMixStart, animationSpec = tween())
+            val animatedColorBackStroke by animateColorAsState(
+                colorBackStroke,
+                animationSpec = tween()
+            )
+            val animatedColorBreastStroke by animateColorAsState(
+                colorBreastStroke,
+                animationSpec = tween()
+            )
+            val animatedColorButterfly by animateColorAsState(
+                colorButterfly,
+                animationSpec = tween()
+            )
+            val animatedColorKickBoard by animateColorAsState(
+                colorKickBoard,
+                animationSpec = tween()
+            )
+            val animatedColorMixStart by animateColorAsState(
+                colorMixStart,
+                animationSpec = tween()
+            )
             val animatedColorMixEnd by animateColorAsState(colorMixEnd, animationSpec = tween())
 
             val brushList = remember(isThisMonth) {
@@ -772,7 +820,8 @@ private fun CalendarHeaderView(
             textAlign = TextAlign.Center
         )
 
-        val totalDistance = remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
+        val totalDistance =
+            remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
         val totalCaloriesBurned =
             remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
 
