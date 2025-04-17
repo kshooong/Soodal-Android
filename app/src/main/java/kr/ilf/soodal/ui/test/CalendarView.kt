@@ -139,7 +139,7 @@ fun CalendarView(
     var calendarMode by viewModel.calendarUiState
 
     val today by remember { mutableStateOf(LocalDate.now()) }
-    val todayWeek = remember { today.minusDays(today.dayOfWeek.value - 3L) } // 오늘이 있는 주의 수요일
+    val todayWeek = remember { today.minusDays(today.dayOfWeek.value % 7 - 3L) } // 오늘이 있는 주의 수요일
     var currentMonth by viewModel.currentMonth
     var currentWeek by viewModel.currentWeek // 선택된 날이 있는 주의 수요일
     val selectedMonth = rememberSaveable(stateSaver = selectedMonthSaver) {
@@ -196,11 +196,11 @@ fun CalendarView(
             // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
             if (selectedMonth.value.year == currentMonth.year && selectedMonth.value.month == currentMonth.month) {
                 val selectedDate = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
-                val selectedWeek = selectedDate.minusDays(selectedDate.dayOfWeek.value - 3L)
+                val selectedWeek = selectedDate.minusDays(selectedDate.dayOfWeek.value % 7 - 3L)
                 currentWeek = selectedWeek
             } else {
                 // 바뀐 월의 첫 번째 주를 currentWeek으로 설정
-                val tempWeek = currentMonth.minusDays(currentMonth.dayOfWeek.value - 3L)
+                val tempWeek = currentMonth.minusDays(currentMonth.dayOfWeek.value % 7 - 3L)
                 currentWeek = if (tempWeek.dayOfMonth > 4) tempWeek.plusWeeks(1L) else tempWeek
             }
 
@@ -323,7 +323,7 @@ fun CalendarView(
                                 clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
 
-                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
+                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
 
                             val weekTarget =
                                 ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
@@ -360,7 +360,7 @@ fun CalendarView(
                                 }
                             }
 
-                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value - 3L)
+                            currentWeek = clickedDate.minusDays(clickedDate.dayOfWeek.value % 7 - 3L)
                         }
                     }
                 }
@@ -374,7 +374,7 @@ private fun getWeekOfMonth(date: LocalDate): Int {
     val firstDayOfWeek = firstDayOfMonth.dayOfWeek
     val dayOfMonth = date.dayOfMonth
 
-    val offset = firstDayOfWeek.value
+    val offset = firstDayOfWeek.value % 7
 
     return (dayOfMonth + offset - 1) / 7 + 1
 }
@@ -412,8 +412,7 @@ fun MonthView(
                     val selectedDate =
                         selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
 
-                    currentWeek.dayOfMonth < 4 && week == (getWeekOfMonth(selectedDate) - 1)
-
+                    week == (getWeekOfMonth(selectedDate) - 1)
                 }
 
             WeekView(
