@@ -264,7 +264,7 @@ fun CalendarView(
 
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 val week = todayWeek.minusWeeks(it.toLong())
-                val isCurrentWeek = week in currentWeek.minusWeeks(1) .. currentWeek.plusWeeks(1)
+                val isCurrentWeek = week in currentWeek.minusWeeks(1)..currentWeek.plusWeeks(1)
                 val daysInMonth = week.lengthOfMonth()
                 val firstDayOfMonth = week.withDayOfMonth(1)
                 val firstDayOfWeek =
@@ -276,6 +276,15 @@ fun CalendarView(
                 val dayCounter = (1 + weekOfMonth * 7 - firstDayOfWeek).coerceAtLeast(1)
 
                 WeekView(
+                    // msms offset방식 애니메이션
+           /*         Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(
+                            if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 7.5.dp, vertical = 2.5.dp),*/
                     weekOfMonth,
                     firstDayOfWeek,
                     daysInPrevMonth,
@@ -314,7 +323,8 @@ fun CalendarView(
                             )
 
                             val monthDifference = calculateMonthDifference(todayWeek, clickedDate)
-                            currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
+                            currentMonth =
+                                today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
                             coroutineScope.launch {
                                 monthPagerState.scrollToPage(monthDifference)
                             }
@@ -448,6 +458,48 @@ fun MonthView(
                     week == (getWeekOfMonth(selectedDate) - 1)
                 }
 
+            // msms offset방식 애니메이션
+            /*val calendarMode by viewModel.calendarUiState
+            var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else  (week * 75).dp) }
+            val animatedOffset by animateDpAsState(
+                offset,
+                animationSpec = tween(),
+                finishedListener = { _ -> viewModel.animationCount.value += 1 })
+
+            LaunchedEffect(calendarMode) {
+                offset = when (calendarMode) {
+                    CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 0.dp
+                    CalendarUiState.TO_WEEK -> (week * 75).dp
+                }
+            }
+
+            WeekView(
+                Modifier
+                    .zIndex(if (isCurrentWeek) 6f else week.toFloat())
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .background(
+                        if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
+                    .offset { IntOffset(0, -animatedOffset.roundToPx()) },
+                week,
+                firstDayOfWeek,
+                daysInPrevMonth,
+                viewModel,
+                month,
+                today,
+                dayCounter,
+                daysInMonth,
+                selectedDateStr,
+                selectedMonth,
+                isCurrentWeek,
+                updateDayCounter = { dayCounter = it },
+                onDateClick
+            )*/
+
+            // msms 사이즈 축소 방식 애니메이션
             WeekView(
                 week,
                 firstDayOfWeek,
@@ -469,6 +521,8 @@ fun MonthView(
 
 @Composable
 private fun WeekView(
+    // msms offset방식 애니메이션
+//    modifier: Modifier,
     week: Int,
     firstDayOfWeek: Int,
     daysInPrevMonth: Int,
@@ -485,6 +539,10 @@ private fun WeekView(
 ) {
     var dayCounter = dayCounterStart
     val calendarMode by viewModel.calendarUiState
+
+    // msms offset방식 애니메이션
+/*  val animatedAlpha by remember { mutableFloatStateOf(1f) }
+    val animatedHeight by remember { mutableStateOf(70.dp) }*/
 
     var height by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
     var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
@@ -520,6 +578,8 @@ private fun WeekView(
         })
 
     Row(
+        // msms offset방식 애니메이션
+//        modifier = modifier,
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
@@ -528,6 +588,7 @@ private fun WeekView(
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 7.5.dp, vertical = animatedPadding),
+
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         val dayViewModifier = Modifier
