@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -276,15 +277,13 @@ fun CalendarView(
                 val dayCounter = (1 + weekOfMonth * 7 - firstDayOfWeek).coerceAtLeast(1)
 
                 WeekView(
-                    // msms offset방식 애니메이션
-           /*         Modifier
+                    Modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(
                             if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
                             shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 7.5.dp, vertical = 2.5.dp),*/
+                        ),
                     weekOfMonth,
                     firstDayOfWeek,
                     daysInPrevMonth,
@@ -459,7 +458,7 @@ fun MonthView(
                 }
 
             // msms offset방식 애니메이션
-            /*val calendarMode by viewModel.calendarUiState
+            val calendarMode by viewModel.calendarUiState
             var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else  (week * 75).dp) }
             val animatedOffset by animateDpAsState(
                 offset,
@@ -482,25 +481,8 @@ fun MonthView(
                         if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
-                    .offset { IntOffset(0, -animatedOffset.roundToPx()) },
-                week,
-                firstDayOfWeek,
-                daysInPrevMonth,
-                viewModel,
-                month,
-                today,
-                dayCounter,
-                daysInMonth,
-                selectedDateStr,
-                selectedMonth,
-                isCurrentWeek,
-                updateDayCounter = { dayCounter = it },
-                onDateClick
-            )*/
-
-            // msms 사이즈 축소 방식 애니메이션
-            WeekView(
+                    // msms offest방식 애니메이션
+                    /*.offset { IntOffset(0, -animatedOffset.roundToPx()) }*/,
                 week,
                 firstDayOfWeek,
                 daysInPrevMonth,
@@ -521,8 +503,7 @@ fun MonthView(
 
 @Composable
 private fun WeekView(
-    // msms offset방식 애니메이션
-//    modifier: Modifier,
+    modifier: Modifier,
     week: Int,
     firstDayOfWeek: Int,
     daysInPrevMonth: Int,
@@ -579,14 +560,7 @@ private fun WeekView(
 
     Row(
         // msms offset방식 애니메이션
-//        modifier = modifier,
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(
-                if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(8.dp)
-            )
+        modifier = modifier
             .padding(horizontal = 7.5.dp, vertical = animatedPadding),
 
         horizontalArrangement = Arrangement.spacedBy(5.dp)
