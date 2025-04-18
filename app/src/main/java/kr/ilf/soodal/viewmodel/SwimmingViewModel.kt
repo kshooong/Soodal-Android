@@ -43,6 +43,7 @@ class SwimmingViewModel(
     val calendarUiState = mutableStateOf(CalendarUiState.WEEK_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
     val animationCount = mutableIntStateOf(0)
+    val animationType = mutableStateOf(AnimationTypeUiState.OFFSET)
 
     val healthPermissions =
         setOf(
@@ -494,4 +495,9 @@ enum class PopupUiState {
     APP_FINISH,
     NEW_SESSIONS,
     NEW_SESSIONS_MODIFY
+}
+
+enum class AnimationTypeUiState {
+    SIZING,
+    OFFSET
 }

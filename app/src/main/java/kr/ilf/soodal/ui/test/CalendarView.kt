@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -66,6 +67,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,6 +110,7 @@ import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.ui.toDp
+import kr.ilf.soodal.viewmodel.AnimationTypeUiState
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
@@ -237,19 +240,28 @@ fun CalendarView(
 
     Column(modifier = modifier) {
         CalendarHeaderView(viewModel, contentsBg)
-        Button(onClick = {
-            if (calendarMode == CalendarUiState.WEEK_MODE) {
-                calendarMode = CalendarUiState.TO_MONTH
-            } else if (calendarMode == CalendarUiState.MONTH_MODE) {
-                calendarMode = CalendarUiState.TO_WEEK
-            }
-        }) { Text("Mode") }
+        Row {
+            Button(onClick = {
+                if (calendarMode == CalendarUiState.WEEK_MODE) {
+                    calendarMode = CalendarUiState.TO_MONTH
+                } else if (calendarMode == CalendarUiState.MONTH_MODE) {
+                    calendarMode = CalendarUiState.TO_WEEK
+                }
+            }) { Text("Calendar Mode") }
 
+            Button(onClick = {
+                var animationType by viewModel.animationType
+                animationType = if (animationType == AnimationTypeUiState.SIZING) {
+                    AnimationTypeUiState.OFFSET
+                } else {
+                    AnimationTypeUiState.SIZING
+                }
+            }) { Text("Animation Type") }
+        }
         HorizontalPager(
             state = if (calendarMode == CalendarUiState.WEEK_MODE) weekPagerState else monthPagerState,
             userScrollEnabled = calendarMode == CalendarUiState.WEEK_MODE || calendarMode == CalendarUiState.MONTH_MODE,
             modifier = Modifier
-                .padding(horizontal = 5.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(contentsBg, shape = RoundedCornerShape(10.dp))
@@ -262,6 +274,7 @@ fun CalendarView(
             reverseLayout = true
         ) {
             val context = LocalContext.current
+            val weekHeight = 60.dp
 
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 val week = todayWeek.minusWeeks(it.toLong())
@@ -278,12 +291,11 @@ fun CalendarView(
 
                 WeekView(
                     Modifier
+                        .padding(horizontal = 5.dp)
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .background(
-                            if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(8.dp)
-                        ),
+                        .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
+                        .background(Color.White, shape = RoundedCornerShape(8.dp)),
                     weekOfMonth,
                     firstDayOfWeek,
                     daysInPrevMonth,
@@ -295,6 +307,7 @@ fun CalendarView(
                     selectedDateStr,
                     selectedMonth,
                     isCurrentWeek,
+                    weekHeight,
                     {}
                 ) { clickedDate ->
                     Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
@@ -338,7 +351,8 @@ fun CalendarView(
                     month,
                     selectedMonth,
                     selectedDateStr,
-                    today
+                    today,
+                    weekHeight
                 ) { clickedDate ->
                     when {
                         // 오늘보다 이후
@@ -428,6 +442,7 @@ fun MonthView(
     selectedMonth: MutableState<LocalDate>,
     selectedDateStr: MutableState<String>,
     today: LocalDate,
+    weekHeight: Dp,
     onDateClick: (LocalDate) -> Unit
 ) {
     val daysInMonth = month.lengthOfMonth()
@@ -438,6 +453,7 @@ fun MonthView(
 
     Column(
         modifier = Modifier
+            .padding(horizontal = 5.dp)
             .wrapContentSize()
             .background(Color.Transparent)
     ) {
@@ -457,32 +473,90 @@ fun MonthView(
                     week == (getWeekOfMonth(selectedDate) - 1)
                 }
 
-            // msms offset방식 애니메이션
             val calendarMode by viewModel.calendarUiState
-            var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else  (week * 75).dp) }
-            val animatedOffset by animateDpAsState(
-                offset,
-                animationSpec = tween(),
-                finishedListener = { _ -> viewModel.animationCount.value += 1 })
+            val weekViewModifier =
+                when (viewModel.animationType.value) {
+                    AnimationTypeUiState.OFFSET -> {
+                        var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else (weekHeight + 5.dp) * week) }
+                        var elevation by remember { mutableStateOf(0.dp) }
+                        var dynamicDuration by remember { mutableIntStateOf(350) }
+                        val animatedElevation by animateDpAsState(
+                            elevation,
+                            animationSpec = tween(dynamicDuration),
+                            finishedListener = {
+                                dynamicDuration = 600 - dynamicDuration
+                                if (it != 0.dp)
+                                    elevation = 0.dp
 
-            LaunchedEffect(calendarMode) {
-                offset = when (calendarMode) {
-                    CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 0.dp
-                    CalendarUiState.TO_WEEK -> (week * 75).dp
+                            }
+                        )
+                        val animatedOffset by animateDpAsState(
+                            offset,
+                            animationSpec = tween(600),
+                            finishedListener = { _ -> viewModel.animationCount.value += 1 })
+
+
+                        var scaleRatio by remember { mutableFloatStateOf(0f) }
+                        val animatedScaleRatio by animateFloatAsState(
+                            scaleRatio,
+                            animationSpec = tween(dynamicDuration),
+                            finishedListener = {
+                                dynamicDuration = 600 - dynamicDuration
+                                if (it != 0f)
+                                    scaleRatio = 0f
+
+                            }
+                        )
+
+                        LaunchedEffect(calendarMode) {
+                            offset = when (calendarMode) {
+                                CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 0.dp
+                                CalendarUiState.TO_WEEK -> (weekHeight + 5.dp) * week
+                            }
+
+                            if (calendarMode == CalendarUiState.TO_WEEK || calendarMode == CalendarUiState.TO_MONTH) {
+                                elevation = 2.dp
+                                scaleRatio = 0.005f
+                            }
+                        }
+
+                        Modifier
+                            .zIndex(if (isCurrentWeek) 6f else (5 - week).toFloat())
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
+                            .offset { IntOffset(0, -animatedOffset.roundToPx()) }
+                            .graphicsLayer {
+                                val ratio =
+                                    if (isCurrentWeek) 1 + animatedScaleRatio else 1 - animatedScaleRatio * (week + 1)
+                                scaleX = ratio
+                                scaleY = ratio
+                            }
+                            .shadow(animatedElevation * (5 - week), RoundedCornerShape(8.dp))
+                            .background(Color.White, shape = RoundedCornerShape(8.dp))
+                    }
+
+                    AnimationTypeUiState.SIZING -> {
+                        var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
+
+                        LaunchedEffect(calendarMode) {
+                            paddingV = when (calendarMode) {
+                                CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 2.5.dp
+                                CalendarUiState.TO_WEEK -> if (isCurrentWeek) 2.5.dp else 0.dp
+                            }
+                        }
+
+                        val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
+
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 7.5.dp, vertical = animatedPadding)
+                    }
                 }
-            }
 
             WeekView(
-                Modifier
-                    .zIndex(if (isCurrentWeek) 6f else week.toFloat())
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .background(
-                        if (!isCurrentWeek) Color.Transparent else Color.White.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    // msms offest방식 애니메이션
-                    /*.offset { IntOffset(0, -animatedOffset.roundToPx()) }*/,
+                weekViewModifier,
                 week,
                 firstDayOfWeek,
                 daysInPrevMonth,
@@ -494,6 +568,7 @@ fun MonthView(
                 selectedDateStr,
                 selectedMonth,
                 isCurrentWeek,
+                weekHeight,
                 updateDayCounter = { dayCounter = it },
                 onDateClick
             )
@@ -515,60 +590,66 @@ private fun WeekView(
     selectedDateStr: MutableState<String>,
     selectedMonth: MutableState<LocalDate>,
     isCurrentWeek: Boolean,
+    dayHeight: Dp,
     updateDayCounter: (Int) -> Unit,
     onDateClick: (LocalDate) -> Unit
 ) {
     var dayCounter = dayCounterStart
-    val calendarMode by viewModel.calendarUiState
-
-    // msms offset방식 애니메이션
-/*  val animatedAlpha by remember { mutableFloatStateOf(1f) }
-    val animatedHeight by remember { mutableStateOf(70.dp) }*/
-
-    var height by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 70.dp else 0.dp) }
-    var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
-    var alpha by remember { mutableFloatStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 1f else 0f) }
-
-    LaunchedEffect(calendarMode) {
-        when (calendarMode) {
-            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> {
-                height = 70.dp
-                paddingV = 2.5.dp
-                alpha = 1f
-            }
-
-            CalendarUiState.TO_WEEK -> if (isCurrentWeek) {
-                height = 70.dp
-                paddingV = 2.5.dp
-                alpha = 1f
-            } else {
-                height = 0.dp
-                paddingV = 0.dp
-                alpha = 0f
-            }
-        }
-    }
-
-    val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
-    val animatedAlpha by animateFloatAsState(alpha, animationSpec = tween())
-    val animatedHeight by animateDpAsState(
-        height,
-        animationSpec = tween(),
-        finishedListener = { _ ->
-            viewModel.animationCount.intValue += 1
-        })
 
     Row(
-        // msms offset방식 애니메이션
-        modifier = modifier
-            .padding(horizontal = 7.5.dp, vertical = animatedPadding),
-
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        val dayViewModifier = Modifier
-            .weight(1f)
-            .height(animatedHeight)
-            .alpha(animatedAlpha)
+        val calendarMode by viewModel.calendarUiState
+
+        val dayViewModifier =
+            when (viewModel.animationType.value) {
+                AnimationTypeUiState.OFFSET -> {
+                    val animatedAlpha by remember { mutableFloatStateOf(1f) }
+                    val animatedHeight by remember { mutableStateOf(dayHeight) }
+
+                    Modifier
+                        .weight(1f)
+                        .height(animatedHeight)
+                        .alpha(animatedAlpha)
+                }
+
+                AnimationTypeUiState.SIZING -> {
+                    var height by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) dayHeight else 0.dp) }
+                    var alpha by remember { mutableFloatStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 1f else 0f) }
+
+                    LaunchedEffect(calendarMode) {
+                        when (calendarMode) {
+                            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> {
+                                height = dayHeight
+                                alpha = 1f
+                            }
+
+                            CalendarUiState.TO_WEEK -> if (isCurrentWeek) {
+                                height = dayHeight
+                                alpha = 1f
+                            } else {
+                                height = 0.dp
+                                alpha = 0f
+                            }
+                        }
+                    }
+
+                    val animatedAlpha by animateFloatAsState(alpha, animationSpec = tween())
+                    val animatedHeight by animateDpAsState(
+                        height,
+                        animationSpec = tween(),
+                        finishedListener = { _ ->
+                            viewModel.animationCount.intValue += 1
+                        })
+
+                    Modifier
+                        .weight(1f)
+                        .height(animatedHeight)
+                        .alpha(animatedAlpha)
+
+                }
+            }
 
         for (day in 0..6) {
             if (week == 0 && day < firstDayOfWeek) {
@@ -703,7 +784,7 @@ fun DayView(
             indication = null,
             onClick = { onDateClick(thisDate) }
         )
-        .padding(5.dp))
+        .padding(1.dp))
     {
         val dateBorderColor =
             if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
@@ -724,7 +805,7 @@ fun DayView(
                 .align(Alignment.Center)
                 .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(Color.Transparent, RoundedCornerShape(5.dp))
+                .background(dateBgColor, RoundedCornerShape(5.dp))
         ) {
             Text(
                 modifier = Modifier
