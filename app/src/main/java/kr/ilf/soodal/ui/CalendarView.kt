@@ -4,8 +4,8 @@ import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
@@ -116,6 +116,7 @@ import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
+import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -589,14 +590,15 @@ fun CalendarDetailView(
         modifier = modifier.clipToBounds()
     ) {
         // 조절 바
-        resizeBar(Modifier)
+        if (viewModel.calendarUiState.value == CalendarUiState.MONTH_MODE)
+            resizeBar(Modifier)
 
         // 데이터
         Column(
             Modifier
                 .padding(top = 20.dp)
                 .fillMaxWidth()
-                .wrapContentHeight(Alignment.Top,unbounded = true)
+                .wrapContentHeight(Alignment.Top, unbounded = true)
 //                .verticalScroll(rememberScrollState())
                 .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
         ) {
@@ -833,18 +835,13 @@ fun CalendarDetailView(
 @Composable
 fun ResizeBar(
     modifier: Modifier = Modifier,
-    detailHeight: MutableState<Dp>,
+    animatableHeight: Animatable<Dp, AnimationVector1D>,
     initialHeight: Dp,
     maxHeight: Dp
 ) {
     val scope = rememberCoroutineScope()
     val velocityTracker = remember { VelocityTracker() } // 속도 추적기
     var currentHeight by remember { mutableStateOf(initialHeight) }
-    val animatable = remember { Animatable(initialValue = initialHeight, Dp.VectorConverter,Dp.VisibilityThreshold) }
-
-    LaunchedEffect(animatable.value) {
-        detailHeight.value = animatable.value
-    }
 
     Box(
         modifier = modifier
@@ -860,11 +857,11 @@ fun ResizeBar(
                             initialHeight, // 최소 크기 제한
                             min(
                                 maxHeight,
-                                animatable.value - dragAmount.y.toDp()
+                                animatableHeight.value - dragAmount.y.toDp()
                             )
                         )
                         scope.launch {
-                            animatable.snapTo(newHeight)
+                            animatableHeight.snapTo(newHeight)
                         }
                     },
                     onDragEnd = {
@@ -880,9 +877,9 @@ fun ResizeBar(
                             // 빠르게 아래로 스와이프 → 초기 크기
                             velocity > thresholdVelocity -> initialHeight
                             // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
-                            currentHeight == initialHeight && animatable.value > initialHeight + thirtyPercent -> maxHeight
+                            currentHeight == initialHeight && animatableHeight.value > initialHeight + thirtyPercent -> maxHeight
                             // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
-                            currentHeight == maxHeight && animatable.value < maxHeight - thirtyPercent -> initialHeight
+                            currentHeight == maxHeight && animatableHeight.value < maxHeight - thirtyPercent -> initialHeight
                             else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
                         }
 
@@ -890,7 +887,7 @@ fun ResizeBar(
                         Log.d("ResizeBar", "currentHeight: $currentHeight")
 
                         scope.launch {
-                            animatable.animateTo(
+                            animatableHeight.animateTo(
                                 targetHeight, spring(
                                     stiffness = Spring.StiffnessMediumLow
                                 )
