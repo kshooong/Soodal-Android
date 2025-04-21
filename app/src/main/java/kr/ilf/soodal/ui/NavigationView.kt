@@ -186,7 +186,7 @@ fun NavigationView(
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
                 val density = LocalDensity.current
 
-                kr.ilf.soodal.ui.test.CalendarView(
+                CalendarView(
                     modifier = Modifier
                         .wrapContentSize()
                         .onGloballyPositioned { coordinates ->
