@@ -4,13 +4,17 @@ import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +69,7 @@ import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
 import kr.ilf.soodal.ui.theme.ColorCalendarBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
+import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
 
@@ -188,9 +194,14 @@ fun NavigationView(
                                 with(density) { coordinates.size.height.toDp().value }
                         }, contentsBg = Color.Transparent, viewModel = viewModel
                 )
+                val configuration = LocalConfiguration.current
+                val initialHeight by remember {
+                        derivedStateOf {
+                            configuration.screenHeightDp - calendarHeight - 60
+                        }
+                }
 
-                val initialHeight =
-                    LocalConfiguration.current.screenHeightDp - calendarHeight - 60
+                Log.d("initialHeight", "initialHeight: $initialHeight")
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
@@ -207,11 +218,24 @@ fun NavigationView(
                         mutableStateOf(initialHeight.dp)
                     }
 
+                    val animatableHeight = remember {Animatable(initialValue = detailHeight.value, Dp.VectorConverter,Dp.VisibilityThreshold)}
+
+                    LaunchedEffect(viewModel.calendarUiState.value) {
+                        // 아래 주석은 OFFSET방식 애니메이션 기준
+                        if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
+                            // 달력 애니메이션 종료되고 완전히 WEEK_MODE가 되면 initialHeight 가 큰 값으로 변함 -> DetailView 애니메이션 실행 시 계산해서 넣어줘야함
+                            animatableHeight.animateTo(initialHeight.dp + (65*5).dp, tween(600))
+                        } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
+                            // TO_MONTH 가 되면 바로 initialHeight 가 작은 값으로 변함 -> DetailView 애니메이션 실행 시 계산하지 않고 사용가능
+                            animatableHeight.animateTo(initialHeight.dp , tween(600))
+                        }
+                    }
+
                     CalendarDetailView(
                         Modifier
                             .padding(0.dp, 0.dp, 0.dp, 60.dp)
                             .fillMaxWidth()
-                            .height(detailHeight.value)
+                            .height(animatableHeight.value)
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
@@ -226,7 +250,7 @@ fun NavigationView(
                         resizeBar = { resizeBarModifier ->
                             ResizeBar(
                                 resizeBarModifier,
-                                detailHeight,
+                                animatableHeight,
                                 initialHeight.dp,
                                 (calendarHeight + initialHeight - 5).dp
                             )

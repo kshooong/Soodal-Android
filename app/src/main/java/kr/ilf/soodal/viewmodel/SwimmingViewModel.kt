@@ -40,9 +40,10 @@ class SwimmingViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
     val uiState = mutableStateOf(UiState.LOADING)
-    val calendarUiState = mutableStateOf(CalendarUiState.MONTH_MODE)
+    val calendarUiState = mutableStateOf(CalendarUiState.WEEK_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
     val animationCount = mutableIntStateOf(0)
+    val animationType = mutableStateOf(AnimationTypeUiState.OFFSET)
 
     val healthPermissions =
         setOf(
@@ -66,7 +67,7 @@ class SwimmingViewModel(
     private val changeToken = mutableStateOf<String?>(null)
     val currentMonth = mutableStateOf(LocalDate.now().withDayOfMonth(1))
     val currentWeek =
-        mutableStateOf(LocalDate.now().minusDays(LocalDate.now().dayOfWeek.value + 3L))
+        mutableStateOf(LocalDate.now().minusDays(LocalDate.now().dayOfWeek.value % 7 + 3L))
 
     // 현재 월의 총 합산 데이터
     private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
@@ -494,4 +495,9 @@ enum class PopupUiState {
     APP_FINISH,
     NEW_SESSIONS,
     NEW_SESSIONS_MODIFY
+}
+
+enum class AnimationTypeUiState {
+    SIZING,
+    OFFSET
 }
