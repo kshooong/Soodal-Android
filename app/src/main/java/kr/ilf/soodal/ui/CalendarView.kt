@@ -1281,6 +1281,7 @@ fun ResizeBar(
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
                         change.consume()
+                        if (change.uptimeMillis - change.previousUptimeMillis > 3)
                         velocityTracker.addPosition(change.uptimeMillis, change.position) // 위치 기록
 
                         // 현재 높이 조절 (실시간 변경)
