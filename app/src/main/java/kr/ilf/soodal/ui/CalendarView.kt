@@ -1,4 +1,5 @@
 package kr.ilf.soodal.ui
+
 import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
@@ -73,6 +74,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -1010,6 +1012,7 @@ private fun CalendarHeaderView(
         )
     }
 }
+
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
@@ -1281,7 +1284,7 @@ fun ResizeBar(
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        velocityTracker.addPosition(change.uptimeMillis, change.position) // 위치 기록
+                        velocityTracker.addPointerInputChange(change) // 위치 기록
 
                         // 현재 높이 조절 (실시간 변경)
                         val newHeight = max(
@@ -1297,10 +1300,10 @@ fun ResizeBar(
                     },
                     onDragEnd = {
                         val velocity = velocityTracker.calculateVelocity().y  // Y축 속도(px/s)
-                        Log.d("ResizeBar", "velocity: $velocity")
-                        val thresholdVelocity = 500f  // 임계 속도 (px/s)
+                        val thresholdVelocity = 1000f  // 임계 속도 (px/s)
+                        Log.d("=-=-=", "velocity: $velocity")
                         val range = maxHeight - initialHeight
-                        val thirtyPercent = range * 0.3f
+                        val thresholdPosition = range * 0.2f
 
                         val targetHeight = when {
                             // 빠르게 위로 스와이프 → 최대 크기
@@ -1308,9 +1311,9 @@ fun ResizeBar(
                             // 빠르게 아래로 스와이프 → 초기 크기
                             velocity > thresholdVelocity -> initialHeight
                             // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
-                            currentHeight == initialHeight && animatableHeight.value > initialHeight + thirtyPercent -> maxHeight
+                            currentHeight == initialHeight && animatableHeight.value > initialHeight + thresholdPosition -> maxHeight
                             // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
-                            currentHeight == maxHeight && animatableHeight.value < maxHeight - thirtyPercent -> initialHeight
+                            currentHeight == maxHeight && animatableHeight.value < maxHeight - thresholdPosition -> initialHeight
                             else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
                         }
 
