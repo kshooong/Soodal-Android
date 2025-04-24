@@ -230,7 +230,7 @@ fun NavigationView(
                         )
                     }
 
-                    val animationDurationMills = 400
+                    val animationDurationMills = 500
 
                     LaunchedEffect(viewModel.calendarUiState.value) {
                         // 아래 주석은 OFFSET방식 애니메이션 기준

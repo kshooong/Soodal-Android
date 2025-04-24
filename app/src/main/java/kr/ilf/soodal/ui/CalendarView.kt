@@ -153,7 +153,7 @@ val selectedMonthSaver =
 @Composable
 fun CalendarView(
     modifier: Modifier,
-    weekHeight :Dp,
+    weekHeight: Dp,
     contentsBg: Color,
     viewModel: SwimmingViewModel
 ) {
@@ -497,12 +497,12 @@ private fun MonthView(
                     AnimationTypeUiState.OFFSET -> {
                         var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else (weekHeight + 5.dp) * week) }
                         var elevation by remember { mutableStateOf(0.dp) }
-                        var dynamicDuration by remember { mutableIntStateOf(250) }
+                        var dynamicDuration by remember { mutableIntStateOf(300) }
                         val animatedElevation by animateDpAsState(
                             elevation,
                             animationSpec = tween(dynamicDuration),
                             finishedListener = {
-                                dynamicDuration = 400 - dynamicDuration
+                                dynamicDuration = 500 - dynamicDuration
                                 if (it != 0.dp)
                                     elevation = 0.dp
 
@@ -510,7 +510,7 @@ private fun MonthView(
                         )
                         val animatedOffset by animateDpAsState(
                             offset,
-                            animationSpec = tween(400),
+                            animationSpec = tween(500),
                             finishedListener = { _ -> viewModel.animationCount.value += 1 })
 
 
@@ -519,7 +519,7 @@ private fun MonthView(
                             scaleRatio,
                             animationSpec = tween(dynamicDuration),
                             finishedListener = {
-                                dynamicDuration = 400 - dynamicDuration
+                                dynamicDuration = 500 - dynamicDuration
                                 if (it != 0f)
                                     scaleRatio = 0f
 
@@ -1039,228 +1039,307 @@ fun CalendarDetailView(
             // 거리, 시간, 칼로리, 최고 심박, 최저 심박
             val detailRecords by viewModel.currentDetailRecords.collectAsState()
 
-            // 새 화면
-            var totalDistance by remember { mutableIntStateOf(0) }
-            var totalTime by remember { mutableStateOf(Duration.ZERO) }
-            var totalCalories by remember { mutableDoubleStateOf(0.0) }
-            var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
-            var totalMaxHR by remember { mutableIntStateOf(0) }
-            var totalCrawl by remember { mutableIntStateOf(0) }
-            var totalBackStroke by remember { mutableIntStateOf(0) }
-            var totalBreastStroke by remember { mutableIntStateOf(0) }
-            var totalButterfly by remember { mutableIntStateOf(0) }
-            var totalKickBoard by remember { mutableIntStateOf(0) }
-            var totalMixed by remember { mutableIntStateOf(0) }
+            if (viewModel.calendarUiState.value == CalendarUiState.MONTH_MODE) {
 
-            val animationSpec = spring(
-                visibilityThreshold = Int.VisibilityThreshold,
-                stiffness = Spring.StiffnessLow
-            )
+                var totalDistance by remember { mutableIntStateOf(0) }
+                var totalTime by remember { mutableStateOf(Duration.ZERO) }
+                var totalCalories by remember { mutableDoubleStateOf(0.0) }
+                var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
+                var totalMaxHR by remember { mutableIntStateOf(0) }
+                var totalCrawl by remember { mutableIntStateOf(0) }
+                var totalBackStroke by remember { mutableIntStateOf(0) }
+                var totalBreastStroke by remember { mutableIntStateOf(0) }
+                var totalButterfly by remember { mutableIntStateOf(0) }
+                var totalKickBoard by remember { mutableIntStateOf(0) }
+                var totalMixed by remember { mutableIntStateOf(0) }
 
-            val animatedCrawl by animateIntAsState(totalCrawl, animationSpec)
-            val animatedBackStroke by animateIntAsState(totalBackStroke, animationSpec)
-            val animatedBreastStroke by animateIntAsState(totalBreastStroke, animationSpec)
-            val animatedButterfly by animateIntAsState(totalButterfly, animationSpec)
-            val animatedKickBoard by animateIntAsState(totalKickBoard, animationSpec)
-            val animatedMixed by animateIntAsState(totalMixed, animationSpec)
+                LaunchedEffect(detailRecords) {
+                    var tempTotalDistance = totalDistance
+                    var tempTotalTime = totalTime
+                    var tempTotalCalories = totalCalories
+                    var tempTotalMinHR = totalMinHR
+                    var tempTotalMaxHR = totalMaxHR
+                    var tempTotalCrawl = totalCrawl
+                    var tempTotalBackStroke = totalBackStroke
+                    var tempTotalBreastStroke = totalBreastStroke
+                    var tempTotalButterfly = totalButterfly
+                    var tempTotalKickBoard = totalKickBoard
+                    var tempTotalMixed = totalMixed
 
-            LaunchedEffect(detailRecords) {
-                var tempTotalDistance = totalDistance
-                var tempTotalTime = totalTime
-                var tempTotalCalories = totalCalories
-                var tempTotalMinHR = totalMinHR
-                var tempTotalMaxHR = totalMaxHR
-                var tempTotalCrawl = totalCrawl
-                var tempTotalBackStroke = totalBackStroke
-                var tempTotalBreastStroke = totalBreastStroke
-                var tempTotalButterfly = totalButterfly
-                var tempTotalKickBoard = totalKickBoard
-                var tempTotalMixed = totalMixed
+                    detailRecords.forEachIndexed { index, (record, sample) ->
+                        if (index == 0) {
+                            tempTotalDistance = 0
+                            tempTotalTime = Duration.ZERO
+                            tempTotalCalories = 0.0
+                            tempTotalMinHR = Int.MAX_VALUE
+                            tempTotalMaxHR = 0
+                            tempTotalCrawl = 0
+                            tempTotalBackStroke = 0
+                            tempTotalBreastStroke = 0
+                            tempTotalButterfly = 0
+                            tempTotalKickBoard = 0
+                            tempTotalMixed = 0
+                        }
 
-                detailRecords.forEachIndexed { index, (record, sample) ->
-                    if (index == 0) {
-                        tempTotalDistance = 0
-                        tempTotalTime = Duration.ZERO
-                        tempTotalCalories = 0.0
-                        tempTotalMinHR = Int.MAX_VALUE
-                        tempTotalMaxHR = 0
-                        tempTotalCrawl = 0
-                        tempTotalBackStroke = 0
-                        tempTotalBreastStroke = 0
-                        tempTotalButterfly = 0
-                        tempTotalKickBoard = 0
-                        tempTotalMixed = 0
+                        tempTotalDistance += record.distance?.toInt() ?: 0
+                        tempTotalTime += record.activeTime?.let { Duration.parse(it) }
+                            ?: Duration.ZERO
+                        tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
+                        tempTotalMinHR = min(tempTotalMinHR, record.minHeartRate?.toInt() ?: 0)
+                        tempTotalMaxHR = maxOf(tempTotalMaxHR, record.maxHeartRate?.toInt() ?: 0)
+                        tempTotalCrawl += record.crawl
+                        tempTotalBackStroke += record.backStroke
+                        tempTotalBreastStroke += record.breastStroke
+                        tempTotalButterfly += record.butterfly
+                        tempTotalKickBoard += record.kickBoard
+                        tempTotalMixed += record.mixed
                     }
 
-                    tempTotalDistance += record.distance?.toInt() ?: 0
-                    tempTotalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
-                    tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
-                    tempTotalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
-                    tempTotalMaxHR = maxOf(totalMaxHR, record.maxHeartRate?.toInt() ?: 0)
-                    tempTotalCrawl += record.crawl
-                    tempTotalBackStroke += record.backStroke
-                    tempTotalBreastStroke += record.breastStroke
-                    tempTotalButterfly += record.butterfly
-                    tempTotalKickBoard += record.kickBoard
-                    tempTotalMixed += record.mixed
+                    totalDistance = tempTotalDistance
+                    totalTime = tempTotalTime
+                    totalCalories = tempTotalCalories
+                    totalMinHR = tempTotalMinHR
+                    totalMaxHR = tempTotalMaxHR
+                    totalCrawl = tempTotalCrawl
+                    totalBackStroke = tempTotalBackStroke
+                    totalBreastStroke = tempTotalBreastStroke
+                    totalButterfly = tempTotalButterfly
+                    totalKickBoard = tempTotalKickBoard
+                    totalMixed = tempTotalMixed
                 }
 
-                totalDistance = tempTotalDistance
-                totalTime = tempTotalTime
-                totalCalories = tempTotalCalories
-                totalMinHR = tempTotalMinHR
-                totalMaxHR = tempTotalMaxHR
-                totalCrawl = tempTotalCrawl
-                totalBackStroke = tempTotalBackStroke
-                totalBreastStroke = tempTotalBreastStroke
-                totalButterfly = tempTotalButterfly
-                totalKickBoard = tempTotalKickBoard
-                totalMixed = tempTotalMixed
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = totalDistance.toString() + "m",
+                        fontSize = 36.dp.toSp,
+                        lineHeight = 36.dp.toSp,
+                    )
+                    // 임시 수정버튼
+                    detailRecords.forEach {
+                        Button(
+                            modifier = Modifier.height(24.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(),
+                            onClick = {
+                                viewModel.setModifyRecord(it.detailRecord)
+                                viewModel.popupUiState.value = PopupUiState.MODIFY
+                            }) {
+                            Text(text = "영법 수정", fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                val totalRecord = DetailRecord(
+                    id = "totalRecord",
+                    startTime = Instant.now(),
+                    endTime = Instant.now(),
+                    activeTime = totalTime.toString(),
+                    distance = totalDistance.toString(),
+                    energyBurned = totalCalories.toString(),
+                    minHeartRate = totalMinHR.toLong(),
+                    maxHeartRate = totalMaxHR.toLong(),
+                    avgHeartRate = ((totalMinHR + totalMaxHR) / 2).toLong(),
+                    poolLength = 25,
+                    crawl = totalCrawl,
+                    backStroke = totalBackStroke,
+                    breastStroke = totalBreastStroke,
+                    butterfly = totalButterfly,
+                    kickBoard = totalKickBoard,
+                    mixed = totalMixed
+                )
+                val totalHRRecord = listOf(HeartRateSample(Instant.now(), "totalRecord", 0))
+                val totalDetailRecordWithHR = DetailRecordWithHR(totalRecord, totalHRRecord)
+
+                DetailDataView(
+                    totalDetailRecordWithHR,
+                )
+            } else {
+                detailRecords.forEach { detailRecordWithHR ->
+                    var crawl by remember { mutableIntStateOf(0) }
+                    var backStroke by remember { mutableIntStateOf(0) }
+                    var breastStroke by remember { mutableIntStateOf(0) }
+                    var butterfly by remember { mutableIntStateOf(0) }
+                    var kickBoard by remember { mutableIntStateOf(0) }
+                    var mixed by remember { mutableIntStateOf(0) }
+
+                    val detailRecord = detailRecordWithHR.detailRecord.copy(
+                        crawl = crawl,
+                        backStroke = backStroke,
+                        breastStroke = breastStroke,
+                        butterfly = butterfly,
+                        kickBoard = kickBoard,
+                        mixed = mixed
+                    )
+
+                    val viewDetailRecordWithHR = detailRecordWithHR.copy(detailRecord)
+
+                    LaunchedEffect(detailRecordWithHR) {
+                        crawl = detailRecordWithHR.detailRecord.crawl
+                        backStroke = detailRecordWithHR.detailRecord.backStroke
+                        breastStroke = detailRecordWithHR.detailRecord.breastStroke
+                        butterfly = detailRecordWithHR.detailRecord.butterfly
+                        kickBoard = detailRecordWithHR.detailRecord.kickBoard
+                        mixed = detailRecordWithHR.detailRecord.mixed
+                    }
+
+                    DetailDataView(
+                        viewDetailRecordWithHR,
+                        true
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailDataView(
+    detailRecordWithHR: DetailRecordWithHR,
+    isDetail: Boolean = false
+) {
+    val detailRecord = detailRecordWithHR.detailRecord
+
+    val activeTime = detailRecord.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
+    val calories = detailRecord.energyBurned?.toDouble() ?: 0.0
+    val maxHR = detailRecord.maxHeartRate?.toInt() ?: 0
+    val minHR = detailRecord.minHeartRate?.toInt() ?: 0
+
+    val animationSpec = spring(
+        visibilityThreshold = Int.VisibilityThreshold, stiffness = Spring.StiffnessLow
+    )
+    val animatedCrawl by animateIntAsState(detailRecord.crawl, animationSpec)
+    val animatedBackStroke by animateIntAsState(detailRecord.backStroke, animationSpec)
+    val animatedBreastStroke by animateIntAsState(detailRecord.breastStroke, animationSpec)
+    val animatedButterfly by animateIntAsState(detailRecord.butterfly, animationSpec)
+    val animatedKickBoard by animateIntAsState(detailRecord.kickBoard, animationSpec)
+    val animatedMixed by animateIntAsState(detailRecord.mixed, animationSpec)
+
+    val distanceList = listOf(
+        Triple(detailRecord.crawl, animatedCrawl, SolidColor(ColorCrawl)),
+        Triple(detailRecord.backStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
+        Triple(
+            detailRecord.breastStroke,
+            animatedBreastStroke,
+            SolidColor(ColorBreastStroke)
+        ),
+        Triple(detailRecord.butterfly, animatedButterfly, SolidColor(ColorButterfly)),
+        Triple(
+            detailRecord.mixed, animatedMixed, Brush.verticalGradient(
+                Pair(0f, ColorMixStart),
+                Pair(1f, ColorMixEnd)
+            )
+        ),
+        Triple(detailRecord.kickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
+    )
+
+    Column {
+        Row(
+            modifier = Modifier
+                .padding(top = 5.dp)
+                .fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("시간")
+                Text(activeTime.toCustomTimeString())
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = totalDistance.toString() + "m",
-                    fontSize = 36.dp.toSp,
-                    lineHeight = 36.dp.toSp,
-                )
-                // 임시 수정버튼
-                detailRecords.forEach {
-                    Button(
-                        modifier = Modifier.height(24.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(),
-                        onClick = {
-                            viewModel.setModifyRecord(it.detailRecord)
-                            viewModel.popupUiState.value = PopupUiState.MODIFY
-                        }) {
-                        Text(text = "영법 수정", fontSize = 12.sp)
-                    }
-                }
+                Text("칼로리")
+                Text(calories.toInt().toString())
             }
+        }
 
-            Column {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("시간")
-                        Text(totalTime.toCustomTimeString())
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("칼로리")
-                        Text(totalCalories.toInt().toString())
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("최대 심박")
-                        Text(totalMaxHR.toString())
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("최소 심박")
-                        Text(totalMinHR.toString())
-                    }
-                }
-            }
-
-            Column(
-                Modifier
-                    .padding(top = 5.dp)
-                    .fillMaxWidth()
-                    .background(
-                        SkyBlue6, shape = RoundedCornerShape(15.dp)
-                    )
-                    .padding(8.dp)
+        Row(
+            modifier = Modifier
+                .padding(top = 5.dp)
+                .fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                var refValue by remember { mutableIntStateOf(1000) }
-                val animatedRefVal by animateIntAsState(
-                    refValue, spring(
-                        visibilityThreshold = Int.VisibilityThreshold,
-                        stiffness = 200f
+                Text("최대 심박")
+                Text(maxHR.toString())
+            }
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("최소 심박")
+                Text(minHR.toString())
+            }
+        }
+    }
+
+    Column(
+        Modifier
+            .padding(top = 5.dp)
+            .fillMaxWidth()
+            .background(
+                SkyBlue6, shape = RoundedCornerShape(15.dp)
+            )
+            .padding(8.dp)
+    ) {
+        var refValue by remember { mutableIntStateOf(1000) }
+        val animatedRefVal by animateIntAsState(
+            refValue, spring(
+                visibilityThreshold = Int.VisibilityThreshold,
+                stiffness = 200f
+            )
+        )
+
+        distanceList.filter {
+            it.first != 0
+        }.sortedByDescending {
+            it.first
+        }.forEachIndexed { i, it ->
+            if (i == 0) refValue = max(1000, it.first)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .height(30.dp)
+                        .fillMaxWidth(it.second / animatedRefVal.toFloat())
+                        .background(
+                            it.third,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(end = 7.dp),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    if (it.first >= 75) Text(
+                        it.second.toString(),
+                        lineHeight = 14.dp.toSp,
+                        fontSize = 14.dp.toSp,
+                        color = Color.Black.copy(0.8f)
                     )
-                )
-
-                listOf(
-                    Triple(totalCrawl, animatedCrawl, SolidColor(ColorCrawl)),
-                    Triple(totalBackStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
-                    Triple(totalBreastStroke, animatedBreastStroke, SolidColor(ColorBreastStroke)),
-                    Triple(totalButterfly, animatedButterfly, SolidColor(ColorButterfly)),
-                    Triple(
-                        totalMixed, animatedMixed, Brush.verticalGradient(
-                            Pair(0f, ColorMixStart),
-                            Pair(1f, ColorMixEnd)
-                        )
-                    ),
-                    Triple(totalKickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
-                ).filter {
-                    it.first != 0
-                }.sortedByDescending {
-                    it.first
-                }.forEachIndexed { i, it ->
-                    if (i == 0) refValue = max(1000, it.first)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .height(30.dp)
-                                .fillMaxWidth(it.second / animatedRefVal.toFloat())
-                                .background(
-                                    it.third,
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .padding(end = 7.dp),
-                            contentAlignment = Alignment.CenterEnd,
-                        ) {
-                            if (it.first >= 75) Text(
-                                it.second.toString(),
-                                lineHeight = 14.dp.toSp,
-                                fontSize = 14.dp.toSp,
-                                color = Color.Black.copy(0.8f)
-                            )
-                        }
-
-                        if (it.first < 75) Text(
-                            it.second.toString(),
-                            lineHeight = 14.dp.toSp,
-                            fontSize = 14.dp.toSp,
-                            color = Color.Black.copy(0.8f)
-                        )
-                    }
                 }
+
+                if (it.first < 75) Text(
+                    it.second.toString(),
+                    lineHeight = 14.dp.toSp,
+                    fontSize = 14.dp.toSp,
+                    color = Color.Black.copy(0.8f)
+                )
             }
         }
     }
