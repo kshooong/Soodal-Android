@@ -153,6 +153,7 @@ val selectedMonthSaver =
 @Composable
 fun CalendarView(
     modifier: Modifier,
+    weekHeight :Dp,
     contentsBg: Color,
     viewModel: SwimmingViewModel
 ) {
@@ -292,7 +293,6 @@ fun CalendarView(
             reverseLayout = true
         ) {
             val context = LocalContext.current
-            val weekHeight = 60.dp
 
             if (calendarMode == CalendarUiState.WEEK_MODE) {
                 val week = todayWeek.minusWeeks(it.toLong())
@@ -497,12 +497,12 @@ private fun MonthView(
                     AnimationTypeUiState.OFFSET -> {
                         var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else (weekHeight + 5.dp) * week) }
                         var elevation by remember { mutableStateOf(0.dp) }
-                        var dynamicDuration by remember { mutableIntStateOf(350) }
+                        var dynamicDuration by remember { mutableIntStateOf(250) }
                         val animatedElevation by animateDpAsState(
                             elevation,
                             animationSpec = tween(dynamicDuration),
                             finishedListener = {
-                                dynamicDuration = 600 - dynamicDuration
+                                dynamicDuration = 400 - dynamicDuration
                                 if (it != 0.dp)
                                     elevation = 0.dp
 
@@ -510,7 +510,7 @@ private fun MonthView(
                         )
                         val animatedOffset by animateDpAsState(
                             offset,
-                            animationSpec = tween(600),
+                            animationSpec = tween(400),
                             finishedListener = { _ -> viewModel.animationCount.value += 1 })
 
 
@@ -519,7 +519,7 @@ private fun MonthView(
                             scaleRatio,
                             animationSpec = tween(dynamicDuration),
                             finishedListener = {
-                                dynamicDuration = 600 - dynamicDuration
+                                dynamicDuration = 400 - dynamicDuration
                                 if (it != 0f)
                                     scaleRatio = 0f
 
@@ -1323,7 +1323,7 @@ fun ResizeBar(
                         scope.launch {
                             animatableHeight.animateTo(
                                 targetHeight, spring(
-                                    stiffness = Spring.StiffnessMediumLow
+                                    stiffness = Spring.StiffnessMediumLow,
                                 )
                             )
                         }

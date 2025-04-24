@@ -183,6 +183,7 @@ fun NavigationView(
                     )
                     .statusBarsPadding()
             ) {
+                val weekHeight = 60.dp
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
                 val density = LocalDensity.current
 
@@ -192,13 +193,16 @@ fun NavigationView(
                         .onGloballyPositioned { coordinates ->
                             calendarHeight =
                                 with(density) { coordinates.size.height.toDp().value }
-                        }, contentsBg = Color.Transparent, viewModel = viewModel
+                        },
+                    weekHeight = weekHeight,
+                    contentsBg = Color.Transparent,
+                    viewModel = viewModel
                 )
                 val configuration = LocalConfiguration.current
                 val initialHeight by remember {
-                        derivedStateOf {
-                            configuration.screenHeightDp - calendarHeight - 60
-                        }
+                    derivedStateOf {
+                        configuration.screenHeightDp - calendarHeight - 60
+                    }
                 }
 
                 Log.d("initialHeight", "initialHeight: $initialHeight")
@@ -218,16 +222,24 @@ fun NavigationView(
                         mutableStateOf(initialHeight.dp)
                     }
 
-                    val animatableHeight = remember {Animatable(initialValue = detailHeight.value, Dp.VectorConverter,Dp.VisibilityThreshold)}
+                    val animatableHeight = remember {
+                        Animatable(
+                            initialValue = detailHeight.value,
+                            Dp.VectorConverter,
+                            Dp.VisibilityThreshold
+                        )
+                    }
+
+                    val animationDurationMills = 400
 
                     LaunchedEffect(viewModel.calendarUiState.value) {
                         // 아래 주석은 OFFSET방식 애니메이션 기준
                         if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
                             // 달력 애니메이션 종료되고 완전히 WEEK_MODE가 되면 initialHeight 가 큰 값으로 변함 -> DetailView 애니메이션 실행 시 계산해서 넣어줘야함
-                            animatableHeight.animateTo(initialHeight.dp + (65*5).dp, tween(600))
+                            animatableHeight.animateTo(initialHeight.dp + ((weekHeight.value + 5) * 5).dp, tween(animationDurationMills))
                         } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
                             // TO_MONTH 가 되면 바로 initialHeight 가 작은 값으로 변함 -> DetailView 애니메이션 실행 시 계산하지 않고 사용가능
-                            animatableHeight.animateTo(initialHeight.dp , tween(600))
+                            animatableHeight.animateTo(initialHeight.dp, tween(animationDurationMills))
                         }
                     }
 
