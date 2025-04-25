@@ -533,7 +533,7 @@ private fun MonthView(
                             }
 
                             if (calendarMode == CalendarUiState.TO_WEEK || calendarMode == CalendarUiState.TO_MONTH) {
-                                elevation = 2.dp
+                                elevation = 3.dp
                                 scaleRatio = 0.005f
                             }
                         }
@@ -550,7 +550,11 @@ private fun MonthView(
                                 scaleX = ratio
                                 scaleY = ratio
                             }
-                            .shadow(animatedElevation * (5 - week), RoundedCornerShape(8.dp))
+//                            .shadow(animatedElevation * (5 - week), RoundedCornerShape(8.dp))
+                            .shadow(
+                                if (isCurrentWeek) animatedElevation else 0.dp,
+                                RoundedCornerShape(8.dp)
+                            )
                             .background(Color.White, shape = RoundedCornerShape(8.dp))
                     }
 
