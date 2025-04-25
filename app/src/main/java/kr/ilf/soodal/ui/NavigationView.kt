@@ -198,14 +198,6 @@ fun NavigationView(
                     contentsBg = Color.Transparent,
                     viewModel = viewModel
                 )
-                val configuration = LocalConfiguration.current
-                val initialHeight by remember {
-                    derivedStateOf {
-                        configuration.screenHeightDp - calendarHeight - 60
-                    }
-                }
-
-                Log.d("initialHeight", "initialHeight: $initialHeight")
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
@@ -214,17 +206,14 @@ fun NavigationView(
                     visible = detailRecord.isNotEmpty(), enter = UpEnterTransition,
                     exit = DownExitTransition
                 ) {
-                    val mySaver = Saver<Dp, Bundle>(
-                        save = { Bundle().apply { putFloat("detailHeight", it.value) } },
-                        restore = { it.getFloat("detailHeight").dp }
-                    )
-                    val detailHeight = rememberSaveable(stateSaver = mySaver) {
-                        mutableStateOf(initialHeight.dp)
-                    }
-
-                    val animatableHeight = remember {
+//                    val mySaver = Saver<Dp, Bundle>(
+//                        save = { Bundle().apply { putFloat("detailHeight", it.value) } },
+//                        restore = { it.getFloat("detailHeight").dp }
+//                    )
+//
+                    val animatableOffset = remember {
                         Animatable(
-                            initialValue = detailHeight.value,
+                            initialValue = calendarHeight.dp,
                             Dp.VectorConverter,
                             Dp.VisibilityThreshold
                         )
@@ -236,18 +225,24 @@ fun NavigationView(
                         // 아래 주석은 OFFSET방식 애니메이션 기준
                         if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
                             // 달력 애니메이션 종료되고 완전히 WEEK_MODE가 되면 initialHeight 가 큰 값으로 변함 -> DetailView 애니메이션 실행 시 계산해서 넣어줘야함
-                            animatableHeight.animateTo(initialHeight.dp + ((weekHeight.value + 5) * 5).dp, tween(animationDurationMills))
+                            animatableOffset.animateTo(
+                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                tween(animationDurationMills)
+                            )
                         } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
                             // TO_MONTH 가 되면 바로 initialHeight 가 작은 값으로 변함 -> DetailView 애니메이션 실행 시 계산하지 않고 사용가능
-                            animatableHeight.animateTo(initialHeight.dp, tween(animationDurationMills))
+                            animatableOffset.animateTo(
+                                calendarHeight.dp,
+                                tween(animationDurationMills)
+                            )
                         }
                     }
 
                     CalendarDetailView(
                         Modifier
+                            .offset { IntOffset(0, animatableOffset.value.roundToPx()) }
                             .padding(0.dp, 0.dp, 0.dp, 60.dp)
-                            .fillMaxWidth()
-                            .height(animatableHeight.value)
+                            .fillMaxSize()
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
@@ -262,9 +257,9 @@ fun NavigationView(
                         resizeBar = { resizeBarModifier ->
                             ResizeBar(
                                 resizeBarModifier,
-                                animatableHeight,
-                                initialHeight.dp,
-                                (calendarHeight + initialHeight - 5).dp
+                                animatableOffset,
+                                calendarHeight.dp,
+                                5.dp
                             )
                         }
                     )
