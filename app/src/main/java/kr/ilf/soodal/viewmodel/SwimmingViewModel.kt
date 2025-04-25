@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +28,7 @@ import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
+import kr.ilf.soodal.database.entity.HeartRateSample
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -34,6 +36,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.min
 
 class SwimmingViewModel(
     private val application: Application,
@@ -70,7 +73,7 @@ class SwimmingViewModel(
         mutableStateOf(LocalDate.now().minusDays(LocalDate.now().dayOfWeek.value % 7 + 3L))
 
     // 현재 월의 총 합산 데이터
-    private val _currentMonthTotal = MutableStateFlow<DailyRecord>(DailyRecord(Instant.now()))
+    private val _currentMonthTotal = MutableStateFlow(DailyRecord(Instant.now()))
     val currentMonthTotal
         get() = _currentMonthTotal.asStateFlow()
 
@@ -94,6 +97,10 @@ class SwimmingViewModel(
     val newRecords
         get() = _newRecords.asStateFlow()
     private val hasNewRecord = mutableStateOf(false)
+
+    // 선택한 날짜의 데이터 종합
+    private val _totalDetailRecordWithHR = MutableStateFlow<DetailRecordWithHR?>(null)
+    val totalDetailRecordWithHR: StateFlow<DetailRecordWithHR?> = _totalDetailRecordWithHR.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -381,6 +388,57 @@ class SwimmingViewModel(
             }
         }
     }
+
+    // 데이터 집계 함수
+    fun calculateTotalDetailRecord(detailRecords: List<DetailRecordWithHR> = _currentDetailRecords.value) {
+        var totalDistance = 0
+        var totalTime = Duration.ZERO
+        var totalCalories = 0.0
+        var totalMinHR = Int.MAX_VALUE
+        var totalMaxHR = 0
+        var totalCrawl = 0
+        var totalBackStroke = 0
+        var totalBreastStroke = 0
+        var totalButterfly = 0
+        var totalKickBoard = 0
+        var totalMixed = 0
+
+        detailRecords.forEach { (record, _) ->
+            totalDistance += record.distance?.toInt() ?: 0
+            totalTime += record.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
+            totalCalories += record.energyBurned?.toDouble() ?: 0.0
+            totalMinHR = min(totalMinHR, record.minHeartRate?.toInt() ?: 0)
+            totalMaxHR = maxOf(totalMaxHR, record.maxHeartRate?.toInt() ?: 0)
+            totalCrawl += record.crawl
+            totalBackStroke += record.backStroke
+            totalBreastStroke += record.breastStroke
+            totalButterfly += record.butterfly
+            totalKickBoard += record.kickBoard
+            totalMixed += record.mixed
+        }
+
+        val totalRecord = DetailRecord(
+            id = "totalRecord",
+            startTime = Instant.now(),
+            endTime = Instant.now(),
+            activeTime = totalTime.toString(),
+            distance = totalDistance.toString(),
+            energyBurned = totalCalories.toString(),
+            minHeartRate = totalMinHR.toLong(),
+            maxHeartRate = totalMaxHR.toLong(),
+            avgHeartRate = ((totalMinHR + totalMaxHR) / 2).toLong(),
+            poolLength = 25,
+            crawl = totalCrawl,
+            backStroke = totalBackStroke,
+            breastStroke = totalBreastStroke,
+            butterfly = totalButterfly,
+            kickBoard = totalKickBoard,
+            mixed = totalMixed
+        )
+        val totalHRRecord = listOf(HeartRateSample(Instant.now(), "totalRecord", 0))
+        _totalDetailRecordWithHR.value = DetailRecordWithHR(totalRecord, totalHRRecord)
+    }
+
 
     fun checkAndShowNewRecordPopup() {
         if (hasNewRecord.value) {
