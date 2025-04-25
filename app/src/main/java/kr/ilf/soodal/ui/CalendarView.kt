@@ -3,6 +3,7 @@ package kr.ilf.soodal.ui
 import android.content.res.Resources
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -13,6 +14,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -46,7 +50,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -138,7 +141,6 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -259,14 +261,6 @@ fun CalendarView(
     Column(modifier = modifier) {
         CalendarHeaderView(viewModel, contentsBg)
         Row {
-            Button(onClick = {
-                if (calendarMode == CalendarUiState.WEEK_MODE) {
-                    calendarMode = CalendarUiState.TO_MONTH
-                } else if (calendarMode == CalendarUiState.MONTH_MODE) {
-                    calendarMode = CalendarUiState.TO_WEEK
-                }
-            }) { Text("Calendar Mode") }
-
             Button(onClick = {
                 var animationType by viewModel.animationType
                 animationType = if (animationType == AnimationTypeUiState.SIZING) {
@@ -1020,184 +1014,137 @@ private fun CalendarHeaderView(
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
-//    viewModel: PreviewViewmodel, // Preview 용
     viewModel: SwimmingViewModel,
     resizeBar: @Composable (Modifier) -> Unit
 ) {
-    Box(
-        modifier = modifier.clipToBounds()
-    ) {
-        // 조절 바
-        if (viewModel.calendarUiState.value == CalendarUiState.MONTH_MODE)
-            resizeBar(Modifier)
+    Box(modifier = modifier.clipToBounds()) {
+        AnimatedContent(
+            targetState = viewModel.calendarUiState.value in setOf(
+                CalendarUiState.WEEK_MODE,
+                CalendarUiState.TO_WEEK
+            ),
+            modifier = Modifier,
+            label = "CalendarUiState",
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut()
+            }
+        ) { targetState ->
+            var calendarMode by viewModel.calendarUiState
+            val onModeChange = remember {
+                {
+                    if (calendarMode == CalendarUiState.WEEK_MODE) {
+                        calendarMode = CalendarUiState.TO_MONTH
+                    } else if (calendarMode == CalendarUiState.MONTH_MODE) {
+                        calendarMode = CalendarUiState.TO_WEEK
+                    }
+                }
+            }
 
-        // 데이터
-        Column(
-            Modifier
-                .padding(top = 20.dp)
-                .fillMaxWidth()
-                .wrapContentHeight(Alignment.Top, unbounded = true)
-//                .verticalScroll(rememberScrollState())
-                .padding(start = 10.dp, end = 10.dp, bottom = 5.dp)
-        ) {
-            // 거리, 시간, 칼로리, 최고 심박, 최저 심박
             val detailRecords by viewModel.currentDetailRecords.collectAsState()
 
+            LaunchedEffect(detailRecords) {
+                viewModel.calculateTotalDetailRecord()
+            }
+
             if (viewModel.calendarUiState.value == CalendarUiState.MONTH_MODE) {
+                resizeBar(Modifier)
+            }
 
-                var totalDistance by remember { mutableIntStateOf(0) }
-                var totalTime by remember { mutableStateOf(Duration.ZERO) }
-                var totalCalories by remember { mutableDoubleStateOf(0.0) }
-                var totalMinHR by remember { mutableIntStateOf(Int.MAX_VALUE) }
-                var totalMaxHR by remember { mutableIntStateOf(0) }
-                var totalCrawl by remember { mutableIntStateOf(0) }
-                var totalBackStroke by remember { mutableIntStateOf(0) }
-                var totalBreastStroke by remember { mutableIntStateOf(0) }
-                var totalButterfly by remember { mutableIntStateOf(0) }
-                var totalKickBoard by remember { mutableIntStateOf(0) }
-                var totalMixed by remember { mutableIntStateOf(0) }
-
-                LaunchedEffect(detailRecords) {
-                    var tempTotalDistance = totalDistance
-                    var tempTotalTime = totalTime
-                    var tempTotalCalories = totalCalories
-                    var tempTotalMinHR = totalMinHR
-                    var tempTotalMaxHR = totalMaxHR
-                    var tempTotalCrawl = totalCrawl
-                    var tempTotalBackStroke = totalBackStroke
-                    var tempTotalBreastStroke = totalBreastStroke
-                    var tempTotalButterfly = totalButterfly
-                    var tempTotalKickBoard = totalKickBoard
-                    var tempTotalMixed = totalMixed
-
-                    detailRecords.forEachIndexed { index, (record, sample) ->
-                        if (index == 0) {
-                            tempTotalDistance = 0
-                            tempTotalTime = Duration.ZERO
-                            tempTotalCalories = 0.0
-                            tempTotalMinHR = Int.MAX_VALUE
-                            tempTotalMaxHR = 0
-                            tempTotalCrawl = 0
-                            tempTotalBackStroke = 0
-                            tempTotalBreastStroke = 0
-                            tempTotalButterfly = 0
-                            tempTotalKickBoard = 0
-                            tempTotalMixed = 0
-                        }
-
-                        tempTotalDistance += record.distance?.toInt() ?: 0
-                        tempTotalTime += record.activeTime?.let { Duration.parse(it) }
-                            ?: Duration.ZERO
-                        tempTotalCalories += record.energyBurned?.toDouble() ?: 0.0
-                        tempTotalMinHR = min(tempTotalMinHR, record.minHeartRate?.toInt() ?: 0)
-                        tempTotalMaxHR = maxOf(tempTotalMaxHR, record.maxHeartRate?.toInt() ?: 0)
-                        tempTotalCrawl += record.crawl
-                        tempTotalBackStroke += record.backStroke
-                        tempTotalBreastStroke += record.breastStroke
-                        tempTotalButterfly += record.butterfly
-                        tempTotalKickBoard += record.kickBoard
-                        tempTotalMixed += record.mixed
-                    }
-
-                    totalDistance = tempTotalDistance
-                    totalTime = tempTotalTime
-                    totalCalories = tempTotalCalories
-                    totalMinHR = tempTotalMinHR
-                    totalMaxHR = tempTotalMaxHR
-                    totalCrawl = tempTotalCrawl
-                    totalBackStroke = tempTotalBackStroke
-                    totalBreastStroke = tempTotalBreastStroke
-                    totalButterfly = tempTotalButterfly
-                    totalKickBoard = tempTotalKickBoard
-                    totalMixed = tempTotalMixed
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = totalDistance.toString() + "m",
-                        fontSize = 36.dp.toSp,
-                        lineHeight = 36.dp.toSp,
-                    )
-                    // 임시 수정버튼
-                    detailRecords.forEach {
-                        Button(
-                            modifier = Modifier.height(24.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(),
-                            onClick = {
-                                viewModel.setModifyRecord(it.detailRecord)
-                                viewModel.popupUiState.value = PopupUiState.MODIFY
-                            }) {
-                            Text(text = "영법 수정", fontSize = 12.sp)
+            Column(
+                Modifier
+                    .padding(top = 20.dp)
+                    .fillMaxWidth()
+                    .wrapContentHeight(Alignment.Top, unbounded = true)
+                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (targetState) {
+                    detailRecords.forEach { detailRecordWithHR ->
+                        DetailModeContent(detailRecordWithHR, onModeChange) {
+                            viewModel.setModifyRecord(detailRecordWithHR.detailRecord)
+                            viewModel.popupUiState.value = PopupUiState.MODIFY
                         }
                     }
-                }
+                } else {
+                    val totalDetailRecordWithHR by viewModel.totalDetailRecordWithHR.collectAsState()
 
-                val totalRecord = DetailRecord(
-                    id = "totalRecord",
-                    startTime = Instant.now(),
-                    endTime = Instant.now(),
-                    activeTime = totalTime.toString(),
-                    distance = totalDistance.toString(),
-                    energyBurned = totalCalories.toString(),
-                    minHeartRate = totalMinHR.toLong(),
-                    maxHeartRate = totalMaxHR.toLong(),
-                    avgHeartRate = ((totalMinHR + totalMaxHR) / 2).toLong(),
-                    poolLength = 25,
-                    crawl = totalCrawl,
-                    backStroke = totalBackStroke,
-                    breastStroke = totalBreastStroke,
-                    butterfly = totalButterfly,
-                    kickBoard = totalKickBoard,
-                    mixed = totalMixed
-                )
-                val totalHRRecord = listOf(HeartRateSample(Instant.now(), "totalRecord", 0))
-                val totalDetailRecordWithHR = DetailRecordWithHR(totalRecord, totalHRRecord)
-
-                DetailDataView(
-                    totalDetailRecordWithHR,
-                )
-            } else {
-                detailRecords.forEach { detailRecordWithHR ->
-                    var crawl by remember { mutableIntStateOf(0) }
-                    var backStroke by remember { mutableIntStateOf(0) }
-                    var breastStroke by remember { mutableIntStateOf(0) }
-                    var butterfly by remember { mutableIntStateOf(0) }
-                    var kickBoard by remember { mutableIntStateOf(0) }
-                    var mixed by remember { mutableIntStateOf(0) }
-
-                    val detailRecord = detailRecordWithHR.detailRecord.copy(
-                        crawl = crawl,
-                        backStroke = backStroke,
-                        breastStroke = breastStroke,
-                        butterfly = butterfly,
-                        kickBoard = kickBoard,
-                        mixed = mixed
-                    )
-
-                    val viewDetailRecordWithHR = detailRecordWithHR.copy(detailRecord)
-
-                    LaunchedEffect(detailRecordWithHR) {
-                        crawl = detailRecordWithHR.detailRecord.crawl
-                        backStroke = detailRecordWithHR.detailRecord.backStroke
-                        breastStroke = detailRecordWithHR.detailRecord.breastStroke
-                        butterfly = detailRecordWithHR.detailRecord.butterfly
-                        kickBoard = detailRecordWithHR.detailRecord.kickBoard
-                        mixed = detailRecordWithHR.detailRecord.mixed
+                    totalDetailRecordWithHR?.let {
+                        MonthModeContent(it, onModeChange)
                     }
-
-                    DetailDataView(
-                        viewDetailRecordWithHR,
-                        true
-                    )
                 }
+
             }
         }
     }
+}
+
+
+@Composable
+fun MonthModeContent(
+    totalDetailRecordWithHR: DetailRecordWithHR,
+    onDetailClick: () -> Unit = {},
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = totalDetailRecordWithHR.detailRecord.distance + "m",
+            fontSize = 36.dp.toSp,
+            lineHeight = 36.dp.toSp,
+        )
+
+        Button(onClick = onDetailClick) { Text("detail") }
+    }
+
+    DetailDataView(totalDetailRecordWithHR)
+}
+
+@Composable
+fun DetailModeContent(
+    detailRecordWithHR: DetailRecordWithHR,
+    onCloseClick: () -> Unit = {},
+    onModifyClick: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = detailRecordWithHR.detailRecord.distance + "m",
+            fontSize = 36.dp.toSp,
+            lineHeight = 36.dp.toSp,
+        )
+
+        Text(
+            text = detailRecordWithHR.detailRecord.startTime.atZone(ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")),
+            style = MaterialTheme.typography.bodySmall
+        )
+        // 임시 수정버튼
+        Button(
+            modifier = Modifier.height(24.dp),
+            shape = RoundedCornerShape(10.dp),
+            contentPadding = PaddingValues(),
+            onClick = onModifyClick
+        ) {
+            Text(text = "영법 수정", fontSize = 12.sp)
+        }
+
+        // 임시 닫기버튼
+        Button(
+            modifier = Modifier.height(24.dp),
+            shape = RoundedCornerShape(10.dp),
+            contentPadding = PaddingValues(),
+            onClick = onCloseClick
+        ) {
+            Text(text = "닫기 ", fontSize = 12.sp)
+        }
+    }
+
+    DetailDataView(detailRecordWithHR)
 }
 
 @Composable
