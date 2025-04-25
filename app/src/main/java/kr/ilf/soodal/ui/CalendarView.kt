@@ -1348,13 +1348,13 @@ private fun DetailDataView(
 @Composable
 fun ResizeBar(
     modifier: Modifier = Modifier,
-    animatableHeight: Animatable<Dp, AnimationVector1D>,
-    initialHeight: Dp,
-    maxHeight: Dp
+    animatableOffset: Animatable<Dp, AnimationVector1D>,
+    initialOffset: Dp,
+    minOffset: Dp
 ) {
     val scope = rememberCoroutineScope()
     val velocityTracker = remember { VelocityTracker() } // 속도 추적기
-    var currentHeight by remember { mutableStateOf(initialHeight) }
+    var currentOffset by remember { mutableStateOf(initialOffset) }
 
     Box(
         modifier = modifier
@@ -1366,42 +1366,42 @@ fun ResizeBar(
                         velocityTracker.addPointerInputChange(change) // 위치 기록
 
                         // 현재 높이 조절 (실시간 변경)
-                        val newHeight = max(
-                            initialHeight, // 최소 크기 제한
-                            min(
-                                maxHeight,
-                                animatableHeight.value - dragAmount.y.toDp()
+                        val newOffset = min(
+                            initialOffset, // 최소 크기 제한
+                            max(
+                                minOffset,
+                                animatableOffset.value + dragAmount.y.toDp()
                             )
                         )
                         scope.launch {
-                            animatableHeight.snapTo(newHeight)
+                            animatableOffset.snapTo(newOffset)
                         }
                     },
                     onDragEnd = {
                         val velocity = velocityTracker.calculateVelocity().y  // Y축 속도(px/s)
                         val thresholdVelocity = 1000f  // 임계 속도 (px/s)
                         Log.d("=-=-=", "velocity: $velocity")
-                        val range = maxHeight - initialHeight
+                        val range = initialOffset - minOffset
                         val thresholdPosition = range * 0.2f
 
-                        val targetHeight = when {
+                        val targetOffset = when {
                             // 빠르게 위로 스와이프 → 최대 크기
-                            velocity < -thresholdVelocity -> maxHeight
+                            velocity < -thresholdVelocity -> minOffset
                             // 빠르게 아래로 스와이프 → 초기 크기
-                            velocity > thresholdVelocity -> initialHeight
+                            velocity > thresholdVelocity -> initialOffset
                             // 현재 높이가 최소 높이이고, 30% 이상 올라갔으면 최대 크기
-                            currentHeight == initialHeight && animatableHeight.value > initialHeight + thresholdPosition -> maxHeight
+                            currentOffset == initialOffset && animatableOffset.value < initialOffset - thresholdPosition -> minOffset
                             // 현재 높이가 최대 높이이고, 30% 이상 내려갔으면 초기 크기
-                            currentHeight == maxHeight && animatableHeight.value < maxHeight - thresholdPosition -> initialHeight
-                            else -> if (currentHeight - initialHeight < maxHeight - currentHeight) initialHeight else maxHeight
+                            currentOffset == minOffset && animatableOffset.value > minOffset + thresholdPosition -> initialOffset
+                            else -> if (initialOffset - currentOffset < currentOffset - minOffset) initialOffset else minOffset
                         }
 
-                        currentHeight = targetHeight
-                        Log.d("ResizeBar", "currentHeight: $currentHeight")
+                        currentOffset = targetOffset
+                        Log.d("ResizeBar", "currentOffset: $currentOffset")
 
                         scope.launch {
-                            animatableHeight.animateTo(
-                                targetHeight, spring(
+                            animatableOffset.animateTo(
+                                targetOffset, spring(
                                     stiffness = Spring.StiffnessMediumLow,
                                 )
                             )
