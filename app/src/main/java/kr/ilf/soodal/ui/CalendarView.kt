@@ -306,8 +306,8 @@ fun CalendarView(
                         .padding(horizontal = 5.dp)
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
-                        .background(Color.White, shape = RoundedCornerShape(8.dp)),
+//                        .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
+                        .background(Color.White, shape = RoundedCornerShape(14.dp)),
                     weekOfMonth,
                     firstDayOfWeek,
                     daysInPrevMonth,
@@ -467,7 +467,8 @@ private fun MonthView(
         modifier = Modifier
             .padding(horizontal = 5.dp)
             .wrapContentSize()
-            .background(Color.Transparent)
+            .background(Color.Transparent),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         // 날짜 표시
         var dayCounter = 1
@@ -527,7 +528,7 @@ private fun MonthView(
                             }
 
                             if (calendarMode == CalendarUiState.TO_WEEK || calendarMode == CalendarUiState.TO_MONTH) {
-                                elevation = 3.dp
+                                elevation = 5.dp
                                 scaleRatio = 0.005f
                             }
                         }
@@ -536,7 +537,6 @@ private fun MonthView(
                             .zIndex(if (isCurrentWeek) 6f else (5 - week).toFloat())
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(horizontal = 7.5.dp, vertical = 2.5.dp)
                             .offset { IntOffset(0, -animatedOffset.roundToPx()) }
                             .graphicsLayer {
                                 val ratio =
@@ -544,30 +544,17 @@ private fun MonthView(
                                 scaleX = ratio
                                 scaleY = ratio
                             }
-//                            .shadow(animatedElevation * (5 - week), RoundedCornerShape(8.dp))
                             .shadow(
                                 if (isCurrentWeek) animatedElevation else 0.dp,
-                                RoundedCornerShape(8.dp)
+                                RoundedCornerShape(14.dp)
                             )
-                            .background(Color.White, shape = RoundedCornerShape(8.dp))
+                            .background(Color.White, shape = RoundedCornerShape(14.dp))
                     }
 
                     AnimationTypeUiState.SIZING -> {
-                        var paddingV by remember { mutableStateOf(if (isCurrentWeek || calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 2.5.dp else 0.dp) }
-
-                        LaunchedEffect(calendarMode) {
-                            paddingV = when (calendarMode) {
-                                CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 2.5.dp
-                                CalendarUiState.TO_WEEK -> if (isCurrentWeek) 2.5.dp else 0.dp
-                            }
-                        }
-
-                        val animatedPadding by animateDpAsState(paddingV, animationSpec = tween())
-
                         Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(horizontal = 7.5.dp, vertical = animatedPadding)
                     }
                 }
 
@@ -621,13 +608,13 @@ private fun WeekView(
         val dayViewModifier =
             when (viewModel.animationType.value) {
                 AnimationTypeUiState.OFFSET -> {
-                    val animatedAlpha by remember { mutableFloatStateOf(1f) }
-                    val animatedHeight by remember { mutableStateOf(dayHeight) }
+                    val alpha by remember { mutableFloatStateOf(1f) }
+                    val height by remember { mutableStateOf(dayHeight) }
 
                     Modifier
                         .weight(1f)
-                        .height(animatedHeight)
-                        .alpha(animatedAlpha)
+                        .height(height)
+                        .alpha(alpha)
                 }
 
                 AnimationTypeUiState.SIZING -> {
@@ -691,11 +678,11 @@ private fun WeekView(
 
                 DayView(
                     modifier = dayViewModifier
-                        .background(animatedBgColor, shape = RoundedCornerShape(8.dp))
+                        .background(animatedBgColor, shape = RoundedCornerShape(14.dp))
                         .border(
                             1.5.dp,
                             borderColor,
-                            RoundedCornerShape(8.dp)
+                            RoundedCornerShape(14.dp)
                         ),
                     viewModel = viewModel,
                     month = preMonth.withDayOfMonth(prevDay),
@@ -727,11 +714,11 @@ private fun WeekView(
                 // 다음 달 날짜 표시
                 DayView(
                     modifier = dayViewModifier
-                        .background(animatedBgColor, shape = RoundedCornerShape(8.dp))
+                        .background(animatedBgColor, shape = RoundedCornerShape(14.dp))
                         .border(
                             1.5.dp,
                             borderColor,
-                            RoundedCornerShape(8.dp)
+                            RoundedCornerShape(14.dp)
                         ),
                     viewModel = viewModel,
                     month = nextMonth.withDayOfMonth(nextDay),
@@ -761,11 +748,11 @@ private fun WeekView(
 
                     DayView(
                         modifier = dayViewModifier
-                            .background(bgColor, shape = RoundedCornerShape(8.dp))
+                            .background(bgColor, shape = RoundedCornerShape(14.dp))
                             .border(
                                 1.5.dp,
                                 borderColor,
-                                RoundedCornerShape(8.dp)
+                                RoundedCornerShape(14.dp)
                             ),
                         viewModel = viewModel,
                         month = month.withDayOfMonth(dayCounter),
