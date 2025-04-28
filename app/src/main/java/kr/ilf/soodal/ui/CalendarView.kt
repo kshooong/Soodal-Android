@@ -260,16 +260,16 @@ fun CalendarView(
 
     Column(modifier = modifier) {
         CalendarHeaderView(viewModel, contentsBg)
-        Row {
-            Button(onClick = {
-                var animationType by viewModel.animationType
-                animationType = if (animationType == AnimationTypeUiState.SIZING) {
-                    AnimationTypeUiState.OFFSET
-                } else {
-                    AnimationTypeUiState.SIZING
-                }
-            }) { Text("Animation Type") }
-        }
+//        Row {
+//            Button(onClick = {
+//                var animationType by viewModel.animationType
+//                animationType = if (animationType == AnimationTypeUiState.SIZING) {
+//                    AnimationTypeUiState.OFFSET
+//                } else {
+//                    AnimationTypeUiState.SIZING
+//                }
+//            }) { Text("Animation Type") }
+//        }
 
         HorizontalPager(
             state = if (calendarMode == CalendarUiState.WEEK_MODE) weekPagerState else monthPagerState,
