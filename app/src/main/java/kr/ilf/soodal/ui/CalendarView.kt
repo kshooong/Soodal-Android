@@ -654,11 +654,13 @@ private fun DayView(
     isThisMonth: Boolean,
     onDateClick: (LocalDate) -> Unit
 ) {
+    val calendarMode by viewModel.calendarUiState
     val thisDate = month.withDayOfMonth(day.toInt())
 
     Box(modifier = modifier
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
+            enabled = calendarMode in setOf(CalendarUiState.MONTH_MODE, CalendarUiState.WEEK_MODE),
             indication = null,
             onClick = { onDateClick(thisDate) }
         )
