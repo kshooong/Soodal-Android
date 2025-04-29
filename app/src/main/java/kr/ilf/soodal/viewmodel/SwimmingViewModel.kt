@@ -2,7 +2,6 @@ package kr.ilf.soodal.viewmodel
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -45,8 +44,6 @@ class SwimmingViewModel(
     val uiState = mutableStateOf(UiState.LOADING)
     val calendarUiState = mutableStateOf(CalendarUiState.WEEK_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
-    val animationCount = mutableIntStateOf(0)
-    val animationType = mutableStateOf(AnimationTypeUiState.OFFSET)
 
     val healthPermissions =
         setOf(
