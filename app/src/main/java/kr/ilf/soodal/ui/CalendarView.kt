@@ -258,7 +258,7 @@ fun CalendarView(
         }
     }
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         CalendarHeaderView(viewModel, contentsBg)
 //        Row {
 //            Button(onClick = {
@@ -920,47 +920,84 @@ private fun CalendarHeaderView(
     viewModel: SwimmingViewModel,
     contentsBg: Color
 ) {
+    val calendarMode by viewModel.calendarUiState
     val currentMonth by viewModel.currentMonth
     val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
     val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
-    // 년, 월
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        Text(
-            text = currentMonth.format(monthFormatter),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .padding(top = 10.dp, start = 5.dp, end = 5.dp)
-                .background(contentsBg, shape = RoundedCornerShape(10.dp))
-                .padding(horizontal = 15.dp),
-            textAlign = TextAlign.Center
-        )
 
-        val totalDistance =
-            remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
-        val totalCaloriesBurned =
-            remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
+    val coroutineScope = rememberCoroutineScope()
+    val animatedProgress = remember { Animatable(0f) }
+    var isMonthModeUi by remember { mutableStateOf(true) }
 
-        Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
-            Text(
-                totalDistance.value + "m",
-                color = Color.Gray,
-                fontFamily = notoSansKr,
-                fontSize = 12.sp,
-                lineHeight = 12.sp,
-            )
-            Text(
-                totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal",
-                color = Color.Gray,
-                fontFamily = notoSansKr,
-                fontSize = 12.sp,
-                lineHeight = 12.sp,
-            )
+    LaunchedEffect(calendarMode) {
+        isMonthModeUi = when (calendarMode) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH -> true
+            CalendarUiState.TO_WEEK, CalendarUiState.WEEK_MODE -> false
         }
 
+        val targetProgress = when (calendarMode) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH -> 0f
+            CalendarUiState.TO_WEEK, CalendarUiState.WEEK_MODE -> 1f
+        }
+
+        coroutineScope.launch {
+            animatedProgress.animateTo(targetValue = targetProgress)
+        }
+    }
+
+    Box(
+        Modifier
+            .graphicsLayer {
+                val scale = 1f - (animatedProgress.value * 0.1f)
+                scaleX = scale
+                scaleY = scale
+            }
+            .wrapContentWidth()
+            .animateContentSize(), contentAlignment = Alignment.Center
+    ) {
+        // 년, 월
+        val rowModifier =
+            if (isMonthModeUi) Modifier.fillMaxWidth() else Modifier.wrapContentWidth()
+        Row(
+            rowModifier,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = currentMonth.format(monthFormatter),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier
+                    .padding(top = 10.dp, start = 5.dp, end = 5.dp)
+                    .background(contentsBg, shape = RoundedCornerShape(10.dp))
+                    .padding(horizontal = 15.dp),
+                textAlign = TextAlign.Center
+            )
+
+
+            if (isMonthModeUi) {
+                val totalDistance =
+                    remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
+                val totalCaloriesBurned =
+                    remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
+
+                Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
+                    Text(
+                        totalDistance.value + "m",
+                        color = Color.Gray,
+                        fontFamily = notoSansKr,
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
+                    )
+                    Text(
+                        totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal",
+                        color = Color.Gray,
+                        fontFamily = notoSansKr,
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
+                    )
+                }
+            }
+        }
     }
 
     // 요일 헤더
