@@ -22,6 +22,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -38,6 +40,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -178,6 +182,7 @@ fun NavigationView(
             ) {
                 val weekHeight = 60.dp
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
+                val configuration = LocalConfiguration.current
                 val density = LocalDensity.current
 
                 CalendarView(
@@ -204,6 +209,8 @@ fun NavigationView(
 //                        restore = { it.getFloat("detailHeight").dp }
 //                    )
 //
+                    val initHeight = configuration.screenHeightDp.dp - 60.dp
+                    val detailHeight = remember { mutableStateOf(initHeight) }
                     val animatableOffset = remember {
                         Animatable(
                             initialValue = calendarHeight.dp,
@@ -217,13 +224,23 @@ fun NavigationView(
                     LaunchedEffect(viewModel.calendarUiState.value) {
                         // 아래 주석은 달력 OFFSET방식 애니메이션 기준
                         if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
-                            // 달력 애니메이션 종료되고 완전히 WEEK_MODE가 되면 initialHeight 가 큰 값으로 변함 -> DetailView 애니메이션 실행 시 계산해서 넣어줘야함
                             animatableOffset.animateTo(
                                 calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
                                 tween(animationDurationMills)
                             )
+
+                            // 상세보기에서 스크롤위해 높이 수정
+                            detailHeight.value = initHeight - animatableOffset.value
+                            animatableOffset.snapTo(
+                                0.dp,
+                            )
                         } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
-                            // TO_MONTH 가 되면 바로 initialHeight 가 작은 값으로 변함 -> DetailView 애니메이션 실행 시 계산하지 않고 사용가능
+                            // 상세보기에서 스크롤위해 높이 수정한 높이 되돌리고 애니메이션 시작
+                            animatableOffset.snapTo(
+                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                            )
+                            detailHeight.value = initHeight
+
                             animatableOffset.animateTo(
                                 calendarHeight.dp,
                                 tween(animationDurationMills)
@@ -235,7 +252,8 @@ fun NavigationView(
                         Modifier
                             .offset { IntOffset(0, animatableOffset.value.roundToPx()) }
                             .padding(0.dp, 0.dp, 0.dp, 60.dp)
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .height(detailHeight.value)
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
