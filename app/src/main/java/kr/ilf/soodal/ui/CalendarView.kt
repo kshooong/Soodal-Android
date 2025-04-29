@@ -816,7 +816,7 @@ private fun CalendarHeaderView(
         }
 
         coroutineScope.launch {
-            animatedProgress.animateTo(targetValue = targetProgress)
+            animatedProgress.animateTo(targetValue = targetProgress, tween(500))
         }
     }
 
@@ -828,7 +828,7 @@ private fun CalendarHeaderView(
                 scaleY = scale
             }
             .wrapContentWidth()
-            .animateContentSize(), contentAlignment = Alignment.Center
+            .animateContentSize(tween(500)), contentAlignment = Alignment.Center
     ) {
         // 년, 월
         val rowModifier =
