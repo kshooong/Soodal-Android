@@ -536,7 +536,7 @@ private fun WeekView(
                 val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
                 var bgColor = ColorCalendarItemBgDis
                 var borderColor = Color.Transparent
-                val isThisMonth = calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek
+                val isThisMonth = calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek // msms 변수명 변경 필요 isThisMonth 다른 곳도 22
 
                 if (isThisMonth) {
                     val sameDate = prevDay.toString() == selectedDateStr.value
@@ -656,6 +656,7 @@ private fun DayView(
 ) {
     val calendarMode by viewModel.calendarUiState
     val thisDate = month.withDayOfMonth(day.toInt())
+    val currentMonth by viewModel.currentMonth
 
     Box(modifier = modifier
         .clickable(
