@@ -1004,19 +1004,24 @@ fun CalendarDetailView(
     viewModel: SwimmingViewModel,
     resizeBar: @Composable (Modifier) -> Unit
 ) {
+    var calendarMode by viewModel.calendarUiState
+
     Box(modifier = modifier.clipToBounds()) {
         AnimatedContent(
-            targetState = viewModel.calendarUiState.value in setOf(
+            targetState = calendarMode in setOf(
                 CalendarUiState.WEEK_MODE,
                 CalendarUiState.TO_WEEK
             ),
-            modifier = Modifier,
             label = "CalendarUiState",
             transitionSpec = {
                 fadeIn() togetherWith fadeOut()
             }
         ) { targetState ->
-            var calendarMode by viewModel.calendarUiState
+
+            if (calendarMode == CalendarUiState.MONTH_MODE) {
+                resizeBar(Modifier)
+            }
+
             val onModeChange = remember {
                 {
                     if (calendarMode == CalendarUiState.WEEK_MODE) {
@@ -1028,21 +1033,28 @@ fun CalendarDetailView(
             }
 
             val detailRecords by viewModel.currentDetailRecords.collectAsState()
+            val scrollableState = rememberScrollState()
+            val columnModifier = remember(calendarMode) {
+                Modifier
+                    .padding(top = 15.dp)
+                    .fillMaxWidth()
+                    .wrapContentHeight(Alignment.Top, calendarMode != CalendarUiState.WEEK_MODE)
+                    .padding(horizontal = 10.dp)
+                    .then(
+                        if (calendarMode == CalendarUiState.WEEK_MODE) {
+                            Modifier.verticalScroll(scrollableState)
+                        } else {
+                            Modifier
+                        }
+                    )
+            }
 
             LaunchedEffect(detailRecords) {
                 viewModel.calculateTotalDetailRecord()
             }
 
-            if (viewModel.calendarUiState.value == CalendarUiState.MONTH_MODE) {
-                resizeBar(Modifier)
-            }
-
             Column(
-                Modifier
-                    .padding(top = 20.dp)
-                    .fillMaxWidth()
-                    .wrapContentHeight(Alignment.Top, unbounded = true)
-                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp),
+                columnModifier,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 if (targetState) {
@@ -1059,7 +1071,6 @@ fun CalendarDetailView(
                         MonthModeContent(it, onModeChange)
                     }
                 }
-
             }
         }
     }
