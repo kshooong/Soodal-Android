@@ -199,7 +199,7 @@ fun CalendarView(
     }
 
     LaunchedEffect(weekPagerState.currentPage) {
-        if ((calendarMode == CalendarUiState.WEEK_MODE)) {
+        if (calendarMode in setOf(CalendarUiState.WEEK_MODE, CalendarUiState.TO_MONTH)) {
             currentWeek = todayWeek.minusWeeks(weekPagerState.currentPage.toLong())
 
             val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
@@ -211,7 +211,7 @@ fun CalendarView(
     }
 
     LaunchedEffect(monthPagerState.currentPage) {
-        if ((calendarMode == CalendarUiState.MONTH_MODE)) {
+        if (calendarMode in setOf(CalendarUiState.MONTH_MODE, CalendarUiState.TO_WEEK)) {
             currentMonth = today.withDayOfMonth(1).minusMonths(monthPagerState.currentPage.toLong())
 
             // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
@@ -311,7 +311,7 @@ fun CalendarView(
                                 clickedDate.atStartOfDay(ZoneOffset.systemDefault()).toInstant()
                             )
 
-                            val monthDifference = calculateMonthDifference(todayWeek, clickedDate)
+                            val monthDifference = calculateMonthDifference(today, clickedDate)
                             currentMonth =
                                 today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
                             coroutineScope.launch {
