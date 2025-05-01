@@ -219,9 +219,10 @@ fun NavigationView(
                         )
                     }
 
+                    var calendarMode by viewModel.calendarUiState
                     val animationDurationMills = 500
 
-                    LaunchedEffect(viewModel.calendarUiState.value) {
+                    LaunchedEffect(calendarMode) {
                         // 아래 주석은 달력 OFFSET방식 애니메이션 기준
                         if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
                             animatableOffset.animateTo(
@@ -246,6 +247,13 @@ fun NavigationView(
                                 tween(animationDurationMills)
                             )
                         }
+
+                        if (calendarMode == CalendarUiState.TO_WEEK) {
+                            calendarMode = CalendarUiState.WEEK_MODE
+                        } else if (calendarMode == CalendarUiState.TO_MONTH) {
+                            calendarMode = CalendarUiState.MONTH_MODE
+                        }
+
                     }
 
                     CalendarDetailView(
