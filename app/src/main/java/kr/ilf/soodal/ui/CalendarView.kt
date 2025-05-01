@@ -435,14 +435,7 @@ private fun MonthView(
     var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else (weekHeight + 5.dp) * currentWeekCount) }
     val animatedOffset by animateDpAsState(
         offset,
-        animationSpec = tween(500),
-        finishedListener = {
-            if (calendarMode == CalendarUiState.TO_WEEK) {
-                calendarMode = CalendarUiState.WEEK_MODE
-            } else if (calendarMode == CalendarUiState.TO_MONTH) {
-                calendarMode = CalendarUiState.MONTH_MODE
-            }
-        })
+        animationSpec = tween(500))
 
     LaunchedEffect(calendarMode) {
         offset = when (calendarMode) {
