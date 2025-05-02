@@ -431,7 +431,7 @@ private fun MonthView(
         selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
 
     val currentWeek by viewModel.currentWeek
-    val currentWeekCount = remember(currentWeek) {
+    val currentWeekCount = remember(currentWeek, selectedDate) {
         if (currentWeek.month == month.month && currentWeek.year == month.year) {
             getWeekOfMonth(currentWeek) - 1
         } else {
