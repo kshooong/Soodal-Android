@@ -202,7 +202,7 @@ fun CalendarView(
         if (calendarMode in setOf(CalendarUiState.WEEK_MODE, CalendarUiState.TO_MONTH)) {
             currentWeek = todayWeek.minusWeeks(weekPagerState.currentPage.toLong())
 
-            val monthDifference = calculateMonthDifference(todayWeek, currentWeek)
+            val monthDifference = calculateMonthDifference(today, currentWeek)
             currentMonth = today.withDayOfMonth(1).minusMonths(monthDifference.toLong())
             coroutineScope.launch {
                 monthPagerState.scrollToPage(monthDifference)
@@ -446,7 +446,9 @@ private fun MonthView(
         mutableIntStateOf(
             if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0 else with(
                 density
-            ) { (weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount }) // dp 를 px로 변환 시 소수점 차이로 offset값이 안맞아서 반올림 후 곱함
+            ) {
+                (weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount
+            }) // dp 를 px로 변환 시 소수점 차이로 offset값이 안맞아서 반올림 후 곱함
     }
 
     val animatedOffset = remember {
@@ -464,7 +466,8 @@ private fun MonthView(
             )
 
             CalendarUiState.TO_WEEK -> {
-                val targetOffset = with(density) { ((weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount) }
+                val targetOffset =
+                    with(density) { ((weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount) }
                 animatedOffset.animateTo(targetOffset, tween(500))
             }
         }
