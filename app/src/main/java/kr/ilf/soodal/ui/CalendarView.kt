@@ -214,15 +214,14 @@ fun CalendarView(
         if (calendarMode in setOf(CalendarUiState.MONTH_MODE, CalendarUiState.TO_WEEK)) {
             currentMonth = today.withDayOfMonth(1).minusMonths(monthPagerState.currentPage.toLong())
 
-            // 선택된 날이 이번 달에 있으면 그 날짜가 속한 주를 currentWeek으로 설정
-            if (selectedMonth.value.year == currentMonth.year && selectedMonth.value.month == currentMonth.month) {
-                val selectedDate = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
-                val selectedWeek = selectedDate.minusDays(selectedDate.dayOfWeek.value % 7 - 3L)
-                currentWeek = selectedWeek
-            } else {
-                // 바뀐 월의 첫 번째 주를 currentWeek으로 설정
-                val tempWeek = currentMonth.minusDays(currentMonth.dayOfWeek.value % 7 - 3L)
-                currentWeek = if (tempWeek.dayOfMonth > 4) tempWeek.plusWeeks(1L) else tempWeek
+            val selectedDate = selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
+            val minusDays = selectedDate.dayOfWeek.value % 7 - 3L
+            val selectedWeek = selectedDate.minusDays(minusDays)
+
+            currentWeek = when {
+                selectedMonth.value.year == currentMonth.year && selectedMonth.value.month == currentMonth.month -> selectedWeek
+                selectedWeek.plusDays(3L).month == currentMonth.month || selectedWeek.minusDays(3L).month == currentMonth.month -> selectedWeek
+                else -> currentMonth.minusDays(currentMonth.dayOfWeek.value % 7 - 3L)
             }
 
             val weekTarget = ChronoUnit.WEEKS.between(currentWeek, todayWeek).toInt()
@@ -434,10 +433,19 @@ private fun MonthView(
 
     val currentWeek by viewModel.currentWeek
     val currentWeekCount = remember(currentWeek, selectedDate) {
-        if (currentWeek.month == month.month && currentWeek.year == month.year) {
-            getWeekOfMonth(currentWeek) - 1
-        } else {
-            getWeekOfMonth(selectedDate) - 1
+        // msms 조건 재확인 필요 일단은 됨
+        if (viewModel.currentMonth.value.month == month.month)
+            if (currentWeek.month == month.month && currentWeek.year == month.year) {
+                getWeekOfMonth(currentWeek) - 1
+            } else if (currentWeek.plusDays(3L).month == month.month) {
+                getWeekOfMonth(currentWeek.plusDays(3L)) - 1
+            } else if (currentWeek.minusDays(3L).month == month.month) {
+                getWeekOfMonth(currentWeek.minusDays(3L)) - 1
+            } else {
+                getWeekOfMonth(selectedDate) - 1
+            }
+        else {
+            0
         }
     }
 
@@ -487,12 +495,19 @@ private fun MonthView(
 
         // 주 단위로 날짜를 표시
         for (week in 0..5) { // 최대 6주까지 표시
+            // msms 조건 재확인 필요 일단은 됨
             val isCurrentWeek =
-                if (currentWeek.month == month.month && currentWeek.year == month.year) {
-                    week == (getWeekOfMonth(currentWeek) - 1)
-                } else {
-                    week == (getWeekOfMonth(selectedDate) - 1)
-                }
+                if (viewModel.currentMonth.value.month == month.month) {
+                    if (currentWeek.month == month.month && currentWeek.year == month.year) {
+                        week == (getWeekOfMonth(currentWeek) - 1)
+                    } else if (currentWeek.plusDays(3L).month == month.month) {
+                        week == (getWeekOfMonth(currentWeek.plusDays(3L)) - 1)
+                    } else if (currentWeek.minusDays(3L).month == month.month) {
+                        week == (getWeekOfMonth(currentWeek.minusDays(3L)) - 1)
+                    } else {
+                        week == (getWeekOfMonth(selectedDate) - 1)
+                    }
+                } else false
 
             WeekView(
                 Modifier
