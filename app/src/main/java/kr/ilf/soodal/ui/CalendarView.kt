@@ -9,8 +9,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -422,6 +422,8 @@ private fun MonthView(
     weekHeight: Dp,
     onDateClick: (LocalDate) -> Unit
 ) {
+    val density = LocalDensity.current
+
     val daysInMonth = month.lengthOfMonth()
     val firstDayOfMonth = month.withDayOfMonth(1)
     val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // 0: Sunday, 6: Saturda
@@ -439,27 +441,41 @@ private fun MonthView(
         }
     }
 
-    var calendarMode by viewModel.calendarUiState
-    var offset by remember { mutableStateOf(if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0.dp else (weekHeight + 5.dp) * currentWeekCount) }
-    val animatedOffset by animateDpAsState(
-        offset,
-        animationSpec = tween(500)
-    )
-
-    LaunchedEffect(calendarMode) {
-        offset = when (calendarMode) {
-            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> 0.dp
-            CalendarUiState.TO_WEEK -> (weekHeight + 5.dp) * currentWeekCount
-        }
+    val calendarMode by viewModel.calendarUiState
+    val offset by remember {
+        mutableIntStateOf(
+            if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0 else with(
+                density
+            ) { (weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount }) // dp 를 px로 변환 시 소수점 차이로 offset값이 안맞아서 반올림 후 곱함
     }
 
+    val animatedOffset = remember {
+        Animatable(
+            initialValue = offset,
+            Int.VectorConverter,
+            Int.VisibilityThreshold
+        )
+    }
+    LaunchedEffect(calendarMode) {
+        when (calendarMode) {
+            CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH, CalendarUiState.WEEK_MODE -> animatedOffset.animateTo(
+                0,
+                tween(500)
+            )
+
+            CalendarUiState.TO_WEEK -> {
+                val targetOffset = with(density) { ((weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount) }
+                animatedOffset.animateTo(targetOffset, tween(500))
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .padding(horizontal = 5.dp)
             .wrapContentSize()
             .clipToBounds()
-            .offset { IntOffset(0, -animatedOffset.roundToPx()) }
+            .offset { IntOffset(0, -animatedOffset.value) }
             .background(Color.Transparent),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
@@ -811,6 +827,7 @@ private fun CalendarHeaderView(
     var isMonthModeUi by remember { mutableStateOf(true) }
 
     LaunchedEffect(calendarMode) {
+        Log.i("=-=-=", "CalendarHeaderView ${calendarMode.name}")
         isMonthModeUi = when (calendarMode) {
             CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH -> true
             CalendarUiState.TO_WEEK, CalendarUiState.WEEK_MODE -> false

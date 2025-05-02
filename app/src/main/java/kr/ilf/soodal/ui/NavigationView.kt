@@ -224,7 +224,7 @@ fun NavigationView(
 
                     LaunchedEffect(calendarMode) {
                         // 아래 주석은 달력 OFFSET방식 애니메이션 기준
-                        if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
+                        if (calendarMode == CalendarUiState.TO_WEEK) {
                             animatableOffset.animateTo(
                                 calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
                                 tween(animationDurationMills)
@@ -235,7 +235,9 @@ fun NavigationView(
                             animatableOffset.snapTo(
                                 0.dp,
                             )
-                        } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
+
+                            calendarMode = CalendarUiState.WEEK_MODE
+                        } else if (calendarMode == CalendarUiState.TO_MONTH) {
                             // 상세보기에서 스크롤위해 높이 수정한 높이 되돌리고 애니메이션 시작
                             animatableOffset.snapTo(
                                 calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
@@ -246,14 +248,9 @@ fun NavigationView(
                                 calendarHeight.dp,
                                 tween(animationDurationMills)
                             )
-                        }
 
-                        if (calendarMode == CalendarUiState.TO_WEEK) {
-                            calendarMode = CalendarUiState.WEEK_MODE
-                        } else if (calendarMode == CalendarUiState.TO_MONTH) {
                             calendarMode = CalendarUiState.MONTH_MODE
                         }
-
                     }
 
                     CalendarDetailView(
