@@ -786,6 +786,10 @@ private fun DayView(
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
                         // 거리 정보를 리스트로 변환
+                        if (record.totalDistance == "0") {
+                            return@let emptyList<Brush>()
+                        }
+
                         val distances = mapOf(
                             SolidColor(animatedColorCrawl) to record.crawl,
                             SolidColor(animatedColorBackStroke) to record.backStroke,
@@ -800,7 +804,7 @@ private fun DayView(
 
                         val ratioList = distributeDistance(distances, 8)
                         ratioList
-                    } ?: emptyList<Brush>()
+                    } ?: emptyList()
 
                 }
             }
