@@ -3,8 +3,6 @@ package kr.ilf.soodal.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -27,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -39,13 +38,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +55,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -67,8 +64,8 @@ import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
 import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
-import kr.ilf.soodal.ui.theme.ColorCalendarBgEnd
-import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
+import kr.ilf.soodal.ui.theme.ColorCalBgEnd
+import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -175,8 +172,8 @@ fun NavigationView(
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            Pair(0f, ColorCalendarBgStart),
-                            Pair(0.75f, ColorCalendarBgEnd),
+                            Pair(0f, ColorCalBgStart),
+                            Pair(0.75f, ColorCalBgEnd),
                             start = Offset(0f, 0f),
                             end = Offset(0.5f, Float.POSITIVE_INFINITY)
                         )
@@ -185,6 +182,7 @@ fun NavigationView(
             ) {
                 val weekHeight = 60.dp
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
+                val configuration = LocalConfiguration.current
                 val density = LocalDensity.current
 
                 CalendarView(
@@ -198,14 +196,6 @@ fun NavigationView(
                     contentsBg = Color.Transparent,
                     viewModel = viewModel
                 )
-                val configuration = LocalConfiguration.current
-                val initialHeight by remember {
-                    derivedStateOf {
-                        configuration.screenHeightDp - calendarHeight - 60
-                    }
-                }
-
-                Log.d("initialHeight", "initialHeight: $initialHeight")
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
@@ -214,40 +204,61 @@ fun NavigationView(
                     visible = detailRecord.isNotEmpty(), enter = UpEnterTransition,
                     exit = DownExitTransition
                 ) {
-                    val mySaver = Saver<Dp, Bundle>(
-                        save = { Bundle().apply { putFloat("detailHeight", it.value) } },
-                        restore = { it.getFloat("detailHeight").dp }
-                    )
-                    val detailHeight = rememberSaveable(stateSaver = mySaver) {
-                        mutableStateOf(initialHeight.dp)
-                    }
-
-                    val animatableHeight = remember {
+//                    val mySaver = Saver<Dp, Bundle>(
+//                        save = { Bundle().apply { putFloat("detailHeight", it.value) } },
+//                        restore = { it.getFloat("detailHeight").dp }
+//                    )
+//
+                    val initHeight = configuration.screenHeightDp.dp - 60.dp
+                    val detailHeight = remember { mutableStateOf(initHeight) }
+                    val animatableOffset = remember {
                         Animatable(
-                            initialValue = detailHeight.value,
+                            initialValue = calendarHeight.dp,
                             Dp.VectorConverter,
                             Dp.VisibilityThreshold
                         )
                     }
 
-                    val animationDurationMills = 400
+                    var calendarMode by viewModel.calendarUiState
+                    val animationDurationMills = 500
 
-                    LaunchedEffect(viewModel.calendarUiState.value) {
-                        // 아래 주석은 OFFSET방식 애니메이션 기준
-                        if (viewModel.calendarUiState.value == CalendarUiState.TO_WEEK) {
-                            // 달력 애니메이션 종료되고 완전히 WEEK_MODE가 되면 initialHeight 가 큰 값으로 변함 -> DetailView 애니메이션 실행 시 계산해서 넣어줘야함
-                            animatableHeight.animateTo(initialHeight.dp + ((weekHeight.value + 5) * 5).dp, tween(animationDurationMills))
-                        } else if (viewModel.calendarUiState.value == CalendarUiState.TO_MONTH) {
-                            // TO_MONTH 가 되면 바로 initialHeight 가 작은 값으로 변함 -> DetailView 애니메이션 실행 시 계산하지 않고 사용가능
-                            animatableHeight.animateTo(initialHeight.dp, tween(animationDurationMills))
+                    LaunchedEffect(calendarMode) {
+                        // 아래 주석은 달력 OFFSET방식 애니메이션 기준
+                        if (calendarMode == CalendarUiState.TO_WEEK) {
+                            animatableOffset.animateTo(
+                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                tween(animationDurationMills)
+                            )
+
+                            // 상세보기에서 스크롤위해 높이 수정
+                            detailHeight.value = initHeight - animatableOffset.value
+                            animatableOffset.snapTo(
+                                0.dp,
+                            )
+
+                            calendarMode = CalendarUiState.WEEK_MODE
+                        } else if (calendarMode == CalendarUiState.TO_MONTH) {
+                            // 상세보기에서 스크롤위해 높이 수정한 높이 되돌리고 애니메이션 시작
+                            animatableOffset.snapTo(
+                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                            )
+                            detailHeight.value = initHeight
+
+                            animatableOffset.animateTo(
+                                calendarHeight.dp,
+                                tween(animationDurationMills)
+                            )
+
+                            calendarMode = CalendarUiState.MONTH_MODE
                         }
                     }
 
                     CalendarDetailView(
                         Modifier
+                            .offset { IntOffset(0, animatableOffset.value.roundToPx()) }
                             .padding(0.dp, 0.dp, 0.dp, 60.dp)
                             .fillMaxWidth()
-                            .height(animatableHeight.value)
+                            .height(detailHeight.value)
                             .navigationBarsPadding()
                             .background(
                                 Color.White,
@@ -262,9 +273,9 @@ fun NavigationView(
                         resizeBar = { resizeBarModifier ->
                             ResizeBar(
                                 resizeBarModifier,
-                                animatableHeight,
-                                initialHeight.dp,
-                                (calendarHeight + initialHeight - 5).dp
+                                animatableOffset,
+                                calendarHeight.dp,
+                                5.dp
                             )
                         }
                     )
