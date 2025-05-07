@@ -432,7 +432,7 @@ private fun MonthView(
         selectedMonth.value.withDayOfMonth(selectedDateStr.value.toInt())
 
     val currentWeek by viewModel.currentWeek
-    val currentWeekCount = remember(currentWeek, selectedDate) {
+    val currentWeekCount = remember(currentWeek, selectedDate, viewModel.currentMonth.value) {
         // msms 조건 재확인 필요 일단은 됨
         if (viewModel.currentMonth.value.month == month.month)
             if (currentWeek.month == month.month && currentWeek.year == month.year) {
