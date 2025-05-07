@@ -64,8 +64,8 @@ import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
 import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
-import kr.ilf.soodal.ui.theme.ColorCalendarBgEnd
-import kr.ilf.soodal.ui.theme.ColorCalendarBgStart
+import kr.ilf.soodal.ui.theme.ColorCalBgEnd
+import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -172,8 +172,8 @@ fun NavigationView(
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            Pair(0f, ColorCalendarBgStart),
-                            Pair(0.75f, ColorCalendarBgEnd),
+                            Pair(0f, ColorCalBgStart),
+                            Pair(0.75f, ColorCalBgEnd),
                             start = Offset(0f, 0f),
                             end = Offset(0.5f, Float.POSITIVE_INFINITY)
                         )
