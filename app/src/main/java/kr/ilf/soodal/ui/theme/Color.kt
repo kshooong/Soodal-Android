@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 
 val SkyBlue4 = Color(0xFF9ED3FF)
 val SkyBlue6 = Color(0xFFE7F3FF)
+val SmokeBlue3 = Color(0xFF72AAFF)
 val Blue3 = Color(0xFF499CFB)
 val Blue4 = Color(0xFF9DC0FF)
 
@@ -26,21 +27,22 @@ val Blue4 = Color(0xFF9DC0FF)
 //val ColorCalendarOnDateBg = Color(0xFFFCFCFC)
 //val ColorCalendarDateBg = Color(0xFFE5E5E5)
 
-val ColorCalendarBgStart = Color(0xFFCBEDFF)
-val ColorCalendarBgEnd = Blue4
-val ColorCalendarItemBg = Color(0xFFE7F3FF)
-val ColorCalendarItemBorder = Blue3
-val ColorCalendarOnItemBg = Color(0xFFE7F3FF)
-val ColorCalendarOnItemBorder = Blue3
-val ColorCalendarDate = Color(0xFF5E5959)
-val ColorCalendarDateBg = Color(0xFFF9F9F9)
-val ColorCalendarToday = Color(0xFFF9F9F9)
-val ColorCalendarTodayBg = Blue3
-val ColorCalendarDetailBg = Color(0xFFEDEDED)
+val ColorCalBgStart = Color(0xFFCBEDFF)
+val ColorCalBgEnd = Blue4
+val ColorCalItemBg = Color(0xFFE7F3FF)
+val ColorCalItemBorder = Blue3
+val ColorCalSelectedBg = Color(0xFFE7F3FF)
+val ColorCalSelectedBorder = Blue3
+val ColorCalSelectedBorderSecondary = SmokeBlue3
+val ColorCalDate = Color(0xFF5E5959)
+val ColorCalDateBg = Color(0xFFF9F9F9)
+val ColorCalToday = Blue3
+val ColorCalTodayBg = Blue3
+val ColorCalDetailBg = Color(0xFFEDEDED)
 
-val ColorCalendarItemBgDis = Color(0xFFF4F4F4)
-val ColorCalendarDateBgDis = Color(0xFFE5E5E5)
-val ColorCalendarDateDis = Color(0xFFBCBFD1)
+val ColorCalItemBgDis = Color(0xFFF4F4F4)
+val ColorCalDateBgDis = Color(0xFFE5E5E5)
+val ColorCalDateDis = Color(0xFFBCBFD1)
 
 val ColorBottomBar = Color(0xFFFDFDFD)
 val ColorBottomBarDivider = Color(0xFFE5E5E5)

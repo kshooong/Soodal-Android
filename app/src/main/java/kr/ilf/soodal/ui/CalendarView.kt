@@ -107,16 +107,13 @@ import kr.ilf.soodal.ui.theme.ColorBreastStroke
 import kr.ilf.soodal.ui.theme.ColorBreastStrokeSecondary
 import kr.ilf.soodal.ui.theme.ColorButterfly
 import kr.ilf.soodal.ui.theme.ColorButterflySecondary
-import kr.ilf.soodal.ui.theme.ColorCalendarDate
-import kr.ilf.soodal.ui.theme.ColorCalendarDateBg
-import kr.ilf.soodal.ui.theme.ColorCalendarDateBgDis
-import kr.ilf.soodal.ui.theme.ColorCalendarDateDis
-import kr.ilf.soodal.ui.theme.ColorCalendarItemBg
-import kr.ilf.soodal.ui.theme.ColorCalendarItemBgDis
-import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBg
-import kr.ilf.soodal.ui.theme.ColorCalendarOnItemBorder
-import kr.ilf.soodal.ui.theme.ColorCalendarToday
-import kr.ilf.soodal.ui.theme.ColorCalendarTodayBg
+import kr.ilf.soodal.ui.theme.ColorCalDate
+import kr.ilf.soodal.ui.theme.ColorCalDateDis
+import kr.ilf.soodal.ui.theme.ColorCalItemBg
+import kr.ilf.soodal.ui.theme.ColorCalSelectedBg
+import kr.ilf.soodal.ui.theme.ColorCalSelectedBorder
+import kr.ilf.soodal.ui.theme.ColorCalSelectedBorderSecondary
+import kr.ilf.soodal.ui.theme.ColorCalToday
 import kr.ilf.soodal.ui.theme.ColorCrawl
 import kr.ilf.soodal.ui.theme.ColorCrawlSecondary
 import kr.ilf.soodal.ui.theme.ColorKickBoard
@@ -567,21 +564,15 @@ private fun WeekView(
                 // 이전 달 날짜 표시
                 val preMonth = month.minusMonths(1L)
                 val prevDay = daysInPrevMonth - firstDayOfWeek + day + 1
-                var bgColor = ColorCalendarItemBgDis
-                var borderColor = Color.Transparent
-                val isThisMonth =
-                    calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek // msms 변수명 변경 필요 isThisMonth 다른 곳도 22
 
-                if (isThisMonth) {
-                    val sameDate = prevDay.toString() == selectedDateStr.value
-                    val sameMonth = preMonth.month == selectedMonth.value.month
-                    if (sameDate && sameMonth) {
-                        borderColor = ColorCalendarOnItemBorder
-                        bgColor = ColorCalendarOnItemBg
-                    } else {
-                        bgColor = ColorCalendarItemBg
-                    }
-                }
+                val isNotMonthMode = calendarMode != CalendarUiState.MONTH_MODE
+                val isActive = isNotMonthMode && isCurrentWeek
+                val sameDate = prevDay.toString() == selectedDateStr.value
+                val sameMonth = preMonth.month == selectedMonth.value.month
+
+                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val borderColor =
+                    if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
                 val animatedBgColor by animateColorAsState(bgColor, animationSpec = tween())
 
@@ -597,29 +588,25 @@ private fun WeekView(
                     month = preMonth.withDayOfMonth(prevDay),
                     day = prevDay.toString(),
                     today = today,
-                    isThisMonth = isThisMonth,
+                    isActive = isActive,
                     onDateClick = onDateClick
                 )
 
             } else if (dayCounter > daysInMonth) {
                 val nextMonth = month.plusMonths(1L)
                 val nextDay = dayCounter - daysInMonth
-                var bgColor = ColorCalendarItemBgDis
-                var borderColor = Color.Transparent
-                val isThisMonth = calendarMode != CalendarUiState.MONTH_MODE && isCurrentWeek
 
-                if (isThisMonth) {
-                    val sameDate = nextDay.toString() == selectedDateStr.value
-                    val sameMonth = nextMonth.month == selectedMonth.value.month
-                    if (sameDate && sameMonth) {
-                        borderColor = ColorCalendarOnItemBorder
-                        bgColor = ColorCalendarOnItemBg
-                    } else {
-                        bgColor = ColorCalendarItemBg
-                    }
-                }
+                val isNotMonthMode = calendarMode != CalendarUiState.MONTH_MODE
+                val isActive = isNotMonthMode && isCurrentWeek
+                val sameDate = nextDay.toString() == selectedDateStr.value
+                val sameMonth = nextMonth.month == selectedMonth.value.month
+
+                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val borderColor =
+                    if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
                 val animatedBgColor by animateColorAsState(bgColor, animationSpec = tween())
+
                 // 다음 달 날짜 표시
                 DayView(
                     modifier = dayViewModifier
@@ -633,7 +620,7 @@ private fun WeekView(
                     month = nextMonth.withDayOfMonth(nextDay),
                     day = nextDay.toString(),
                     today = today,
-                    isThisMonth = isThisMonth,
+                    isActive = isActive,
                     onDateClick = onDateClick
                 )
 
@@ -644,15 +631,15 @@ private fun WeekView(
                     val sameDate = dayCounter.toString() == selectedDateStr.value
                     val sameMonth = month.month == selectedMonth.value.month
                     val borderColor = if (sameDate && sameMonth) {
-                        ColorCalendarOnItemBorder
+                        ColorCalSelectedBorder
                     } else {
                         Color.Transparent
                     }
 
                     val bgColor = if (sameDate && sameMonth) {
-                        ColorCalendarOnItemBg
+                        ColorCalSelectedBg
                     } else {
-                        ColorCalendarItemBg
+                        ColorCalItemBg
                     }
 
                     DayView(
@@ -667,7 +654,7 @@ private fun WeekView(
                         month = month.withDayOfMonth(dayCounter),
                         day = dayCounter.toString(),
                         today = today,
-                        isThisMonth = true,
+                        isActive = true,
                         onDateClick = onDateClick
                     )
 
@@ -685,12 +672,11 @@ private fun DayView(
     month: LocalDate,
     day: String,
     today: LocalDate,
-    isThisMonth: Boolean,
+    isActive: Boolean,
     onDateClick: (LocalDate) -> Unit
 ) {
     val calendarMode by viewModel.calendarUiState
     val thisDate = month.withDayOfMonth(day.toInt())
-    val currentMonth by viewModel.currentMonth
 
     Box(modifier = modifier
         .clickable(
@@ -705,15 +691,17 @@ private fun DayView(
         .padding(1.dp))
     {
         val dateBorderColor =
-            if (today == thisDate) ColorCalendarOnItemBorder else Color.Transparent
+//            if (today == thisDate) ColorCalSelectedBorder else
+                Color.Transparent
         val dateBgColor =
-            if (isThisMonth)
-                if (today == thisDate) ColorCalendarTodayBg else ColorCalendarDateBg
-            else ColorCalendarDateBgDis
+//            if (isActive)
+//                if (today == thisDate) ColorCalTodayBg else ColorCalDateBg
+//            else
+                Color.Transparent
         val dateTextColor =
-            if (isThisMonth)
-                if (today == thisDate) ColorCalendarToday else ColorCalendarDate
-            else ColorCalendarDateDis
+            if (isActive)
+                if (today == thisDate) ColorCalToday else ColorCalDate
+            else ColorCalDateDis
 
         val animatedTextColor by animateColorAsState(dateTextColor, animationSpec = tween())
 
@@ -762,14 +750,14 @@ private fun DayView(
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val colorCrawl = if (isThisMonth) ColorCrawl else ColorCrawlSecondary
-            val colorBackStroke = if (isThisMonth) ColorBackStroke else ColorBackStrokeSecondary
+            val colorCrawl = if (isActive) ColorCrawl else ColorCrawlSecondary
+            val colorBackStroke = if (isActive) ColorBackStroke else ColorBackStrokeSecondary
             val colorBreastStroke =
-                if (isThisMonth) ColorBreastStroke else ColorBreastStrokeSecondary
-            val colorButterfly = if (isThisMonth) ColorButterfly else ColorButterflySecondary
-            val colorKickBoard = if (isThisMonth) ColorKickBoard else ColorKickBoardSecondary
-            val colorMixStart = if (isThisMonth) ColorMixStart else ColorMixStartSecondary
-            val colorMixEnd = if (isThisMonth) ColorMixEnd else ColorMixEndSecondary
+                if (isActive) ColorBreastStroke else ColorBreastStrokeSecondary
+            val colorButterfly = if (isActive) ColorButterfly else ColorButterflySecondary
+            val colorKickBoard = if (isActive) ColorKickBoard else ColorKickBoardSecondary
+            val colorMixStart = if (isActive) ColorMixStart else ColorMixStartSecondary
+            val colorMixEnd = if (isActive) ColorMixEnd else ColorMixEndSecondary
 
             val animatedColorCrawl by animateColorAsState(colorCrawl, animationSpec = tween())
             val animatedColorBackStroke by animateColorAsState(
@@ -794,7 +782,7 @@ private fun DayView(
             )
             val animatedColorMixEnd by animateColorAsState(colorMixEnd, animationSpec = tween())
 
-            val brushList = remember(isThisMonth) {
+            val brushList = remember(isActive) {
                 derivedStateOf {
                     dailyRecord.value?.let { record ->
                         // 거리 정보를 리스트로 변환
