@@ -110,6 +110,7 @@ import kr.ilf.soodal.ui.theme.ColorButterflySecondary
 import kr.ilf.soodal.ui.theme.ColorCalDate
 import kr.ilf.soodal.ui.theme.ColorCalDateDis
 import kr.ilf.soodal.ui.theme.ColorCalItemBg
+import kr.ilf.soodal.ui.theme.ColorCalItemBgDis
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBg
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBorder
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBorderSecondary
@@ -570,7 +571,11 @@ private fun WeekView(
                 val sameDate = prevDay.toString() == selectedDateStr.value
                 val sameMonth = preMonth.month == selectedMonth.value.month
 
-                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val bgColor = when {
+                    sameDate && sameMonth && isActive -> ColorCalSelectedBg
+                        isActive -> ColorCalItemBg
+                            else  -> ColorCalItemBgDis
+                }
                 val borderColor =
                     if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
@@ -601,7 +606,11 @@ private fun WeekView(
                 val sameDate = nextDay.toString() == selectedDateStr.value
                 val sameMonth = nextMonth.month == selectedMonth.value.month
 
-                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val bgColor = when {
+                    sameDate && sameMonth && isActive -> ColorCalSelectedBg
+                    isActive -> ColorCalItemBg
+                    else  -> ColorCalItemBgDis
+                }
                 val borderColor =
                     if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
@@ -697,7 +706,7 @@ private fun DayView(
 //            if (isActive)
 //                if (today == thisDate) ColorCalTodayBg else ColorCalDateBg
 //            else
-                Color.Transparent
+            Color.Transparent
         val dateTextColor =
             if (isActive)
                 if (today == thisDate) ColorCalToday else ColorCalDate
