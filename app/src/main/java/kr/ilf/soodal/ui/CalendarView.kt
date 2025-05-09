@@ -484,7 +484,7 @@ private fun MonthView(
 
             CalendarUiState.TO_WEEK -> {
                 val targetOffset =
-                    with(density) { ((weekHeight + spacing).toPx().roundToInt() * currentWeekCount) }
+                    with(density) { (weekHeight + spacing).toPx().roundToInt() * currentWeekCount }
                 animatedOffset.animateTo(targetOffset, tween(500))
             }
         }
@@ -724,8 +724,15 @@ private fun RowScope.DayView(
 
         // 총 거리
         dailyRecord?.let {
-            Row(modifier = Modifier.align(Alignment.TopCenter), verticalAlignment = Alignment.CenterVertically) {
-                Image(ImageBitmap.imageResource(R.drawable.ic_swimming2), contentDescription = "수영 거리", modifier = Modifier.size(7.5.dp))
+            Row(
+                modifier = Modifier.align(Alignment.TopCenter),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    ImageBitmap.imageResource(R.drawable.ic_swimming2),
+                    contentDescription = "수영 거리",
+                    modifier = Modifier.size(7.5.dp)
+                )
                 Spacer(Modifier.width(1.dp))
                 Text(
                     text = it.totalDistance!!,
@@ -737,10 +744,31 @@ private fun RowScope.DayView(
             }
         }
 
+        // msms 아이콘 테스트
+        val rId = listOf(
+            R.drawable.ic_calorie,
+            R.drawable.ic_calorie2,
+            R.drawable.ic_calorie3,
+            R.drawable.ic_calorie4,
+            R.drawable.ic_calorie5,
+            R.drawable.ic_calorie6,
+            R.drawable.ic_calorie7,
+            R.drawable.ic_calorie8,
+            R.drawable.ic_calorie9
+        )[viewModel.testState.value]
+
         // 총 칼로리 소모
         dailyRecord?.let {
-            Row(modifier = Modifier.align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically) {
-                Image(ImageBitmap.imageResource(R.drawable.ic_calorie), contentDescription = "칼로리", modifier = Modifier.size(7.5.dp))
+            Row(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    ImageBitmap.imageResource(rId),
+                    contentDescription = "칼로리",
+                    modifier = Modifier.size(7.5.dp)
+                )
+                Spacer(Modifier.width(1.dp))
                 Text(
                     text = "${it.totalEnergyBurned!!.toFloat().roundToInt()}",
                     color = Color.Gray,
@@ -754,7 +782,7 @@ private fun RowScope.DayView(
         // 날짜 박스
         Box(
             modifier = Modifier
-                .offset(y= (-0.5).dp)
+                .offset(y = (-0.5).dp)
                 .align(Alignment.Center)
                 .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
@@ -775,7 +803,7 @@ private fun RowScope.DayView(
 
         Column(
             modifier = Modifier
-                .offset(y= (-0.5).dp)
+                .offset(y = (-0.5).dp)
                 .fillMaxWidth()
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -855,7 +883,7 @@ private fun RowScope.DayView(
 @Composable
 private fun CalendarHeaderView(
     viewModel: SwimmingViewModel,
-    height:Dp,
+    height: Dp,
     weekSpacing: Dp,
     contentsBg: Color
 ) {
@@ -884,7 +912,17 @@ private fun CalendarHeaderView(
         }
     }
 
-    Column(Modifier.height(height), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier
+            .height(height)
+            // msms 아이콘 테스트
+            .clickable {
+                if (viewModel.testState.value == 8) viewModel.testState.value =
+                    0 else viewModel.testState.value += 1
+            },
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
             Modifier
                 .graphicsLayer {
