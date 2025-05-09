@@ -29,9 +29,9 @@ val Blue4 = Color(0xFF9DC0FF)
 
 val ColorCalBgStart = Color(0xFFCBEDFF)
 val ColorCalBgEnd = Blue4
-val ColorCalItemBg = Color(0xFFE7F3FF)
+val ColorCalItemBg = Color(0xFFF4F6FF)
 val ColorCalItemBorder = Blue3
-val ColorCalSelectedBg = Color(0xFFE7F3FF)
+val ColorCalSelectedBg = ColorCalItemBg
 val ColorCalSelectedBorder = Blue3
 val ColorCalSelectedBorderSecondary = SmokeBlue3
 val ColorCalDate = Color(0xFF5E5959)
@@ -40,7 +40,7 @@ val ColorCalToday = Blue3
 val ColorCalTodayBg = Blue3
 val ColorCalDetailBg = Color(0xFFEDEDED)
 
-val ColorCalItemBgDis = Color(0xFFF4F4F4)
+val ColorCalItemBgDis = ColorCalItemBg.copy(alpha = 0.7f)
 val ColorCalDateBgDis = Color(0xFFE5E5E5)
 val ColorCalDateDis = Color(0xFFBCBFD1)
 

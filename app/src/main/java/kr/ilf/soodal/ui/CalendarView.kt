@@ -704,7 +704,7 @@ private fun RowScope.DayView(
             indication = null,
             onClick = { onDateClick(thisDate) }
         )
-        .padding(1.dp)
+        .padding(0.5.dp)
 
     Box(modifier = modifier) {
         val dateBorderColor =
@@ -731,12 +731,13 @@ private fun RowScope.DayView(
                 Image(
                     ImageBitmap.imageResource(R.drawable.ic_swimming2),
                     contentDescription = "수영 거리",
-                    modifier = Modifier.size(7.5.dp)
+                    modifier = Modifier.size(7.5.dp),
+                    alpha = if (isActive) 1f else 0.7f
                 )
                 Spacer(Modifier.width(1.dp))
                 Text(
                     text = it.totalDistance!!,
-                    color = Color.Gray,
+                    color = Color.Gray.copy(alpha = if (isActive) 1f else 0.7f),
                     fontFamily = notoSansKr,
                     fontSize = 7.5.dp.toSp,
                     lineHeight = 7.5.dp.toSp
@@ -754,7 +755,10 @@ private fun RowScope.DayView(
             R.drawable.ic_calorie6,
             R.drawable.ic_calorie7,
             R.drawable.ic_calorie8,
-            R.drawable.ic_calorie9
+            R.drawable.ic_calorie9,
+            R.drawable.ic_calorie10,
+            R.drawable.ic_calorie11,
+            R.drawable.ic_calorie12,
         )[viewModel.testState.value]
 
         // 총 칼로리 소모
@@ -766,12 +770,13 @@ private fun RowScope.DayView(
                 Image(
                     ImageBitmap.imageResource(rId),
                     contentDescription = "칼로리",
-                    modifier = Modifier.size(7.5.dp)
+                    modifier = Modifier.size(7.5.dp),
+                    alpha = if (isActive) 1f else 0.7f
                 )
                 Spacer(Modifier.width(1.dp))
                 Text(
                     text = "${it.totalEnergyBurned!!.toFloat().roundToInt()}",
-                    color = Color.Gray,
+                    color = Color.Gray.copy(alpha = if (isActive) 1f else 0.7f),
                     fontFamily = notoSansKr,
                     fontSize = 7.5.dp.toSp,
                     lineHeight = 7.5.dp.toSp
@@ -917,7 +922,7 @@ private fun CalendarHeaderView(
             .height(height)
             // msms 아이콘 테스트
             .clickable {
-                if (viewModel.testState.value == 8) viewModel.testState.value =
+                if (viewModel.testState.value == 11) viewModel.testState.value =
                     0 else viewModel.testState.value += 1
             },
         verticalArrangement = Arrangement.SpaceBetween,
