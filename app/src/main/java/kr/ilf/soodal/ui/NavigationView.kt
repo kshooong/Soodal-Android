@@ -20,6 +20,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,10 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -201,6 +204,22 @@ fun NavigationView(
                     contentsBg = Color.Transparent,
                     viewModel = viewModel
                 )
+
+                Box(
+                    Modifier
+                        .padding(bottom = 60.dp)
+                        .height(configuration.screenHeightDp.dp - 60.dp - calendarHeight.toDp() - 200.dp)
+                        .align(Alignment.BottomCenter)
+                ) {
+                    Image(
+                        ImageBitmap.imageResource(R.drawable.ic_swimming_bg),
+                        contentDescription = "",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .focusable(false),
+                        alpha = 0.2f
+                    )
+                }
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
