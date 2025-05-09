@@ -180,7 +180,10 @@ fun NavigationView(
                     )
                     .statusBarsPadding()
             ) {
-                val weekHeight = 60.dp
+                val headerHeight = 73.dp
+                val weekHeight = 62.dp
+                val spacing = 5.dp
+                val weekModeOffset = remember { headerHeight + weekHeight + spacing + 5.dp }
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
                 val configuration = LocalConfiguration.current
                 val density = LocalDensity.current
@@ -192,7 +195,9 @@ fun NavigationView(
                             calendarHeight =
                                 with(density) { coordinates.size.height.toDp().value }
                         },
+                    headerHeight = headerHeight,
                     weekHeight = weekHeight,
+                    spacing = spacing,
                     contentsBg = Color.Transparent,
                     viewModel = viewModel
                 )
@@ -223,10 +228,9 @@ fun NavigationView(
                     val animationDurationMills = 500
 
                     LaunchedEffect(calendarMode) {
-                        // 아래 주석은 달력 OFFSET방식 애니메이션 기준
                         if (calendarMode == CalendarUiState.TO_WEEK) {
                             animatableOffset.animateTo(
-                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                weekModeOffset,
                                 tween(animationDurationMills)
                             )
 
@@ -240,7 +244,7 @@ fun NavigationView(
                         } else if (calendarMode == CalendarUiState.TO_MONTH) {
                             // 상세보기에서 스크롤위해 높이 수정한 높이 되돌리고 애니메이션 시작
                             animatableOffset.snapTo(
-                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                weekModeOffset,
                             )
                             detailHeight.value = initHeight
 
