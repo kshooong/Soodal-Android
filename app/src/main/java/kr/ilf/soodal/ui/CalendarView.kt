@@ -785,19 +785,30 @@ private fun RowScope.DayView(
         }
 
         // 날짜 박스
-        Box(
+        Row(
             modifier = Modifier
                 .offset(y = (-0.5).dp)
                 .align(Alignment.Center)
-                .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(dateBgColor, RoundedCornerShape(5.dp))
+                .background(dateBgColor, RoundedCornerShape(5.dp)),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (calendarMode == CalendarUiState.WEEK_MODE && day == "1")
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = "${month.month.value}.",
+                    fontSize = 8.sp,
+                    lineHeight = 8.sp,
+                    textAlign = TextAlign.Center,
+                    fontFamily = notoSansKr,
+                    color = animatedTextColor
+                )
+
             Text(
                 modifier = Modifier
-                    .wrapContentSize()
-                    .align(Alignment.Center),
-                text = day, // 날짜만 표시
+                    .wrapContentSize(),
+                text = day,
                 fontSize = 10.sp,
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
