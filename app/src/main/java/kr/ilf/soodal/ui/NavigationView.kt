@@ -205,10 +205,12 @@ fun NavigationView(
                     viewModel = viewModel
                 )
 
+                // 배경 아이콘
                 Box(
                     Modifier
                         .padding(bottom = 60.dp)
-                        .height(configuration.screenHeightDp.dp - 60.dp - calendarHeight.toDp() - 200.dp)
+                        .height(configuration.screenHeightDp.dp - 60.dp - calendarHeight.dp)
+                        .padding(bottom = 5.dp)
                         .align(Alignment.BottomCenter)
                 ) {
                     Image(
