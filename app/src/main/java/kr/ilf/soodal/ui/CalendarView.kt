@@ -18,6 +18,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,12 +29,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -70,6 +74,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -80,6 +85,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -110,6 +116,7 @@ import kr.ilf.soodal.ui.theme.ColorButterflySecondary
 import kr.ilf.soodal.ui.theme.ColorCalDate
 import kr.ilf.soodal.ui.theme.ColorCalDateDis
 import kr.ilf.soodal.ui.theme.ColorCalItemBg
+import kr.ilf.soodal.ui.theme.ColorCalItemBgDis
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBg
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBorder
 import kr.ilf.soodal.ui.theme.ColorCalSelectedBorderSecondary
@@ -150,7 +157,9 @@ val selectedMonthSaver =
 @Composable
 fun CalendarView(
     modifier: Modifier,
+    headerHeight: Dp,
     weekHeight: Dp,
+    spacing: Dp,
     contentsBg: Color,
     viewModel: SwimmingViewModel
 ) {
@@ -232,7 +241,7 @@ fun CalendarView(
     }
 
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        CalendarHeaderView(viewModel, contentsBg)
+        CalendarHeaderView(viewModel, headerHeight, spacing, contentsBg)
 
         HorizontalPager(
             state = if (calendarMode == CalendarUiState.WEEK_MODE) weekPagerState else monthPagerState,
@@ -266,7 +275,7 @@ fun CalendarView(
 
                 WeekView(
                     Modifier
-                        .padding(horizontal = 5.dp)
+                        .padding(horizontal = 2.dp)
                         .fillMaxWidth()
                         .wrapContentHeight(),
                     weekOfMonth,
@@ -281,6 +290,7 @@ fun CalendarView(
                     selectedMonth,
                     isCurrentWeek,
                     weekHeight,
+                    spacing,
                     {}
                 ) { clickedDate ->
                     Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
@@ -325,7 +335,8 @@ fun CalendarView(
                     selectedMonth,
                     selectedDateStr,
                     today,
-                    weekHeight
+                    weekHeight,
+                    spacing,
                 ) { clickedDate ->
                     when {
                         // 오늘보다 이후
@@ -416,6 +427,7 @@ private fun MonthView(
     selectedDateStr: MutableState<String>,
     today: LocalDate,
     weekHeight: Dp,
+    spacing: Dp,
     onDateClick: (LocalDate) -> Unit
 ) {
     val density = LocalDensity.current
@@ -452,7 +464,7 @@ private fun MonthView(
             if (calendarMode == CalendarUiState.MONTH_MODE || calendarMode == CalendarUiState.WEEK_MODE) 0 else with(
                 density
             ) {
-                (weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount
+                (weekHeight + spacing).toPx().roundToInt() * currentWeekCount
             }) // dp 를 px로 변환 시 소수점 차이로 offset값이 안맞아서 반올림 후 곱함
     }
 
@@ -472,7 +484,7 @@ private fun MonthView(
 
             CalendarUiState.TO_WEEK -> {
                 val targetOffset =
-                    with(density) { ((weekHeight + 5.dp).toPx().roundToInt() * currentWeekCount) }
+                    with(density) { (weekHeight + spacing).toPx().roundToInt() * currentWeekCount }
                 animatedOffset.animateTo(targetOffset, tween(500))
             }
         }
@@ -480,12 +492,12 @@ private fun MonthView(
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 5.dp)
+            .padding(horizontal = 2.dp)
             .wrapContentSize()
             .clipToBounds()
             .offset { IntOffset(0, -animatedOffset.value) }
             .background(Color.Transparent),
-        verticalArrangement = Arrangement.spacedBy(5.dp)
+        verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // 날짜 표시
         var dayCounter = 1
@@ -522,6 +534,7 @@ private fun MonthView(
                 selectedMonth,
                 isCurrentWeek,
                 weekHeight,
+                spacing,
                 updateDayCounter = { dayCounter = it },
                 onDateClick
             )
@@ -544,6 +557,7 @@ private fun WeekView(
     selectedMonth: MutableState<LocalDate>,
     isCurrentWeek: Boolean,
     dayHeight: Dp,
+    spacing: Dp,
     updateDayCounter: (Int) -> Unit,
     onDateClick: (LocalDate) -> Unit
 ) {
@@ -551,13 +565,9 @@ private fun WeekView(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
+        horizontalArrangement = Arrangement.spacedBy(spacing)
     ) {
         val calendarMode by viewModel.calendarUiState
-
-        val dayViewModifier = Modifier
-            .weight(1f)
-            .height(dayHeight)
 
         for (day in 0..6) {
             if (week == 0 && day < firstDayOfWeek) {
@@ -570,21 +580,21 @@ private fun WeekView(
                 val sameDate = prevDay.toString() == selectedDateStr.value
                 val sameMonth = preMonth.month == selectedMonth.value.month
 
-                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val bgColor = when {
+                    sameDate && sameMonth && isActive -> ColorCalSelectedBg
+                    isActive -> ColorCalItemBg
+                    else -> ColorCalItemBgDis
+                }
                 val borderColor =
                     if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
                 val animatedBgColor by animateColorAsState(bgColor, animationSpec = tween())
 
                 DayView(
-                    modifier = dayViewModifier
-                        .background(animatedBgColor, shape = RoundedCornerShape(14.dp))
-                        .border(
-                            1.5.dp,
-                            borderColor,
-                            RoundedCornerShape(14.dp)
-                        ),
                     viewModel = viewModel,
+                    height = dayHeight,
+                    backgroundColor = animatedBgColor,
+                    borderColor = borderColor,
                     month = preMonth.withDayOfMonth(prevDay),
                     day = prevDay.toString(),
                     today = today,
@@ -601,7 +611,11 @@ private fun WeekView(
                 val sameDate = nextDay.toString() == selectedDateStr.value
                 val sameMonth = nextMonth.month == selectedMonth.value.month
 
-                val bgColor = if (isActive) ColorCalSelectedBg else ColorCalItemBg
+                val bgColor = when {
+                    sameDate && sameMonth && isActive -> ColorCalSelectedBg
+                    isActive -> ColorCalItemBg
+                    else -> ColorCalItemBgDis
+                }
                 val borderColor =
                     if (sameDate && sameMonth) ColorCalSelectedBorderSecondary else Color.Transparent
 
@@ -609,14 +623,10 @@ private fun WeekView(
 
                 // 다음 달 날짜 표시
                 DayView(
-                    modifier = dayViewModifier
-                        .background(animatedBgColor, shape = RoundedCornerShape(14.dp))
-                        .border(
-                            1.5.dp,
-                            borderColor,
-                            RoundedCornerShape(14.dp)
-                        ),
                     viewModel = viewModel,
+                    height = dayHeight,
+                    backgroundColor = animatedBgColor,
+                    borderColor = borderColor,
                     month = nextMonth.withDayOfMonth(nextDay),
                     day = nextDay.toString(),
                     today = today,
@@ -643,14 +653,10 @@ private fun WeekView(
                     }
 
                     DayView(
-                        modifier = dayViewModifier
-                            .background(bgColor, shape = RoundedCornerShape(14.dp))
-                            .border(
-                                1.5.dp,
-                                borderColor,
-                                RoundedCornerShape(14.dp)
-                            ),
                         viewModel = viewModel,
+                        height = dayHeight,
+                        backgroundColor = bgColor,
+                        borderColor = borderColor,
                         month = month.withDayOfMonth(dayCounter),
                         day = dayCounter.toString(),
                         today = today,
@@ -666,9 +672,11 @@ private fun WeekView(
 }
 
 @Composable
-private fun DayView(
-    modifier: Modifier,
+private fun RowScope.DayView(
     viewModel: SwimmingViewModel,
+    height: Dp,
+    backgroundColor: Color,
+    borderColor: Color,
     month: LocalDate,
     day: String,
     today: LocalDate,
@@ -678,26 +686,35 @@ private fun DayView(
     val calendarMode by viewModel.calendarUiState
     val thisDate = month.withDayOfMonth(day.toInt())
 
-    Box(modifier = modifier
+    val dailyRecords by viewModel.dailyRecords.collectAsState()
+    val dailyRecord by remember {
+        derivedStateOf {
+            dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
+        }
+    }
+
+    val modifier = Modifier
+        .weight(1f)
+        .height(height)
+        .background(backgroundColor, shape = RoundedCornerShape(14.dp))
+        .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
-            enabled = calendarMode in setOf(
-                CalendarUiState.MONTH_MODE,
-                CalendarUiState.WEEK_MODE
-            ),
+            enabled = calendarMode in setOf(CalendarUiState.MONTH_MODE, CalendarUiState.WEEK_MODE),
             indication = null,
             onClick = { onDateClick(thisDate) }
         )
-        .padding(1.dp))
-    {
+        .padding(0.5.dp)
+
+    Box(modifier = modifier) {
         val dateBorderColor =
 //            if (today == thisDate) ColorCalSelectedBorder else
-                Color.Transparent
+            Color.Transparent
         val dateBgColor =
 //            if (isActive)
 //                if (today == thisDate) ColorCalTodayBg else ColorCalDateBg
 //            else
-                Color.Transparent
+            Color.Transparent
         val dateTextColor =
             if (isActive)
                 if (today == thisDate) ColorCalToday else ColorCalDate
@@ -705,19 +722,93 @@ private fun DayView(
 
         val animatedTextColor by animateColorAsState(dateTextColor, animationSpec = tween())
 
+        // 총 거리
+        dailyRecord?.let {
+            Row(
+                modifier = Modifier.align(Alignment.TopCenter),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    ImageBitmap.imageResource(R.drawable.ic_swimming2),
+                    contentDescription = "수영 거리",
+                    modifier = Modifier.size(7.5.dp),
+                    alpha = if (isActive) 1f else 0.7f
+                )
+                Spacer(Modifier.width(1.dp))
+                Text(
+                    text = it.totalDistance!!,
+                    color = Color.Gray.copy(alpha = if (isActive) 1f else 0.7f),
+                    fontFamily = notoSansKr,
+                    fontSize = 7.5.dp.toSp,
+                    lineHeight = 7.5.dp.toSp
+                )
+            }
+        }
+
+        // msms 아이콘 테스트
+        val rId = listOf(
+            R.drawable.ic_calorie,
+            R.drawable.ic_calorie2,
+            R.drawable.ic_calorie3,
+            R.drawable.ic_calorie4,
+            R.drawable.ic_calorie5,
+            R.drawable.ic_calorie6,
+            R.drawable.ic_calorie7,
+            R.drawable.ic_calorie8,
+            R.drawable.ic_calorie9,
+            R.drawable.ic_calorie10,
+            R.drawable.ic_calorie11,
+            R.drawable.ic_calorie12,
+        )[viewModel.testState.value]
+
+        // 총 칼로리 소모
+        dailyRecord?.let {
+            Row(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    ImageBitmap.imageResource(rId),
+                    contentDescription = "칼로리",
+                    modifier = Modifier.size(7.5.dp),
+                    alpha = if (isActive) 1f else 0.7f
+                )
+                Spacer(Modifier.width(1.dp))
+                Text(
+                    text = "${it.totalEnergyBurned!!.toFloat().roundToInt()}",
+                    color = Color.Gray.copy(alpha = if (isActive) 1f else 0.7f),
+                    fontFamily = notoSansKr,
+                    fontSize = 7.5.dp.toSp,
+                    lineHeight = 7.5.dp.toSp
+                )
+            }
+        }
+
         // 날짜 박스
-        Box(
+        Row(
             modifier = Modifier
+                .offset(y = (-0.5).dp)
                 .align(Alignment.Center)
-                .size(15.dp)
                 .border(1.dp, dateBorderColor, RoundedCornerShape(5.dp))
-                .background(dateBgColor, RoundedCornerShape(5.dp))
+                .background(dateBgColor, RoundedCornerShape(5.dp)),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (calendarMode == CalendarUiState.WEEK_MODE && day == "1")
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = "${month.month.value}.",
+                    fontSize = 8.sp,
+                    lineHeight = 8.sp,
+                    textAlign = TextAlign.Center,
+                    fontFamily = notoSansKr,
+                    color = animatedTextColor
+                )
+
             Text(
                 modifier = Modifier
-                    .wrapContentSize()
-                    .align(Alignment.Center),
-                text = day, // 날짜만 표시
+                    .wrapContentSize(),
+                text = day,
                 fontSize = 10.sp,
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
@@ -726,26 +817,9 @@ private fun DayView(
             )
         }
 
-        val dailyRecords by viewModel.dailyRecords.collectAsState()
-        val dailyRecord = remember {
-            derivedStateOf {
-                dailyRecords[thisDate.atStartOfDay().atZone(ZoneId.systemDefault())]
-            }
-        }
-
-        dailyRecord.value?.let {
-            Text(
-                modifier = Modifier.align(Alignment.TopCenter),
-                text = dailyRecord.value!!.totalDistance!!,
-                color = Color.Gray,
-                fontFamily = notoSansKr,
-                fontSize = 8.sp,
-                lineHeight = 8.sp
-            )
-        }
-
         Column(
             modifier = Modifier
+                .offset(y = (-0.5).dp)
                 .fillMaxWidth()
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -782,10 +856,14 @@ private fun DayView(
             )
             val animatedColorMixEnd by animateColorAsState(colorMixEnd, animationSpec = tween())
 
-            val brushList = remember(isActive) {
+            val brushList by remember(isActive) {
                 derivedStateOf {
-                    dailyRecord.value?.let { record ->
+                    dailyRecord?.let { record ->
                         // 거리 정보를 리스트로 변환
+                        if (record.totalDistance == "0") {
+                            return@let emptyList<Brush>()
+                        }
+
                         val distances = mapOf(
                             SolidColor(animatedColorCrawl) to record.crawl,
                             SolidColor(animatedColorBackStroke) to record.backStroke,
@@ -800,15 +878,15 @@ private fun DayView(
 
                         val ratioList = distributeDistance(distances, 8)
                         ratioList
-                    } ?: emptyList<Brush>()
+                    } ?: emptyList()
 
                 }
             }
 
-            if (brushList.value.isNotEmpty()) {
+            if (brushList.isNotEmpty()) {
                 IconWithPolygon(
                     painterResource(id = R.drawable.ic_pearl2),
-                    brushList.value,
+                    brushList,
                     28.dp,
                     16.dp,
                     false
@@ -821,6 +899,8 @@ private fun DayView(
 @Composable
 private fun CalendarHeaderView(
     viewModel: SwimmingViewModel,
+    height: Dp,
+    weekSpacing: Dp,
     contentsBg: Color
 ) {
     val calendarMode by viewModel.calendarUiState
@@ -833,7 +913,6 @@ private fun CalendarHeaderView(
     var isMonthModeUi by remember { mutableStateOf(true) }
 
     LaunchedEffect(calendarMode) {
-        Log.i("=-=-=", "CalendarHeaderView ${calendarMode.name}")
         isMonthModeUi = when (calendarMode) {
             CalendarUiState.MONTH_MODE, CalendarUiState.TO_MONTH -> true
             CalendarUiState.TO_WEEK, CalendarUiState.WEEK_MODE -> false
@@ -849,93 +928,104 @@ private fun CalendarHeaderView(
         }
     }
 
-    Box(
+    Column(
         Modifier
-            .graphicsLayer {
-                val scale = 1f - (animatedProgress.value * 0.1f)
-                scaleX = scale
-                scaleY = scale
-            }
-            .wrapContentWidth()
-            .animateContentSize(tween(500)), contentAlignment = Alignment.Center
+            .height(height)
+            // msms 아이콘 테스트
+            .clickable {
+                if (viewModel.testState.value == 11) viewModel.testState.value =
+                    0 else viewModel.testState.value += 1
+            },
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 년, 월
-        val rowModifier =
-            if (isMonthModeUi) Modifier.fillMaxWidth() else Modifier.wrapContentWidth()
-        Row(
-            rowModifier,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
+        Box(
+            Modifier
+                .graphicsLayer {
+                    val scale = 1f - (animatedProgress.value * 0.1f)
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .wrapContentWidth()
+                .animateContentSize(tween(500))
         ) {
-            Text(
-                text = currentMonth.format(monthFormatter),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .padding(top = 10.dp, start = 5.dp, end = 5.dp)
-                    .background(contentsBg, shape = RoundedCornerShape(10.dp))
-                    .padding(horizontal = 15.dp),
-                textAlign = TextAlign.Center
-            )
+            // 년, 월
+            val rowModifier =
+                if (isMonthModeUi) Modifier.fillMaxWidth() else Modifier.wrapContentWidth()
+            Row(
+                rowModifier,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    text = currentMonth.format(monthFormatter),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 5.dp, end = 5.dp)
+                        .background(contentsBg, shape = RoundedCornerShape(10.dp))
+                        .padding(horizontal = 15.dp),
+                    textAlign = TextAlign.Center
+                )
 
+                if (isMonthModeUi) {
+                    val totalDistance =
+                        remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
+                    val totalCaloriesBurned =
+                        remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
 
-            if (isMonthModeUi) {
-                val totalDistance =
-                    remember { derivedStateOf { currentMonthTotal.totalDistance ?: "0" } }
-                val totalCaloriesBurned =
-                    remember { derivedStateOf { currentMonthTotal.totalEnergyBurned ?: "0" } }
-
-                Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
-                    Text(
-                        totalDistance.value + "m",
-                        color = Color.Gray,
-                        fontFamily = notoSansKr,
-                        fontSize = 12.sp,
-                        lineHeight = 12.sp,
-                    )
-                    Text(
-                        totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal",
-                        color = Color.Gray,
-                        fontFamily = notoSansKr,
-                        fontSize = 12.sp,
-                        lineHeight = 12.sp,
-                    )
+                    Column(Modifier.wrapContentSize(), verticalArrangement = Arrangement.Center) {
+                        Text(
+                            totalDistance.value + "m",
+                            color = Color.Gray,
+                            fontFamily = notoSansKr,
+                            fontSize = 12.sp,
+                            lineHeight = 12.sp,
+                        )
+                        Text(
+                            totalCaloriesBurned.value.toFloat().roundToInt().toString() + " kcal",
+                            color = Color.Gray,
+                            fontFamily = notoSansKr,
+                            fontSize = 12.sp,
+                            lineHeight = 12.sp,
+                        )
+                    }
                 }
             }
         }
-    }
 
-    // 요일 헤더
-    Row(
-        modifier = Modifier
-            .padding(start = 5.dp, end = 5.dp, top = 5.dp)
-            .background(contentsBg, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = 5.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Text(
-            text = "일",
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center,
-            color = Color.Red
-        )
-
-        listOf("월", "화", "수", "목", "금").forEach {
+        // 요일 헤더
+        Row(
+            modifier = Modifier
+                .padding(start = 5.dp, end = 5.dp, top = 5.dp)
+                .background(contentsBg, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(weekSpacing)
+        ) {
             Text(
-                text = it,
+                text = "일",
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelMedium,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.Red
+            )
+
+            listOf("월", "화", "수", "목", "금").forEach {
+                Text(
+                    text = it,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Text(
+                text = "토",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center,
+                color = Color.Blue
             )
         }
-
-        Text(
-            text = "토",
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center,
-            color = Color.Blue
-        )
     }
 }
 

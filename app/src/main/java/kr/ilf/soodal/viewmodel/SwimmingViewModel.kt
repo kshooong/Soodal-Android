@@ -45,6 +45,9 @@ class SwimmingViewModel(
     val calendarUiState = mutableStateOf(CalendarUiState.WEEK_MODE)
     val popupUiState = mutableStateOf(PopupUiState.NONE)
 
+    // msms 아이콘 테스트
+    val testState = mutableStateOf(0)
+
     val healthPermissions =
         setOf(
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),

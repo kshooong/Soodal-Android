@@ -20,6 +20,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,10 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -180,7 +183,10 @@ fun NavigationView(
                     )
                     .statusBarsPadding()
             ) {
-                val weekHeight = 60.dp
+                val headerHeight = 73.dp
+                val weekHeight = 62.dp
+                val spacing = 5.dp
+                val weekModeOffset = remember { headerHeight + weekHeight + spacing + 5.dp }
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
                 val configuration = LocalConfiguration.current
                 val density = LocalDensity.current
@@ -192,10 +198,30 @@ fun NavigationView(
                             calendarHeight =
                                 with(density) { coordinates.size.height.toDp().value }
                         },
+                    headerHeight = headerHeight,
                     weekHeight = weekHeight,
+                    spacing = spacing,
                     contentsBg = Color.Transparent,
                     viewModel = viewModel
                 )
+
+                // 배경 아이콘
+                Box(
+                    Modifier
+                        .padding(bottom = 60.dp)
+                        .height(configuration.screenHeightDp.dp - 60.dp - calendarHeight.dp)
+                        .padding(bottom = 5.dp)
+                        .align(Alignment.BottomCenter)
+                ) {
+                    Image(
+                        ImageBitmap.imageResource(R.drawable.ic_swimming_bg),
+                        contentDescription = "",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .focusable(false),
+                        alpha = 0.2f
+                    )
+                }
 
                 val detailRecord by viewModel.currentDetailRecords.collectAsState()
 
@@ -223,10 +249,9 @@ fun NavigationView(
                     val animationDurationMills = 500
 
                     LaunchedEffect(calendarMode) {
-                        // 아래 주석은 달력 OFFSET방식 애니메이션 기준
                         if (calendarMode == CalendarUiState.TO_WEEK) {
                             animatableOffset.animateTo(
-                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                weekModeOffset,
                                 tween(animationDurationMills)
                             )
 
@@ -240,7 +265,7 @@ fun NavigationView(
                         } else if (calendarMode == CalendarUiState.TO_MONTH) {
                             // 상세보기에서 스크롤위해 높이 수정한 높이 되돌리고 애니메이션 시작
                             animatableOffset.snapTo(
-                                calendarHeight.dp - ((weekHeight.value + 5) * 5).dp,
+                                weekModeOffset,
                             )
                             detailHeight.value = initHeight
 
