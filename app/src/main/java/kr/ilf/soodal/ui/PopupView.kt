@@ -36,14 +36,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -52,6 +60,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -239,12 +248,20 @@ fun ModifyRecordPopup(
                 val endTime =
                     record.endTime.atZone(ZoneId.systemDefault()).format(formatter)
 
+                val totalDistance = remember { record.distance?.toInt() ?: 0 }
                 val crawl = remember { mutableIntStateOf(record.crawl) }
                 val back = remember { mutableIntStateOf(record.backStroke) }
                 val breast = remember { mutableIntStateOf(record.breastStroke) }
                 val butterfly = remember { mutableIntStateOf(record.butterfly) }
                 val kick = remember { mutableIntStateOf(record.kickBoard) }
                 val mixed = remember { mutableIntStateOf(record.mixed) }
+
+                val usefulDistance by
+                remember {
+                    derivedStateOf {
+                        totalDistance - crawl.intValue - back.intValue - breast.intValue - butterfly.intValue - kick.intValue - mixed.intValue
+                    }
+                }
 
                 Column(
                     Modifier
@@ -258,12 +275,55 @@ fun ModifyRecordPopup(
                         val poolLength = record.poolLength
                         Text(text = "수영 시간 $startTime ~ $endTime")
                         Text(text = "총 거리 ${record.distance}")
-                        DistanceRow(rowModifier, crawl, poolLength, "자유형")
-                        DistanceRow(rowModifier, back, poolLength, "배영")
-                        DistanceRow(rowModifier, breast, poolLength, "평영")
-                        DistanceRow(rowModifier, butterfly, poolLength, "접영")
-                        DistanceRow(rowModifier, mixed, poolLength, "혼영")
-                        DistanceRow(rowModifier, kick, poolLength, "킥판")
+                        Text(text = "잔여 거리 $usefulDistance")
+                        DistanceRow(
+                            rowModifier,
+                            crawl,
+                            usefulDistance + crawl.intValue,
+                            totalDistance,
+                            poolLength,
+                            "자유형"
+                        )
+                        DistanceRow(
+                            rowModifier,
+                            back,
+                            usefulDistance + back.intValue,
+                            totalDistance,
+                            poolLength,
+                            "배영"
+                        )
+                        DistanceRow(
+                            rowModifier,
+                            breast,
+                            usefulDistance + breast.intValue,
+                            totalDistance,
+                            poolLength,
+                            "평영"
+                        )
+                        DistanceRow(
+                            rowModifier,
+                            butterfly,
+                            usefulDistance + butterfly.intValue,
+                            totalDistance,
+                            poolLength,
+                            "접영"
+                        )
+                        DistanceRow(
+                            rowModifier,
+                            mixed,
+                            usefulDistance + mixed.intValue,
+                            totalDistance,
+                            poolLength,
+                            "혼영"
+                        )
+                        DistanceRow(
+                            rowModifier,
+                            kick,
+                            usefulDistance + kick.intValue,
+                            totalDistance,
+                            poolLength,
+                            "킥판"
+                        )
                     }
                 }
 
@@ -301,9 +361,18 @@ fun ModifyRecordPopup(
 private fun DistanceRow(
     modifier: Modifier,
     distance: MutableIntState,
+    usefulDistance: Int,
+    maxDistance: Int,
     poolLength: Int,
     title: String
 ) {
+    var sliderValue by remember { mutableFloatStateOf(distance.intValue.toFloat()) }
+    val sliderStep by remember { derivedStateOf { (sliderValue / poolLength).toInt() } }
+
+    LaunchedEffect(sliderStep) {
+        distance.intValue = sliderStep * poolLength
+    }
+
     Row(modifier) {
         Text(modifier = Modifier.width(50.dp), text = title)
         TextField(
@@ -311,18 +380,49 @@ private fun DistanceRow(
             value = distance.intValue.toString(),
             onValueChange = { value ->
                 val intValue = value.toIntOrNull() ?: 0
-                distance.intValue = intValue.coerceAtLeast(0)
+                sliderValue = intValue.coerceAtLeast(0).toFloat()
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true
         )
-        Button(onClick = {
-            distance.intValue = (distance.intValue - poolLength).coerceAtLeast(0)
+        Button(modifier = Modifier.size(30.dp), onClick = {
+            sliderValue = (distance.intValue - poolLength).coerceAtLeast(0).toFloat()
         }) {
             Text("-")
         }
-        Button(onClick = { distance.intValue += poolLength }) { Text("+") }
+        Button(
+            modifier = Modifier.size(30.dp),
+            onClick = { sliderValue += poolLength }) { Text("+") }
+
+        Slider(
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.secondary,
+                activeTrackColor = MaterialTheme.colorScheme.secondary,
+                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent,
+            ),
+            valueRange = 0f..maxDistance.toFloat(),
+            onValueChangeFinished = {
+                val tempDistance = sliderStep * poolLength
+                if (tempDistance > usefulDistance) {
+                    sliderValue = usefulDistance.toFloat()
+                    distance.intValue = usefulDistance
+                } else {
+                    sliderValue = tempDistance.toFloat()
+                }
+            }
+        )
     }
+}
+
+@Composable
+@Preview
+fun DistanceRowPreview(){
+    val distance = remember { mutableIntStateOf(350)}
+    DistanceRow(modifier = Modifier.fillMaxWidth(),distance, 800,  1025, 25, "sds")
 }
 
 @Composable
@@ -342,7 +442,10 @@ fun AppFinishPopup(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
-                    .shadow(8.dp, shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                    .shadow(
+                        8.dp,
+                        shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+                    )
                     .scrollable(rememberScrollState(), Orientation.Vertical)
                     .background(Color.White, shape = RoundedCornerShape(30.dp))
                     .padding(20.dp),
