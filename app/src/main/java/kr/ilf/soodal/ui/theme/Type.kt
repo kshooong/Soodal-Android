@@ -16,8 +16,14 @@ val tiny5 = FontFamily(
 )
 val notoSansKr = FontFamily(
     Font(R.font.noto_sans_kr_thin, FontWeight.Thin, FontStyle.Normal),
-    Font(R.font.noto_sans_kr_medium, FontWeight.Normal, FontStyle.Normal),
-    Font(R.font.noto_sans_kr_bold, FontWeight.Bold, FontStyle.Normal)
+    Font(R.font.noto_sans_kr_extra_light, FontWeight.ExtraLight, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_light, FontWeight.Light, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_regular, FontWeight.Normal, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_medium, FontWeight.Medium, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_semi_bold, FontWeight.SemiBold, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_bold, FontWeight.Bold, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_extra_bold, FontWeight.ExtraBold, FontStyle.Normal),
+    Font(R.font.noto_sans_kr_black, FontWeight.Black, FontStyle.Normal)
 )
 
 // Set of Material typography styles to start with
@@ -25,21 +31,21 @@ val fontFamily = notoSansKr
 val DefaultTypography = Typography()
 
 internal val Typography = Typography(
-    displayLarge = DefaultTypography.displayLarge.copy(fontFamily = fontFamily),
-    displayMedium = DefaultTypography.displayMedium.copy(fontFamily = fontFamily),
-    displaySmall = DefaultTypography.displaySmall.copy(fontFamily = fontFamily),
-    headlineLarge = DefaultTypography.headlineLarge.copy(fontFamily = fontFamily),
-    headlineMedium = DefaultTypography.headlineMedium.copy(fontFamily = fontFamily),
-    headlineSmall = DefaultTypography.headlineSmall.copy(fontFamily = fontFamily),
+    displayLarge = DefaultTypography.displayLarge.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    displayMedium = DefaultTypography.displayMedium.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    displaySmall = DefaultTypography.displaySmall.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    headlineLarge = DefaultTypography.headlineLarge.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    headlineMedium = DefaultTypography.headlineMedium.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    headlineSmall = DefaultTypography.headlineSmall.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
     titleLarge = DefaultTypography.titleLarge.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
-    titleMedium = DefaultTypography.titleMedium.copy(fontFamily = fontFamily),
-    titleSmall = DefaultTypography.titleSmall.copy(fontFamily = fontFamily),
-    bodyLarge = DefaultTypography.bodyLarge.copy(fontFamily = fontFamily), // default
-    bodyMedium = DefaultTypography.bodyMedium.copy(fontFamily = fontFamily),
-    bodySmall = DefaultTypography.bodySmall.copy(fontFamily = fontFamily),
-    labelLarge = DefaultTypography.labelLarge.copy(fontFamily = fontFamily),
-    labelMedium = DefaultTypography.labelMedium.copy(fontFamily = fontFamily),
-    labelSmall = DefaultTypography.labelSmall.copy(fontFamily = fontFamily),
+    titleMedium = DefaultTypography.titleMedium.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    titleSmall = DefaultTypography.titleSmall.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    bodyLarge = DefaultTypography.bodyLarge.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium), // default
+    bodyMedium = DefaultTypography.bodyMedium.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    bodySmall = DefaultTypography.bodySmall.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    labelLarge = DefaultTypography.labelLarge.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    labelMedium = DefaultTypography.labelMedium.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
+    labelSmall = DefaultTypography.labelSmall.copy(fontFamily = fontFamily, fontWeight = FontWeight.Medium),
 )
 
 val Typography.splashTitle: TextStyle
