@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,6 +66,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -84,6 +87,7 @@ import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
 import kr.ilf.soodal.ui.theme.ColorButterfly
+import kr.ilf.soodal.ui.theme.ColorButton
 import kr.ilf.soodal.ui.theme.ColorCalItemBg
 import kr.ilf.soodal.ui.theme.ColorCrawl
 import kr.ilf.soodal.ui.theme.ColorKickBoard
@@ -140,15 +144,19 @@ fun PopupView(modifier: Modifier, viewModel: SwimmingViewModel, navController: N
         modifier = modifier
             .statusBarsPadding()
             .padding(top = 5.dp)
-            .shadow(5.dp, shape = RoundedCornerShape(30.dp))
-            .scrollable(rememberScrollState(), Orientation.Vertical)
+            .shadow(
+                5.dp,
+                shape = RoundedCornerShape(30.dp).copy(
+                    bottomStart = CornerSize(0.dp),
+                    bottomEnd = CornerSize(0.dp)
+                )
+            )
             .background(
                 Color.White, shape = ShapeDefaults.ExtraLarge.copy(
                     bottomStart = CornerSize(0.0.dp),
                     bottomEnd = CornerSize(0.0.dp)
                 )
-            )
-            .padding(10.dp),
+            ),
         visible = viewModel.popupUiState.value in setOf(
             PopupUiState.MODIFY,
             PopupUiState.NEW_SESSIONS_MODIFY
@@ -289,197 +297,233 @@ fun ModifyRecordPopup(
                     }
                 }
 
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 10.dp)
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(10.dp, 10.dp, 10.dp, 0.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight()
                     ) {
-                        Text(
-                            text = "${record.distance}m",
-                            modifier = Modifier.alignByBaseline(),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Column(
-                            modifier = Modifier.alignBy(LastBaseline),
-                            horizontalAlignment = Alignment.End
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "$startTimeStr ~ $endTimeStr",
-                                color = Color.Gray,
-                                style = MaterialTheme.typography.bodySmall
+                                text = "${record.distance}m",
+                                modifier = Modifier.alignByBaseline(),
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Medium
                             )
 
-                            Text(
-                                text = "${poolLength}m",
-                                color = Color.Gray,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-
-                    Row(
-                        Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Column {
-                            Text(
-                                modifier = Modifier.offset(y = 3.dp),
-                                text = "잔여 거리",
-                                style = MaterialTheme.typography.labelSmall,
-                                lineHeight = 11.sp,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Normal
-                            )
-
-                            Row {
+                            Column(
+                                modifier = Modifier.alignBy(LastBaseline),
+                                horizontalAlignment = Alignment.End
+                            ) {
                                 Text(
-                                    modifier = Modifier
-                                        .alignByBaseline()
-                                        .padding(end = 6.dp),
-                                    text = "${usefulDistance}m",
-                                    style = MaterialTheme.typography.labelLarge
-                                )
-                                Text(
-                                    modifier = Modifier.alignByBaseline(),
-                                    text = "${usefulDistance / poolLength}",
-                                    style = MaterialTheme.typography.labelLarge
-                                )
-                                Text(
-                                    modifier = Modifier.alignByBaseline(),
-                                    text = "/${totalDistance / poolLength}구간",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    text = "$startTimeStr ~ $endTimeStr",
                                     color = Color.Gray,
-                                    fontWeight = FontWeight.Normal
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Text(
+                                    text = "${poolLength}m",
+                                    color = Color.Gray,
+                                    style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         }
 
-                        if (usefulDistance <= 0)
-                            Text(
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .weight(1f),
-                                text = "잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요",
-                                style = MaterialTheme.typography.labelSmall,
-                                textAlign = TextAlign.End,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Normal
-                            )
-                    }
-                }
+                        Row(
+                            Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Column {
+                                Text(
+                                    modifier = Modifier.offset(y = 3.dp),
+                                    text = "잔여 거리",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    lineHeight = 11.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Normal
+                                )
 
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(top = 5.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    DistanceBlock(
-                        rowModifier,
-                        crawl,
-                        usefulDistance + crawl.intValue,
-                        totalDistance,
-                        poolLength,
-                        "자유형",
-                        "Freestyle(Crawl)",
-                        ColorCrawl,
-                        ColorCrawl,
-                        ColorCrawl.copy(0.3f)
-                    )
-                    DistanceBlock(
-                        rowModifier,
-                        back,
-                        usefulDistance + back.intValue,
-                        totalDistance,
-                        poolLength,
-                        "배영",
-                        "Backstroke",
-                        ColorBackStroke,
-                        ColorBackStroke,
-                        ColorBackStroke.copy(0.3f)
-                    )
-                    DistanceBlock(
-                        rowModifier,
-                        breast,
-                        usefulDistance + breast.intValue,
-                        totalDistance,
-                        poolLength,
-                        "평영",
-                        "Breaststroke",
-                        ColorBreastStroke,
-                        ColorBreastStroke,
-                        ColorBreastStroke.copy(0.3f)
-                    )
-                    DistanceBlock(
-                        rowModifier,
-                        butterfly,
-                        usefulDistance + butterfly.intValue,
-                        totalDistance,
-                        poolLength,
-                        "접영",
-                        "Butterfly",
-                        ColorButterfly,
-                        ColorButterfly,
-                        ColorButterfly.copy(0.3f)
-                    )
-                    DistanceBlock(
-                        rowModifier,
-                        mixed,
-                        usefulDistance + mixed.intValue,
-                        totalDistance,
-                        poolLength,
-                        "혼영",
-                        "Mixed",
-                        ColorMixStart,
-                        ColorMixStart,
-                        ColorMixStart.copy(0.3f)
-                    )
-                    DistanceBlock(
-                        rowModifier,
-                        kick,
-                        usefulDistance + kick.intValue,
-                        totalDistance,
-                        poolLength,
-                        "킥보드",
-                        "KickBoard",
-                        ColorKickBoard,
-                        ColorKickBoard,
-                        ColorKickBoard.copy(0.3f)
-                    )
+                                Row {
+                                    Text(
+                                        modifier = Modifier
+                                            .alignByBaseline()
+                                            .padding(end = 6.dp),
+                                        text = "${usefulDistance}m",
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                    Text(
+                                        modifier = Modifier.alignByBaseline(),
+                                        text = "${usefulDistance / poolLength}",
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                    Text(
+                                        modifier = Modifier.alignByBaseline(),
+                                        text = "/${totalDistance / poolLength}구간",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal
+                                    )
+                                }
+                            }
 
-                }
-
-                Row(Modifier.align(Alignment.End)) {
-                    val context = LocalContext.current
-                    Button(onClick = {
-                        val newDistance =
-                            crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue
-                        if (record.distance == newDistance.toString()) {
-                            val detailRecord = record.copy(
-                                crawl = crawl.intValue,
-                                backStroke = back.intValue,
-                                breastStroke = breast.intValue,
-                                butterfly = butterfly.intValue,
-                                kickBoard = kick.intValue,
-                                mixed = mixed.intValue
-                            )
-                            CoroutineScope(Dispatchers.Default).launch { onClickDone(detailRecord) }
-                        } else {
-                            Toast.makeText(context, "총 거리가 다릅니다.", Toast.LENGTH_SHORT).show()
+                            if (usefulDistance <= 0)
+                                Text(
+                                    modifier = Modifier
+                                        .padding(start = 6.dp)
+                                        .weight(1f),
+                                    text = "잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    textAlign = TextAlign.End,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Normal
+                                )
                         }
-                    }) {
-                        Text(text = "저장")
                     }
-                    Button(onClick = onClickCancel) {
+
+                    Column(
+                        Modifier
+                            .padding(top = 3.dp)
+                            .clip(MaterialTheme.shapes.large)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        DistanceBlock(
+                            rowModifier,
+                            crawl,
+                            usefulDistance + crawl.intValue,
+                            totalDistance,
+                            poolLength,
+                            "자유형",
+                            "Freestyle(Crawl)",
+                            ColorCrawl,
+                            ColorCrawl,
+                            ColorCrawl.copy(0.3f)
+                        )
+                        DistanceBlock(
+                            rowModifier,
+                            back,
+                            usefulDistance + back.intValue,
+                            totalDistance,
+                            poolLength,
+                            "배영",
+                            "Backstroke",
+                            ColorBackStroke,
+                            ColorBackStroke,
+                            ColorBackStroke.copy(0.3f)
+                        )
+                        DistanceBlock(
+                            rowModifier,
+                            breast,
+                            usefulDistance + breast.intValue,
+                            totalDistance,
+                            poolLength,
+                            "평영",
+                            "Breaststroke",
+                            ColorBreastStroke,
+                            ColorBreastStroke,
+                            ColorBreastStroke.copy(0.3f)
+                        )
+                        DistanceBlock(
+                            rowModifier,
+                            butterfly,
+                            usefulDistance + butterfly.intValue,
+                            totalDistance,
+                            poolLength,
+                            "접영",
+                            "Butterfly",
+                            ColorButterfly,
+                            ColorButterfly,
+                            ColorButterfly.copy(0.3f)
+                        )
+                        DistanceBlock(
+                            rowModifier,
+                            mixed,
+                            usefulDistance + mixed.intValue,
+                            totalDistance,
+                            poolLength,
+                            "혼영",
+                            "Mixed",
+                            ColorMixStart,
+                            ColorMixStart,
+                            ColorMixStart.copy(0.3f)
+                        )
+                        DistanceBlock(
+                            rowModifier,
+                            kick,
+                            usefulDistance + kick.intValue,
+                            totalDistance,
+                            poolLength,
+                            "킥보드",
+                            "KickBoard",
+                            ColorKickBoard,
+                            ColorKickBoard,
+                            ColorKickBoard.copy(0.3f)
+                        )
+
+                    }
+                }
+
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(vertical = 5.dp, horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    val context = LocalContext.current
+
+                    Button(
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        onClick = onClickCancel,
+                        shape = MaterialTheme.shapes.large,
+                        colors = buttonColors(
+                            containerColor = ColorCalItemBg,
+                            contentColor = Color.Gray,
+                            disabledContainerColor = Color.Transparent,
+                        )
+                    ) {
                         Text(text = "취소")
+                    }
+
+                    Button(
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        onClick = {
+                            val newDistance =
+                                crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue
+                            if (record.distance == newDistance.toString()) {
+                                val detailRecord = record.copy(
+                                    crawl = crawl.intValue,
+                                    backStroke = back.intValue,
+                                    breastStroke = breast.intValue,
+                                    butterfly = butterfly.intValue,
+                                    kickBoard = kick.intValue,
+                                    mixed = mixed.intValue
+                                )
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    onClickDone(
+                                        detailRecord
+                                    )
+                                }
+                            } else {
+                                Toast.makeText(context, "총 거리가 다릅니다.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        shape = MaterialTheme.shapes.large,
+                        colors = buttonColors(
+                            containerColor = ColorCalItemBg,
+                            contentColor = ColorButton,
+                            disabledContainerColor = Color.Transparent,
+                        )
+                    ) {
+                        Text(text = "저장")
                     }
                 }
             }
