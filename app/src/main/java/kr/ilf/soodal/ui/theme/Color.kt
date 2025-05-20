@@ -17,7 +17,9 @@ val SmokeBlue3 = Color(0xFF72AAFF)
 val Blue3 = Color(0xFF499CFB)
 val Blue4 = Color(0xFF9DC0FF)
 
-val ColorButton = Color(0xFF4967FB)
+val ColorTextButton = Color(0xFF4967FB)
+
+val ColorTextDefault = Color(0xFF1A1A1A)
 
 
 //Calendar

@@ -69,6 +69,7 @@ import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
 import kr.ilf.soodal.ui.theme.ColorCalBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalBgStart
+import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -389,7 +390,8 @@ fun LoadingView(
             text = "수 달",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 280.dp)
+            modifier = Modifier.padding(bottom = 280.dp),
+            color = ColorTextDefault
         )
         Text(
             text = "영     력",
@@ -432,7 +434,8 @@ fun SyncView(
             text = "수 달",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 280.dp)
+            modifier = Modifier.padding(bottom = 280.dp),
+            color = ColorTextDefault
         )
         Text(
             text = "영     력",
@@ -445,7 +448,8 @@ fun SyncView(
             text = "동기화 중",
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 280.dp)
+            modifier = Modifier.padding(top = 280.dp),
+            color = ColorTextDefault
         )
     }
 }
