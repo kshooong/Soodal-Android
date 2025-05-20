@@ -129,6 +129,7 @@ import kr.ilf.soodal.ui.theme.ColorMixEnd
 import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
+import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
@@ -964,7 +965,8 @@ private fun CalendarHeaderView(
                         .padding(top = 10.dp, start = 5.dp, end = 5.dp)
                         .background(contentsBg, shape = RoundedCornerShape(10.dp))
                         .padding(horizontal = 15.dp),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = ColorTextDefault
                 )
 
                 if (isMonthModeUi) {
@@ -1014,7 +1016,8 @@ private fun CalendarHeaderView(
                     text = it,
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = ColorTextDefault
                 )
             }
 
@@ -1122,6 +1125,7 @@ fun MonthModeContent(
             text = totalDetailRecordWithHR.detailRecord.distance + "m",
             fontSize = 36.dp.toSp,
             lineHeight = 36.dp.toSp,
+            color = ColorTextDefault
         )
 
         Button(
@@ -1150,12 +1154,14 @@ fun DetailModeContent(
             text = detailRecordWithHR.detailRecord.distance + "m",
             fontSize = 36.dp.toSp,
             lineHeight = 36.dp.toSp,
+            color = ColorTextDefault
         )
 
         Text(
             text = detailRecordWithHR.detailRecord.startTime.atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")),
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            color = ColorTextDefault
         )
         // 임시 수정버튼
         Button(
@@ -1233,8 +1239,8 @@ private fun DetailDataView(
                     .padding(end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("시간")
-                Text(activeTime.toCustomTimeString())
+                Text("시간", color = ColorTextDefault)
+                Text(activeTime.toCustomTimeString(), color = ColorTextDefault)
             }
 
             Row(
@@ -1243,8 +1249,8 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("칼로리")
-                Text(calories.toInt().toString())
+                Text("칼로리", color = ColorTextDefault)
+                Text(calories.toInt().toString(), color = ColorTextDefault)
             }
         }
 
@@ -1259,8 +1265,8 @@ private fun DetailDataView(
                     .padding(end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("최대 심박")
-                Text(maxHR.toString())
+                Text("최대 심박", color = ColorTextDefault)
+                Text(maxHR.toString(), color = ColorTextDefault)
             }
 
             Row(
@@ -1269,8 +1275,8 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("최소 심박")
-                Text(minHR.toString())
+                Text("최소 심박", color = ColorTextDefault)
+                Text(minHR.toString(), color = ColorTextDefault)
             }
         }
     }
@@ -1315,7 +1321,7 @@ private fun DetailDataView(
                         it.second.toString(),
                         lineHeight = 14.dp.toSp,
                         fontSize = 14.dp.toSp,
-                        color = Color.Black.copy(0.8f)
+                        color = ColorTextDefault
                     )
                 }
 
@@ -1323,7 +1329,7 @@ private fun DetailDataView(
                     it.second.toString(),
                     lineHeight = 14.dp.toSp,
                     fontSize = 14.dp.toSp,
-                    color = Color.Black.copy(0.8f)
+                    color = ColorTextDefault
                 )
             }
         }

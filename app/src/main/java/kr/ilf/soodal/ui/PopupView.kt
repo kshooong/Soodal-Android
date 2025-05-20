@@ -87,11 +87,12 @@ import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.ui.theme.ColorBackStroke
 import kr.ilf.soodal.ui.theme.ColorBreastStroke
 import kr.ilf.soodal.ui.theme.ColorButterfly
-import kr.ilf.soodal.ui.theme.ColorButton
 import kr.ilf.soodal.ui.theme.ColorCalItemBg
 import kr.ilf.soodal.ui.theme.ColorCrawl
 import kr.ilf.soodal.ui.theme.ColorKickBoard
 import kr.ilf.soodal.ui.theme.ColorMixStart
+import kr.ilf.soodal.ui.theme.ColorTextButton
+import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.SwimmingViewModel
 import java.time.Instant
@@ -224,16 +225,25 @@ fun NewSessionsPopup(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Gray.copy(0.3f), shape = RoundedCornerShape(10.dp)),
+                        .background(ColorCalItemBg, shape = RoundedCornerShape(10.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.padding(start = 6.dp)) {
                         Text(
-                            record.startTime.atZone(ZoneId.systemDefault()).format(formatter),
+                            text = record.startTime.atZone(ZoneId.systemDefault())
+                                .format(formatter),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Normal,
                             lineHeight = 16.sp
                         )
-                        Text("${record.distance ?: 0}m", lineHeight = 16.sp)
+                        Text(
+                            "${record.distance ?: 0}m",
+                            style = MaterialTheme.typography.bodyLarge,
+                            lineHeight = 16.sp,
+                            color = ColorTextDefault
+                        )
                     }
                     IconButton(onClick = { onClickModify(record) }) {
                         Icon(
@@ -297,10 +307,12 @@ fun ModifyRecordPopup(
                     }
                 }
 
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(10.dp, 10.dp, 10.dp, 0.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(10.dp, 10.dp, 10.dp, 0.dp)
+                ) {
                     Column(
                         modifier = Modifier
                             .padding(horizontal = 10.dp)
@@ -315,7 +327,8 @@ fun ModifyRecordPopup(
                                 text = "${record.distance}m",
                                 modifier = Modifier.alignByBaseline(),
                                 style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = ColorTextDefault
                             )
 
                             Column(
@@ -357,12 +370,14 @@ fun ModifyRecordPopup(
                                             .alignByBaseline()
                                             .padding(end = 6.dp),
                                         text = "${usefulDistance}m",
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = ColorTextDefault
                                     )
                                     Text(
                                         modifier = Modifier.alignByBaseline(),
                                         text = "${usefulDistance / poolLength}",
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = ColorTextDefault
                                     )
                                     Text(
                                         modifier = Modifier.alignByBaseline(),
@@ -481,7 +496,9 @@ fun ModifyRecordPopup(
                     val context = LocalContext.current
 
                     Button(
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         onClick = onClickCancel,
                         shape = MaterialTheme.shapes.large,
                         colors = buttonColors(
@@ -494,7 +511,9 @@ fun ModifyRecordPopup(
                     }
 
                     Button(
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         onClick = {
                             val newDistance =
                                 crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue
@@ -519,7 +538,7 @@ fun ModifyRecordPopup(
                         shape = MaterialTheme.shapes.large,
                         colors = buttonColors(
                             containerColor = ColorCalItemBg,
-                            contentColor = ColorButton,
+                            contentColor = ColorTextButton,
                             disabledContainerColor = Color.Transparent,
                         )
                     ) {
@@ -601,7 +620,8 @@ private fun DistanceBlock(
                     modifier = Modifier.alignByBaseline(),
                     text = distance.intValue.toString() + "m",
                     style = MaterialTheme.typography.titleMedium,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = ColorTextDefault
                 )
             }
 
@@ -826,7 +846,7 @@ fun AppFinishPopup(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "앱을 종료하시겠습니까?", fontSize = 20.sp)
+                    Text(text = "앱을 종료하시겠습니까?", fontSize = 20.sp, color = ColorTextDefault)
                 }
 
                 Button(
