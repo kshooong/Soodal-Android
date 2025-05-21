@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -61,13 +63,14 @@ class MainActivity : ComponentActivity() {
                 val viewModel: SwimmingViewModel =
                     viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
+                var popupUiState by viewModel.popupUiState
 
                 onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
                     override fun handleOnBackPressed() {
-                        if (viewModel.popupUiState.value == PopupUiState.NONE) {
-                            viewModel.popupUiState.value = PopupUiState.APP_FINISH
-                        } else {
-                            viewModel.popupUiState.value = PopupUiState.NONE
+                        popupUiState = when (popupUiState) {
+                            PopupUiState.NONE -> PopupUiState.APP_FINISH
+                            PopupUiState.NEW_RECORD_MODIFY -> PopupUiState.NEW_RECORD
+                            else -> PopupUiState.NONE
                         }
                     }
                 })
