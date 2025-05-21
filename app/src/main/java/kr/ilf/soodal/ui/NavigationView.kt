@@ -182,6 +182,7 @@ fun NavigationView(
                             end = Offset(0.5f, Float.POSITIVE_INFINITY)
                         )
                     )
+                    .navigationBarsPadding()
                     .statusBarsPadding()
             ) {
                 val headerHeight = 73.dp
