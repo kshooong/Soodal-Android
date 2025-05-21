@@ -127,7 +127,8 @@ fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
             popupUiState = PopupUiState.NEW_SESSIONS_MODIFY
             viewModel.setModifyRecord(it)
         },
-        onClickClose = { popupUiState = PopupUiState.NONE }
+        onClickClose = { popupUiState = PopupUiState.NONE },
+        dimmed = popupUiState == PopupUiState.NEW_SESSIONS
     )
 
     ModifyRecordPopup(
@@ -197,9 +198,10 @@ fun NewSessionsPopup(
     visible: Boolean,
     newMap: Map<String, DetailRecord>,
     onClickModify: (detailRecord: DetailRecord) -> Unit,
-    onClickClose: () -> Unit
+    onClickClose: () -> Unit,
+    dimmed: Boolean = true
 ) {
-    Dimmed(visible)
+    Dimmed(visible && dimmed)
 
     AnimatedVisibility(
         visible,
