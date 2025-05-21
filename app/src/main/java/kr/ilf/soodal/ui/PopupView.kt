@@ -190,7 +190,7 @@ fun NewSessionsPopup(
     onClickClose: () -> Unit
 ) {
     if (visible) {
-        Dialog(onClickClose, properties = DialogProperties(dismissOnClickOutside = false)) {
+         Dialog(onClickClose, properties = DialogProperties(dismissOnClickOutside = false, decorFitsSystemWindows = false)) {
             Column(
                 modifier = modifier,
                 verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -252,7 +252,7 @@ fun ModifyRecordPopup(
     record: DetailRecord?
 ) {
     if (visible) {
-        Dialog(onClickCancel, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Dialog(onClickCancel, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
             Column(
                 modifier = modifier
             ) {
@@ -733,7 +733,7 @@ fun AppFinishPopup(
     onClickCancel: () -> Unit
 ) {
     if (visible) {
-        Dialog(onClickCancel, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Dialog(onClickCancel, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
             Box(modifier, contentAlignment = Alignment.BottomCenter) {
                 Column(
                     modifier = Modifier
@@ -744,7 +744,15 @@ fun AppFinishPopup(
                             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
                         )
                         .scrollable(rememberScrollState(), Orientation.Vertical)
-                        .background(Color.White, shape = RoundedCornerShape(30.dp))
+                        .background(
+                            Color.White,
+                            shape = RoundedCornerShape(
+                                topStart = 30.dp,
+                                topEnd = 30.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
                         .padding(20.dp),
                 ) {
                     Box(
