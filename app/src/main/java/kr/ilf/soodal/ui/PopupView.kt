@@ -485,6 +485,7 @@ fun ModifyRecordPopup(
 
                 Row(
                     Modifier
+                        .padding(bottom = 10.dp)
                         .fillMaxWidth()
                         .height(60.dp)
                         .padding(vertical = 5.dp, horizontal = 10.dp),
