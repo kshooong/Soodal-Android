@@ -119,15 +119,16 @@ fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
             .background(Color.White, shape = RoundedCornerShape(25.dp))
             .padding(10.dp),
         visible = popupUiState in setOf(
-            PopupUiState.NEW_SESSIONS,
-            PopupUiState.NEW_SESSIONS_MODIFY
+            PopupUiState.NEW_RECORD,
+            PopupUiState.NEW_RECORD_MODIFY
         ),
         newMap = viewModel.newRecords.collectAsState().value,
         onClickModify = {
-            popupUiState = PopupUiState.NEW_SESSIONS_MODIFY
+            popupUiState = PopupUiState.NEW_RECORD_MODIFY
             viewModel.setModifyRecord(it)
         },
-        onClickClose = { popupUiState = PopupUiState.NONE }
+        onClickClose = { popupUiState = PopupUiState.NONE },
+        dimmed = popupUiState == PopupUiState.NEW_RECORD
     )
 
     ModifyRecordPopup(
@@ -150,12 +151,12 @@ fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
             ),
         visible = popupUiState in setOf(
             PopupUiState.MODIFY,
-            PopupUiState.NEW_SESSIONS_MODIFY
+            PopupUiState.NEW_RECORD_MODIFY
         ),
         onClickDone = { record ->
             viewModel.modifyDetailRecord(record)
 
-            if (popupUiState == PopupUiState.NEW_SESSIONS_MODIFY) {
+            if (popupUiState == PopupUiState.NEW_RECORD_MODIFY) {
                 viewModel.removeNewRecord(record.id)
 
                 viewModel.newRecords.value.ifEmpty {
@@ -163,7 +164,7 @@ fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
                     return@ModifyRecordPopup
                 }
 
-                popupUiState = PopupUiState.NEW_SESSIONS
+                popupUiState = PopupUiState.NEW_RECORD
             } else {
                 popupUiState = PopupUiState.NONE
             }
@@ -172,8 +173,8 @@ fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
 //            }
         },
         onClickCancel = {
-            if (popupUiState == PopupUiState.NEW_SESSIONS_MODIFY) {
-                popupUiState = PopupUiState.NEW_SESSIONS
+            if (popupUiState == PopupUiState.NEW_RECORD_MODIFY) {
+                popupUiState = PopupUiState.NEW_RECORD
             } else {
                 popupUiState = PopupUiState.NONE
             }
@@ -197,9 +198,10 @@ fun NewSessionsPopup(
     visible: Boolean,
     newMap: Map<String, DetailRecord>,
     onClickModify: (detailRecord: DetailRecord) -> Unit,
-    onClickClose: () -> Unit
+    onClickClose: () -> Unit,
+    dimmed: Boolean = true
 ) {
-    Dimmed(visible)
+    Dimmed(visible && dimmed)
 
     AnimatedVisibility(
         visible,
