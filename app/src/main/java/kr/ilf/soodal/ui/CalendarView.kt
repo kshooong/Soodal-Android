@@ -294,7 +294,7 @@ fun CalendarView(
                     spacing,
                     {}
                 ) { clickedDate ->
-                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
+
                     when {
                         // 오늘보다 이후
                         clickedDate.isAfter(today) -> {
