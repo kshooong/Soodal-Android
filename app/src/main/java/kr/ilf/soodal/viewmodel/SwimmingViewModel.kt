@@ -442,7 +442,7 @@ class SwimmingViewModel(
 
     fun checkAndShowNewRecordPopup() {
         if (hasNewRecord.value) {
-            popupUiState.value = PopupUiState.NEW_SESSIONS
+            popupUiState.value = PopupUiState.NEW_RECORD
         }
     }
 
@@ -509,7 +509,7 @@ class SwimmingViewModel(
         )
 
         hasNewRecord.value = true
-        popupUiState.value = PopupUiState.NEW_SESSIONS
+        popupUiState.value = PopupUiState.NEW_RECORD
         // Test 끝
 
     }
@@ -551,8 +551,8 @@ enum class PopupUiState {
     MODIFY,
     WRITE,
     APP_FINISH,
-    NEW_SESSIONS,
-    NEW_SESSIONS_MODIFY
+    NEW_RECORD,
+    NEW_RECORD_MODIFY
 }
 
 enum class AnimationTypeUiState {
