@@ -478,7 +478,7 @@ fun ModifyRecordPopup(
                             usefulDistance + kick.intValue,
                             totalDistance,
                             poolLength,
-                            stringResource(R.string.label_kick_board),
+                            stringResource(R.string.label_kickboard),
                             "KickBoard",
                             ColorKickBoard,
                             ColorKickBoard,
