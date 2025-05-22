@@ -8,7 +8,12 @@
     <string name="label_close">닫기</string>
     <string name="label_cancel">취소</string>
     <string name="label_save">저장</string>
-    <string name="label_lap_format">/%1$s구간</string>
+    <plurals name="label_slash_laps_format">
+        <item quantity="other">/%d 구간</item>
+    </plurals>
+    <plurals name="label_laps_format">
+        <item quantity="other">%d 구간</item>
+    </plurals>
     <string name="label_freestyle">자유형</string>
     <string name="label_backstroke">배영</string>
     <string name="label_breaststroke">평영</string>
