@@ -1257,7 +1257,7 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.calendar_label_calorie), color = ColorTextDefault)
+                Text(stringResource(R.string.calendar_label_calories), color = ColorTextDefault)
                 Text(calories.toInt().toString(), color = ColorTextDefault)
             }
         }
