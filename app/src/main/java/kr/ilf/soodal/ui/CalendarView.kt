@@ -22,6 +22,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -87,6 +88,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -1004,14 +1006,20 @@ private fun CalendarHeaderView(
             horizontalArrangement = Arrangement.spacedBy(weekSpacing)
         ) {
             Text(
-                text = "일",
+                text = stringResource(R.string.calendar_label_sunday),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
                 color = Color.Red
             )
 
-            listOf("월", "화", "수", "목", "금").forEach {
+            listOf(
+                stringResource(R.string.calendar_label_monday),
+                stringResource(R.string.calendar_label_tuesday),
+                stringResource(R.string.calendar_label_wednesday),
+                stringResource(R.string.calendar_label_thursday),
+                stringResource(R.string.calendar_label_friday)
+            ).forEach {
                 Text(
                     text = it,
                     modifier = Modifier.weight(1f),
@@ -1022,7 +1030,7 @@ private fun CalendarHeaderView(
             }
 
             Text(
-                text = "토",
+                text = stringResource(R.string.calendar_label_saturday),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
@@ -1046,7 +1054,7 @@ fun CalendarDetailView(
                 CalendarUiState.WEEK_MODE,
                 CalendarUiState.TO_WEEK
             ),
-            label = "CalendarUiState",
+            label = "CalendarDetailView",
             transitionSpec = {
                 fadeIn() togetherWith fadeOut()
             }
@@ -1239,7 +1247,7 @@ private fun DetailDataView(
                     .padding(end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("시간", color = ColorTextDefault)
+                Text(stringResource(R.string.calendar_label_duration), color = ColorTextDefault)
                 Text(activeTime.toCustomTimeString(), color = ColorTextDefault)
             }
 
@@ -1249,7 +1257,7 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("칼로리", color = ColorTextDefault)
+                Text(stringResource(R.string.calendar_label_calorie), color = ColorTextDefault)
                 Text(calories.toInt().toString(), color = ColorTextDefault)
             }
         }
@@ -1265,7 +1273,10 @@ private fun DetailDataView(
                     .padding(end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("최대 심박", color = ColorTextDefault)
+                Text(
+                    stringResource(R.string.calendar_label_max_heart_rate),
+                    color = ColorTextDefault
+                )
                 Text(maxHR.toString(), color = ColorTextDefault)
             }
 
@@ -1275,7 +1286,10 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("최소 심박", color = ColorTextDefault)
+                Text(
+                    stringResource(R.string.calendar_label_min_heart_rate),
+                    color = ColorTextDefault
+                )
                 Text(minHR.toString(), color = ColorTextDefault)
             }
         }
@@ -1496,10 +1510,11 @@ fun IconWithPolygon(
 
             Icon(
                 painter = painter,
-                contentDescription = "graph",
+                contentDescription = "",
                 modifier = Modifier
                     .size(iconSize)
                     .offset(offsetX.toDp(), offsetY.toDp())
+                    .focusable(false)
                     .graphicsLayer(
                         rotationZ = if (isRotate) angle + 90f else 0f, // 이미지 여백을 위해 기본으로 20도 돌림
                         compositingStrategy = CompositingStrategy.Offscreen
@@ -1525,10 +1540,11 @@ fun IconWithPolygon(
 
             Icon(
                 painter = painter,
-                contentDescription = "graph",
+                contentDescription = "grap",
                 modifier = Modifier
                     .size(iconSize)
                     .offset(offsetX.toDp(), offsetY.toDp())
+                    .focusable(false)
                     .graphicsLayer(
                         rotationZ = if (isRotate) 90f else 0f,
                         compositingStrategy = CompositingStrategy.Offscreen
@@ -1693,17 +1709,19 @@ class PreviewViewmodel {
     }
 }
 
+@Composable
 fun Duration.toCustomTimeString(): String {
+    LocalContext.current
     val hours = this.inWholeHours
     val minutes = this.inWholeMinutes % 60
     val seconds = this.inWholeSeconds % 60
 
     val parts = mutableListOf<String>()
-    if (hours > 0) parts.add("${hours}시간")
-    if (minutes > 0) parts.add("${minutes}분")
-    if (seconds > 0) parts.add("${seconds}초")
+    if (hours > 0) parts.add("${hours}h")
+    if (minutes > 0) parts.add("${minutes}m")
+    if (seconds > 0) parts.add("${seconds}s")
 
-    return if (parts.isNotEmpty()) parts.joinToString(" ") else "기록 없음"
+    return if (parts.isNotEmpty()) parts.joinToString(" ") else stringResource(R.string.calendar_label_no_record)
 }
 
 // 시스템 설정과 상관 없이 text 크기 고정

@@ -1,4 +1,60 @@
 <resources>
     <string name="app_name">soodal</string>
     <string name="title_activity_permissions_rationale">PermissionsRationaleActivity</string>
+
+<!--    사용하는 곳(or x)_종류_내용(긴 설명일 경우 기능)_포맷여부(format or x)-->
+
+    <!--  popup  -->
+<!--    message: 설명 내용이나 안내 등.., label: 버튼이나 라벨 등, description: Description-->
+<!--    Exit Soodal?-->
+    <string name="popup_message_ask_exit_soodal">수달을 종료하시겠습니까?</string>
+<!--    New swim record available!-->
+    <string name="popup_message_new_swim_record_available">새로운 수영 기록이 있어요!</string>
+    <string name="popup_label_exit">종료</string>
+    <!--   remaining distance -->
+    <string name="popup_label_remaining_distance">잔여 거리</string>
+<!--    No remaining distance.\nPlease adjust other stroke distances and try again.-->
+    <string name="popup_message_no_remaining_distance_guidance">잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요</string>
+
+    <!--  common  -->
+    <string name="label_close">닫기</string>
+    <string name="label_cancel">취소</string>
+    <string name="label_save">저장</string>
+    <string name="label_lap_format">/%1$s구간</string>
+    <string name="label_freestyle">자유형</string>
+    <string name="label_backstroke">배영</string>
+    <string name="label_breaststroke">평영</string>
+    <string name="label_butterfly">접영</string>
+    <string name="label_mixed">혼영</string>
+    <string name="label_kick_board">킥보드</string>
+
+    <!--synchronizing-->
+    <string name="message_synchronizing">동기화 중</string>
+
+    <string name="description_logo">로고</string>
+    <!--    modify stroke-->
+    <string name="description_modify_stroke_button">영법 수정 버튼</string>
+    <string name="description_decrease_distance_button">거리 줄이기 버튼</string>
+    <string name="description_increase_distance_button">거리 늘리기 버튼</string>
+
+    <!-- bottom bar-->
+    <string name="bottom_label_calendar">캘린더</string>
+    <string name="bottom_description_calendar_bottom_menu">캘린더 하단 메뉴</string>
+    <string name="bottom_label_settings">설정</string>
+    <string name="bottom_description_settings_bottom_menu">설정 하단 메뉴</string>
+
+    <!--  calendar  -->
+    <string name="calendar_label_sunday">일</string>
+    <string name="calendar_label_monday">월</string>
+    <string name="calendar_label_tuesday">화</string>
+    <string name="calendar_label_wednesday">수</string>
+    <string name="calendar_label_thursday">목</string>
+    <string name="calendar_label_friday">금</string>
+    <string name="calendar_label_saturday">토</string>
+    <string name="calendar_label_duration">시간</string>
+    <string name="calendar_label_calorie">칼로리</string>
+    <string name="calendar_label_max_heart_rate">최대 심박</string>
+    <string name="calendar_label_min_heart_rate">최소 심박</string>
+    <string name="calendar_label_no_record">기록 없음</string>
+
 </resources>

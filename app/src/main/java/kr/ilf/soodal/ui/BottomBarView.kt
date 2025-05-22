@@ -24,11 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kr.ilf.soodal.R
 import kr.ilf.soodal.Destination
+import kr.ilf.soodal.R
 import kr.ilf.soodal.ui.theme.ColorBottomBar
 import kr.ilf.soodal.ui.theme.ColorBottomBarButton
 import kr.ilf.soodal.ui.theme.ColorBottomBarButtonActive
@@ -53,7 +54,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = buttonModifier,
-                "캘린더",
+                stringResource(R.string.bottom_label_calendar),
+                stringResource(R.string.bottom_description_calendar_bottom_menu),
                 onClick = onCalendarClick,
                 isActivated = Destination.Calendar.route == currentDestination.value,
                 R.drawable.ic_calendar,
@@ -62,7 +64,8 @@ fun BottomBarView(
 
             BottomBarButton(
                 modifier = buttonModifier,
-                "설정",
+                stringResource(R.string.bottom_label_settings),
+                stringResource(R.string.bottom_description_settings_bottom_menu),
                 onClick = onSettingClick,
                 isActivated = Destination.Setting.route == currentDestination.value,
                 R.drawable.ic_setting,
@@ -76,6 +79,7 @@ fun BottomBarView(
 private fun BottomBarButton(
     modifier: Modifier,
     title: String,
+    description: String,
     onClick: () -> Unit,
     isActivated: Boolean = false,
     imageResource: Int,
@@ -104,7 +108,7 @@ private fun BottomBarButton(
             Icon(
                 imageVector = ImageVector.vectorResource(imageResource),
 //                imageVector = ImageVector.vectorResource(id = if (isActivated) imageResourceActive else imageResource),
-                contentDescription = "home",
+                contentDescription = description,
                 modifier = Modifier.size(19.dp),
                 tint = if (isActivated) ColorBottomBarButtonActive else ColorBottomBarButton
             )
