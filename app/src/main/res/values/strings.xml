@@ -16,7 +16,14 @@
     <string name="label_close">Close</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_save">Save</string>
-    <string name="label_lap_format">/%1$sLap</string>
+    <plurals name="label_slash_laps_format">
+        <item quantity="one">/%d lap</item>
+        <item quantity="other">/%d laps</item>
+    </plurals>
+    <plurals name="label_laps_format">
+        <item quantity="one">%d lap</item>
+        <item quantity="other">%d laps</item>
+    </plurals>
     <string name="label_freestyle">Freestyle</string>
     <string name="label_backstroke">Backstroke</string>
     <string name="label_breaststroke">Breaststroke</string>

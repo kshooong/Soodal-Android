@@ -74,6 +74,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -381,13 +382,16 @@ fun ModifyRecordPopup(
                                     )
                                     Text(
                                         modifier = Modifier.alignByBaseline(),
-                                        text = stringResource(
-                                            R.string.label_lap_format, totalDistance / poolLength
+                                        text = pluralStringResource(
+                                            R.plurals.label_slash_laps_format,
+                                            totalDistance / poolLength,
+                                            totalDistance / poolLength
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.Gray,
                                         fontWeight = FontWeight.Normal
                                     )
+
                                 }
                             }
 
@@ -641,8 +645,9 @@ private fun DistanceBlock(
 
                 // 구간
                 Text(
-                    text = stringResource(
-                        R.string.label_lap_format,
+                    text = pluralStringResource(
+                        R.plurals.label_laps_format,
+                        distance.intValue / poolLength,
                         distance.intValue / poolLength
                     ),
                     style = MaterialTheme.typography.labelSmall,
