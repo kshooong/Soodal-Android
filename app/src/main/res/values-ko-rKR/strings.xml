@@ -4,7 +4,7 @@
     <string name="popup_message_new_swim_record_available">새로운 수영 기록이 있어요!</string>
     <string name="popup_label_exit">종료</string>
     <string name="popup_label_remaining_distance">잔여 거리</string>
-    <string name="popup_message_no_remaining_distance_guidance">잔여 거리가 없다면\\n다른 영법의 거리를 조정한 후 시도해 주세요</string>
+    <string name="popup_message_no_remaining_distance_guidance">잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요</string>
     <string name="label_close">닫기</string>
     <string name="label_cancel">취소</string>
     <string name="label_save">저장</string>
