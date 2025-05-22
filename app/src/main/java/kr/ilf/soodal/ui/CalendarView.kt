@@ -89,6 +89,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -1247,7 +1248,12 @@ private fun DetailDataView(
                     .padding(end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.calendar_label_duration), color = ColorTextDefault)
+                Text(
+                    stringResource(R.string.calendar_label_duration),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray
+                )
                 Text(activeTime.toCustomTimeString(), color = ColorTextDefault)
             }
 
@@ -1257,8 +1263,13 @@ private fun DetailDataView(
                     .padding(start = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.calendar_label_calories), color = ColorTextDefault)
-                Text(calories.toInt().toString(), color = ColorTextDefault)
+                Text(
+                    stringResource(R.string.calendar_label_max_heart_rate),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray
+                )
+                Text(maxHR.toString() + "bpm", color = ColorTextDefault)
             }
         }
 
@@ -1274,10 +1285,12 @@ private fun DetailDataView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    stringResource(R.string.calendar_label_max_heart_rate),
-                    color = ColorTextDefault
+                    stringResource(R.string.calendar_label_calories),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray
                 )
-                Text(maxHR.toString(), color = ColorTextDefault)
+                Text(calories.toInt().toString() + "kcal", color = ColorTextDefault)
             }
 
             Row(
@@ -1288,9 +1301,11 @@ private fun DetailDataView(
             ) {
                 Text(
                     stringResource(R.string.calendar_label_min_heart_rate),
-                    color = ColorTextDefault
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray
                 )
-                Text(minHR.toString(), color = ColorTextDefault)
+                Text(minHR.toString() + "bpm", color = ColorTextDefault)
             }
         }
     }
