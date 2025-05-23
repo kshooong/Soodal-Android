@@ -910,7 +910,8 @@ private fun CalendarHeaderView(
     val calendarMode by viewModel.calendarUiState
     val currentMonth by viewModel.currentMonth
     val currentMonthTotal by viewModel.currentMonthTotal.collectAsState()
-    val monthFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월")
+    val pattern = stringResource(R.string.calendar_date_format_year_month)
+    val monthFormatter = DateTimeFormatter.ofPattern(pattern)
 
     val coroutineScope = rememberCoroutineScope()
     val animatedProgress = remember { Animatable(0f) }

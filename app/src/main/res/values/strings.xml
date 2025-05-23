@@ -59,4 +59,6 @@
     <string name="calendar_label_min_heart_rate">Min.heart rate</string>
     <string name="calendar_label_no_record">No record</string>
 
+    <string name="calendar_date_format_year_month">MMMM yyyy</string>
+
 </resources>
