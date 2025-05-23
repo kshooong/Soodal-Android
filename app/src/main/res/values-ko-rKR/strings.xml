@@ -41,4 +41,6 @@
     <string name="calendar_label_max_heart_rate">최대 심박</string>
     <string name="calendar_label_min_heart_rate">최소 심박</string>
     <string name="calendar_label_no_record">기록 없음</string>
+
+    <string name="calendar_date_format_year_month">yyyy년 MM월</string>
 </resources>
