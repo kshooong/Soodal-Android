@@ -1,7 +1,6 @@
 package kr.ilf.soodal.ui
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -75,6 +74,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -216,7 +217,7 @@ fun NewSessionsPopup(
 
             Text(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "새로운 수영 기록이 있어요!"
+                text = stringResource(R.string.popup_message_new_swim_record_available)
             )
 
             newMap.forEach { (id, record) ->
@@ -247,13 +248,13 @@ fun NewSessionsPopup(
                         Icon(
                             modifier = Modifier.padding(),
                             imageVector = ImageVector.vectorResource(R.drawable.ic_modify),
-                            contentDescription = "영법 수정"
+                            contentDescription = stringResource(R.string.description_modify_stroke_button)
                         )
                     }
                 }
             }
             Button(onClick = onClickClose) {
-                Text(text = "닫기")
+                Text(text = stringResource(R.string.label_close))
             }
         }
     }
@@ -357,7 +358,7 @@ fun ModifyRecordPopup(
                             Column {
                                 Text(
                                     modifier = Modifier.offset(y = 3.dp),
-                                    text = "잔여 거리",
+                                    text = stringResource(R.string.popup_label_remaining_distance),
                                     style = MaterialTheme.typography.labelSmall,
                                     lineHeight = 11.sp,
                                     color = Color.Gray,
@@ -381,11 +382,16 @@ fun ModifyRecordPopup(
                                     )
                                     Text(
                                         modifier = Modifier.alignByBaseline(),
-                                        text = "/${totalDistance / poolLength}구간",
+                                        text = pluralStringResource(
+                                            R.plurals.label_slash_laps_format,
+                                            totalDistance / poolLength,
+                                            totalDistance / poolLength
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.Gray,
                                         fontWeight = FontWeight.Normal
                                     )
+
                                 }
                             }
 
@@ -394,7 +400,7 @@ fun ModifyRecordPopup(
                                     modifier = Modifier
                                         .padding(start = 6.dp)
                                         .weight(1f),
-                                    text = "잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요",
+                                    text = stringResource(R.string.popup_message_no_remaining_distance_guidance),
                                     style = MaterialTheme.typography.labelSmall,
                                     textAlign = TextAlign.End,
                                     color = Color.Gray,
@@ -416,7 +422,7 @@ fun ModifyRecordPopup(
                             usefulDistance + crawl.intValue,
                             totalDistance,
                             poolLength,
-                            "자유형",
+                            stringResource(R.string.label_freestyle),
                             "Freestyle(Crawl)",
                             ColorCrawl,
                             ColorCrawl,
@@ -428,7 +434,7 @@ fun ModifyRecordPopup(
                             usefulDistance + back.intValue,
                             totalDistance,
                             poolLength,
-                            "배영",
+                            stringResource(R.string.label_backstroke),
                             "Backstroke",
                             ColorBackStroke,
                             ColorBackStroke,
@@ -440,7 +446,7 @@ fun ModifyRecordPopup(
                             usefulDistance + breast.intValue,
                             totalDistance,
                             poolLength,
-                            "평영",
+                            stringResource(R.string.label_breaststroke),
                             "Breaststroke",
                             ColorBreastStroke,
                             ColorBreastStroke,
@@ -452,7 +458,7 @@ fun ModifyRecordPopup(
                             usefulDistance + butterfly.intValue,
                             totalDistance,
                             poolLength,
-                            "접영",
+                            stringResource(R.string.label_butterfly),
                             "Butterfly",
                             ColorButterfly,
                             ColorButterfly,
@@ -464,7 +470,7 @@ fun ModifyRecordPopup(
                             usefulDistance + mixed.intValue,
                             totalDistance,
                             poolLength,
-                            "혼영",
+                            stringResource(R.string.label_mixed),
                             "Mixed",
                             ColorMixStart,
                             ColorMixStart,
@@ -476,7 +482,7 @@ fun ModifyRecordPopup(
                             usefulDistance + kick.intValue,
                             totalDistance,
                             poolLength,
-                            "킥보드",
+                            stringResource(R.string.label_kickboard),
                             "KickBoard",
                             ColorKickBoard,
                             ColorKickBoard,
@@ -494,6 +500,7 @@ fun ModifyRecordPopup(
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     val context = LocalContext.current
+                    val newDistance by remember { derivedStateOf { crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue } }
 
                     Button(
                         modifier = Modifier
@@ -507,33 +514,27 @@ fun ModifyRecordPopup(
                             disabledContainerColor = Color.Transparent,
                         )
                     ) {
-                        Text(text = "취소")
+                        Text(text = stringResource(R.string.label_cancel))
                     }
 
                     Button(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
+                        enabled = record.distance == newDistance.toString(),
                         onClick = {
-                            val newDistance =
-                                crawl.intValue + back.intValue + breast.intValue + butterfly.intValue + kick.intValue + mixed.intValue
-                            if (record.distance == newDistance.toString()) {
-                                val detailRecord = record.copy(
-                                    crawl = crawl.intValue,
-                                    backStroke = back.intValue,
-                                    breastStroke = breast.intValue,
-                                    butterfly = butterfly.intValue,
-                                    kickBoard = kick.intValue,
-                                    mixed = mixed.intValue
+                            val detailRecord = record.copy(
+                                crawl = crawl.intValue,
+                                backStroke = back.intValue,
+                                breastStroke = breast.intValue,
+                                butterfly = butterfly.intValue,
+                                kickBoard = kick.intValue,
+                                mixed = mixed.intValue
+                            )
+                            CoroutineScope(Dispatchers.Default).launch {
+                                onClickDone(
+                                    detailRecord
                                 )
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    onClickDone(
-                                        detailRecord
-                                    )
-                                }
-                            } else {
-                                Toast.makeText(context, "총 거리가 다릅니다.", Toast.LENGTH_SHORT)
-                                    .show()
                             }
                         },
                         shape = MaterialTheme.shapes.large,
@@ -543,7 +544,7 @@ fun ModifyRecordPopup(
                             disabledContainerColor = Color.Transparent,
                         )
                     ) {
-                        Text(text = "저장")
+                        Text(text = stringResource(R.string.label_save))
                     }
                 }
             }
@@ -644,7 +645,11 @@ private fun DistanceBlock(
 
                 // 구간
                 Text(
-                    text = (distance.intValue / poolLength).toString() + "구간",
+                    text = pluralStringResource(
+                        R.plurals.label_laps_format,
+                        distance.intValue / poolLength,
+                        distance.intValue / poolLength
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray,
@@ -668,7 +673,7 @@ private fun DistanceBlock(
 
                 Icon(
                     Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                    contentDescription = "거리 감소",
+                    contentDescription = stringResource(R.string.description_decrease_distance_button),
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -739,7 +744,7 @@ private fun DistanceBlock(
 
                 Icon(
                     Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = "거리 추가",
+                    contentDescription = stringResource(R.string.description_increase_distance_button),
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -794,7 +799,7 @@ fun AppFinishPopup(
                     ) {
                         Icon(
                             ImageVector.vectorResource(R.drawable.ic_close),
-                            contentDescription = "취소",
+                            contentDescription = stringResource(R.string.label_cancel),
                         )
                     }
                 }
@@ -805,7 +810,11 @@ fun AppFinishPopup(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "앱을 종료하시겠습니까?", fontSize = 20.sp, color = ColorTextDefault)
+                    Text(
+                        text = stringResource(R.string.popup_message_ask_exit_soodal),
+                        fontSize = 20.sp,
+                        color = ColorTextDefault
+                    )
                 }
 
                 Button(
@@ -813,7 +822,7 @@ fun AppFinishPopup(
                         .fillMaxWidth()
                         .height(50.dp),
                     onClick = { onClickDone() }) {
-                    Text(text = "종료")
+                    Text(text = stringResource(R.string.popup_label_exit))
                 }
             }
         }
