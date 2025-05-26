@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -383,22 +384,28 @@ fun LoadingView(
     ) {
         Image(
             painter = painterResource(id = R.drawable.ic_launcher),
-            contentDescription = "logo",
-            modifier = Modifier.size(288.dp)
+            contentDescription = stringResource(R.string.description_logo),
+            modifier = Modifier
+                .size(288.dp)
+                .focusable(false)
         )
 
         Text(
             text = "수 달",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 280.dp),
+            modifier = Modifier
+                .padding(bottom = 280.dp)
+                .focusable(false),
             color = ColorTextDefault
         )
         Text(
             text = "영     력",
             color = Color.Gray,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 220.dp)
+            modifier = Modifier
+                .padding(bottom = 220.dp)
+                .focusable(false)
         )
     }
 }
@@ -422,8 +429,10 @@ fun SyncView(
     ) {
         Image(
             painter = painterResource(id = R.drawable.ic_launcher),
-            contentDescription = "logo",
-            modifier = Modifier.size(288.dp)
+            contentDescription = stringResource(R.string.description_logo),
+            modifier = Modifier
+                .size(288.dp)
+                .focusable(false)
         )
 
 //        Text(
@@ -435,18 +444,22 @@ fun SyncView(
             text = "수 달",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 280.dp),
+            modifier = Modifier
+                .padding(bottom = 280.dp)
+                .focusable(false),
             color = ColorTextDefault
         )
         Text(
             text = "영     력",
             color = Color.Gray,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 220.dp)
+            modifier = Modifier
+                .padding(bottom = 220.dp)
+                .focusable(false)
         )
 
         Text(
-            text = "동기화 중",
+            text = stringResource(R.string.message_synchronizing),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 280.dp),

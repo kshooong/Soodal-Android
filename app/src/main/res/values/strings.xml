@@ -1,4 +1,64 @@
 <resources>
-    <string name="app_name">soodal</string>
-    <string name="title_activity_permissions_rationale">PermissionsRationaleActivity</string>
+    <string name="app_name" translatable="false">soodal</string>
+    <string name="title_activity_permissions_rationale" translatable="false">PermissionsRationaleActivity</string>
+
+<!--    사용하는 곳(or x)_종류_내용(긴 설명일 경우 기능)_포맷여부(format or x)-->
+
+    <!--  popup  -->
+<!--    message: 설명 내용이나 안내 등.., label: 버튼이나 라벨 등, description: Description-->
+    <string name="popup_message_ask_exit_soodal">Exit Soodal?</string>
+    <string name="popup_message_new_swim_record_available">New swim record available!</string>
+    <string name="popup_label_exit">Exit</string>
+    <string name="popup_label_remaining_distance">Remaining distance</string>
+    <string name="popup_message_no_remaining_distance_guidance">No remaining distance\nPlease adjust other stroke distances</string>
+
+    <!--  common  -->
+    <string name="label_close">Close</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_save">Save</string>
+    <plurals name="label_slash_laps_format">
+        <item quantity="one">/%d lap</item>
+        <item quantity="other">/%d laps</item>
+    </plurals>
+    <plurals name="label_laps_format">
+        <item quantity="one">%d lap</item>
+        <item quantity="other">%d laps</item>
+    </plurals>
+    <string name="label_freestyle">Freestyle</string>
+    <string name="label_backstroke">Backstroke</string>
+    <string name="label_breaststroke">Breaststroke</string>
+    <string name="label_butterfly">Butterfly</string>
+    <string name="label_mixed">Mixed</string>
+    <string name="label_kickboard">Kickboard</string>
+
+    <string name="message_synchronizing">Synchronizing</string>
+
+    <string name="description_logo">Logo</string>
+    <!--    modify stroke-->
+    <string name="description_modify_stroke_button">Modify stroke button</string>
+    <string name="description_decrease_distance_button">Decrease distance button</string>
+    <string name="description_increase_distance_button">Increase distance button</string>
+
+    <!-- bottom bar-->
+    <string name="bottom_label_calendar">Calendar</string>
+    <string name="bottom_description_calendar_bottom_menu">Calendar bottom menu</string>
+    <string name="bottom_label_settings">Settings</string>
+    <string name="bottom_description_settings_bottom_menu">Settings bottom menu</string>
+
+    <!--  calendar  -->
+    <string name="calendar_label_sunday">Sun</string>
+    <string name="calendar_label_monday">Mon</string>
+    <string name="calendar_label_tuesday">Tue</string>
+    <string name="calendar_label_wednesday">Wed</string>
+    <string name="calendar_label_thursday">Thu</string>
+    <string name="calendar_label_friday">Fri</string>
+    <string name="calendar_label_saturday">Sat</string>
+    <string name="calendar_label_duration">Duration</string>
+    <string name="calendar_label_calories">Calories</string>
+    <string name="calendar_label_max_heart_rate">Max.heart rate</string>
+    <string name="calendar_label_min_heart_rate">Min.heart rate</string>
+    <string name="calendar_label_no_record">No record</string>
+
+    <string name="calendar_date_format_year_month">MMMM yyyy</string>
+
 </resources>

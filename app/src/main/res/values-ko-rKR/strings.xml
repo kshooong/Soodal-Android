@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="popup_message_ask_exit_soodal">수달을 종료하시겠습니까?</string>
+    <string name="popup_message_new_swim_record_available">새로운 수영 기록이 있어요!</string>
+    <string name="popup_label_exit">종료</string>
+    <string name="popup_label_remaining_distance">잔여 거리</string>
+    <string name="popup_message_no_remaining_distance_guidance">잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요</string>
+    <string name="label_close">닫기</string>
+    <string name="label_cancel">취소</string>
+    <string name="label_save">저장</string>
+    <plurals name="label_slash_laps_format">
+        <item quantity="other">/%d 구간</item>
+    </plurals>
+    <plurals name="label_laps_format">
+        <item quantity="other">%d 구간</item>
+    </plurals>
+    <string name="label_freestyle">자유형</string>
+    <string name="label_backstroke">배영</string>
+    <string name="label_breaststroke">평영</string>
+    <string name="label_butterfly">접영</string>
+    <string name="label_mixed">혼영</string>
+    <string name="label_kickboard">킥보드</string>
+    <string name="message_synchronizing">동기화 중</string>
+    <string name="description_logo">로고</string>
+    <string name="description_modify_stroke_button">영법 수정 버튼</string>
+    <string name="description_decrease_distance_button">거리 줄이기 버튼</string>
+    <string name="description_increase_distance_button">거리 늘리기 버튼</string>
+    <string name="bottom_label_calendar">캘린더</string>
+    <string name="bottom_description_calendar_bottom_menu">캘린더 하단 메뉴</string>
+    <string name="bottom_label_settings">설정</string>
+    <string name="bottom_description_settings_bottom_menu">설정 하단 메뉴</string>
+    <string name="calendar_label_sunday">일</string>
+    <string name="calendar_label_monday">월</string>
+    <string name="calendar_label_tuesday">화</string>
+    <string name="calendar_label_wednesday">수</string>
+    <string name="calendar_label_thursday">목</string>
+    <string name="calendar_label_friday">금</string>
+    <string name="calendar_label_saturday">토</string>
+    <string name="calendar_label_duration">시간</string>
+    <string name="calendar_label_calories">칼로리</string>
+    <string name="calendar_label_max_heart_rate">최대 심박</string>
+    <string name="calendar_label_min_heart_rate">최소 심박</string>
+    <string name="calendar_label_no_record">기록 없음</string>
+
+    <string name="calendar_date_format_year_month">yyyy년 MM월</string>
+</resources>
