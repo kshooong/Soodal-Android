@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import kr.ilf.soodal.ui.BottomBarView
 import kr.ilf.soodal.ui.NavigationView
@@ -68,7 +69,17 @@ class MainActivity : ComponentActivity() {
                 onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
                     override fun handleOnBackPressed() {
                         popupUiState = when (popupUiState) {
-                            PopupUiState.NONE -> PopupUiState.APP_FINISH
+                            PopupUiState.NONE -> {
+                                // 백 스택에 이전 화면이 있다면 pop
+                                if (navController.previousBackStackEntry != null) {
+                                    navController.popBackStack()
+                                    return
+                                }
+
+                                // 없다면 앱종료 팝업
+                                PopupUiState.APP_FINISH
+                            }
+
                             PopupUiState.NEW_RECORD_MODIFY -> PopupUiState.NEW_RECORD
                             else -> PopupUiState.NONE
                         }
@@ -83,16 +94,13 @@ class MainActivity : ComponentActivity() {
                             shape = RoundedCornerShape(3.dp)
                         )
                 ) {
-                    val prevDestination = remember { mutableStateOf(Destination.Home.route) }
-
                     NavigationView(
                         Modifier
                             .fillMaxSize()
                             .background(Color.Transparent),
                         navController,
                         healthConnectManager,
-                        viewModel,
-                        prevDestination
+                        viewModel
                     )
 
                     AnimatedVisibility(
@@ -129,19 +137,29 @@ class MainActivity : ComponentActivity() {
                             currentDestination,
                             onCalendarClick = {
                                 if (navController.currentDestination?.route != Destination.Calendar.route) {
-                                    prevDestination.value =
-                                        navController.currentDestination?.route ?: "Home"
-                                    navController.navigate(Destination.Calendar.route) {
-                                        launchSingleTop = true
-                                        popUpTo(navController.currentDestination?.route!!) {
-                                            inclusive = true
+                                    if (navController.currentDestination?.route == Destination.Settings.route) {
+                                        navController.popBackStack()
+                                    } else {
+                                        navController.navigate(Destination.Calendar.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
                                     }
                                 }
                             },
                             onSettingClick = {
-                                if (BuildConfig.DEBUG)
-                                    viewModel.testNewSessionPopup()
+                                if (navController.currentDestination?.route != Destination.Settings.route) {
+                                    navController.navigate(Destination.Settings.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             }
                         )
                     }

@@ -67,7 +67,7 @@ fun BottomBarView(
                 stringResource(R.string.bottom_label_settings),
                 stringResource(R.string.bottom_description_settings_bottom_menu),
                 onClick = onSettingClick,
-                isActivated = Destination.Setting.route == currentDestination.value,
+                isActivated = Destination.Settings.route == currentDestination.value,
                 R.drawable.ic_setting,
                 R.drawable.ic_setting_active
             )
