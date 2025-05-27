@@ -137,7 +137,7 @@ import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.PopupUiState
-import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModel
 import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
@@ -165,7 +165,7 @@ fun CalendarView(
     weekHeight: Dp,
     spacing: Dp,
     contentsBg: Color,
-    viewModel: SwimmingViewModel
+    viewModel: CalendarViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
     var calendarMode by viewModel.calendarUiState
@@ -425,7 +425,7 @@ private fun getWeekOfMonth(date: LocalDate): Int {
 
 @Composable
 private fun MonthView(
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     month: LocalDate,
     selectedMonth: MutableState<LocalDate>,
     selectedDateStr: MutableState<String>,
@@ -552,7 +552,7 @@ private fun WeekView(
     week: Int,
     firstDayOfWeek: Int,
     daysInPrevMonth: Int,
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     month: LocalDate,
     today: LocalDate,
     dayCounterStart: Int,
@@ -677,7 +677,7 @@ private fun WeekView(
 
 @Composable
 private fun RowScope.DayView(
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     height: Dp,
     backgroundColor: Color,
     borderColor: Color,
@@ -902,7 +902,7 @@ private fun RowScope.DayView(
 
 @Composable
 private fun CalendarHeaderView(
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     height: Dp,
     weekSpacing: Dp,
     contentsBg: Color
@@ -1045,7 +1045,7 @@ private fun CalendarHeaderView(
 @Composable
 fun CalendarDetailView(
     modifier: Modifier,
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     resizeBar: @Composable (Modifier) -> Unit
 ) {
     var calendarMode by viewModel.calendarUiState

@@ -43,8 +43,8 @@ import kr.ilf.soodal.ui.theme.ColorBottomBar
 import kr.ilf.soodal.ui.theme.ColorBottomBarDivider
 import kr.ilf.soodal.ui.theme.SoodalTheme
 import kr.ilf.soodal.viewmodel.PopupUiState
-import kr.ilf.soodal.viewmodel.SwimmingViewModel
-import kr.ilf.soodal.viewmodel.SwimmingViewModelFactory
+import kr.ilf.soodal.viewmodel.CalendarViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModelFactory
 import kr.ilf.soodal.viewmodel.UiState
 
 class MainActivity : ComponentActivity() {
@@ -61,8 +61,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SoodalTheme {
-                val viewModel: SwimmingViewModel =
-                    viewModel(factory = SwimmingViewModelFactory(application, healthConnectManager))
+                val viewModel: CalendarViewModel =
+                    viewModel(factory = CalendarViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
                 var popupUiState by viewModel.popupUiState
 
