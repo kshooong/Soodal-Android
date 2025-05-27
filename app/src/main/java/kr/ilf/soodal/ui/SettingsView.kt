@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kr.ilf.soodal.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +50,7 @@ fun SettingsScreen(navController: NavController) {
             item {
                 TextSettingItem(
                     title = "App Version",
-                    subtitle = "1.0.0",
+                    subtitle = BuildConfig.VERSION_NAME,
                     onClick = { /* 버전 정보 다이얼로그 등 */ }
                 )
             }
