@@ -4,6 +4,7 @@ connectClient = "1.1.0-alpha11"
 kotlin = "2.1.0"
 ksp = "2.1.0-1.0.29"
 coreKtx = "1.10.1"
+appcompat = "1.7.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -11,13 +12,18 @@ lifecycleRuntimeKtx = "2.6.1"
 lifecycleViewmodelCompose = "2.8.3"
 activityCompose = "1.8.0"
 composeBom = "2025.05.00"
+ossLicensesPlugin = "0.10.6"
+playServicesOssLicenses = "17.1.0"
 roomRersion = "2.6.1"
 navVersion = "2.8.4"
 splashscreen = "1.0.1"
 
 [libraries]
+oss-licenses-plugin = { module = "com.google.android.gms:oss-licenses-plugin", version.ref = "ossLicensesPlugin" }
+
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -37,6 +43,8 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomRersion" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

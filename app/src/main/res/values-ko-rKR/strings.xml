@@ -43,4 +43,6 @@
     <string name="calendar_label_no_record">기록 없음</string>
 
     <string name="calendar_date_format_year_month">yyyy년 MM월</string>
+    <string name="settings_label_open_source_licences">오픈소스 라이선스</string>
+    <string name="settings_label_app_version">앱 버전</string>
 </resources>
