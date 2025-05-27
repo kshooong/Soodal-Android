@@ -99,14 +99,14 @@ import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorTextButton
 import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.viewmodel.PopupUiState
-import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun PopupView(viewModel: SwimmingViewModel, navController: NavHostController) {
+fun PopupView(viewModel: CalendarViewModel, navController: NavHostController) {
     val context = LocalContext.current
     var popupUiState by viewModel.popupUiState
 
