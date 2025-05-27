@@ -61,4 +61,7 @@
 
     <string name="calendar_date_format_year_month">MMMM yyyy</string>
 
+    <string name="settings_label_open_source_licences">Open Source Licences</string>
+    <string name="settings_label_app_version">App Version</string>
+
 </resources>

@@ -1,5 +1,7 @@
 package kr.ilf.soodal.ui
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,9 +22,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kr.ilf.soodal.BuildConfig
+import kr.ilf.soodal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +45,11 @@ fun SettingsScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
+        val context = LocalContext.current as Activity
+        val openSourceLicensesStr = stringResource(R.string.settings_label_open_source_licences)
+
+        OssLicensesMenuActivity.setActivityTitle(openSourceLicensesStr)
+
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
             item {
                 SwitchSettingItem(
@@ -49,12 +60,19 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 TextSettingItem(
-                    title = "App Version",
+                    title = stringResource(R.string.settings_label_app_version),
                     subtitle = BuildConfig.VERSION_NAME,
                     onClick = { /* 버전 정보 다이얼로그 등 */ }
                 )
             }
-            // ... 기타 설정 항목들
+            item {
+                TextSettingItem(
+                    title = openSourceLicensesStr,
+                    subtitle = "",
+                    onClick = {
+                        context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))}
+                )
+            }
         }
     }
 }
