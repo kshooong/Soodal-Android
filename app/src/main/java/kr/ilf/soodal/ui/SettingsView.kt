@@ -23,20 +23,33 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kr.ilf.soodal.BuildConfig
 import kr.ilf.soodal.R
+import kr.ilf.soodal.SoodalApplication
+import kr.ilf.soodal.viewmodel.SettingsViewModel
+import kr.ilf.soodal.viewmodel.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    navController: NavController,
+    viewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(
+            (LocalContext.current.applicationContext as SoodalApplication).settingsRepository
+        )
+    )
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -54,17 +67,28 @@ fun SettingsScreen(navController: NavController) {
 
         OssLicensesMenuActivity.setActivityTitle(openSourceLicensesStr)
 
-        LazyColumn(modifier = Modifier.padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally) {
+        val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+
+        LazyColumn(
+            modifier = Modifier.padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             item {
                 SwitchSettingItem(
                     title = "Enable Notifications",
-                    checked = true,
-                    onCheckedChanged = {  }
+                    checked = notificationsEnabled,
+                    onCheckedChanged = { viewModel.onNotificationSettingChanged(!notificationsEnabled) }
                 )
             }
 
             item {
-                Spacer(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(0.5.dp).background(Color.Gray))
+                Spacer(
+                    Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(Color.Gray)
+                )
 
                 TextSettingItem(
                     title = stringResource(R.string.settings_label_app_version),
@@ -73,13 +97,20 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
             item {
-                Spacer(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(0.5.dp).background(Color.Gray))
+                Spacer(
+                    Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(Color.Gray)
+                )
 
                 TextSettingItem(
                     title = openSourceLicensesStr,
                     subtitle = "",
                     onClick = {
-                        context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))}
+                        context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
+                    }
                 )
             }
         }
