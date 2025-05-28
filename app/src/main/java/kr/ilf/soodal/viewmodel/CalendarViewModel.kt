@@ -37,7 +37,7 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.min
 
-class SwimmingViewModel(
+class CalendarViewModel(
     private val application: Application,
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
@@ -515,14 +515,14 @@ class SwimmingViewModel(
     }
 }
 
-class SwimmingViewModelFactory(
+class CalendarViewModelFactory(
     private val application: Application,
     private val healthConnectManager: HealthConnectManager,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SwimmingViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(CalendarViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SwimmingViewModel(
+            return CalendarViewModel(
                 application = application,
                 healthConnectManager = healthConnectManager
             ) as T

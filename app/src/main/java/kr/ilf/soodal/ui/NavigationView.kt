@@ -37,7 +37,6 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -72,7 +71,7 @@ import kr.ilf.soodal.ui.theme.ColorCalBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.viewmodel.CalendarUiState
-import kr.ilf.soodal.viewmodel.SwimmingViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModel
 import kr.ilf.soodal.viewmodel.UiState
 
 @Composable
@@ -80,8 +79,7 @@ fun NavigationView(
     modifier: Modifier,
     navController: NavHostController,
     healthConnectManager: HealthConnectManager,
-    viewModel: SwimmingViewModel,
-    prevDestination: MutableState<String>
+    viewModel: CalendarViewModel
 ) {
     val context = LocalContext.current
 
@@ -134,42 +132,16 @@ fun NavigationView(
         composable(
             Destination.Calendar.route,
             enterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Home.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeIn()
+                slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Home.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeOut()
+                slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut()
             },
             popEnterTransition = {
-                slideIntoContainer(
-                    towards = if (Destination.Home.route == prevDestination.value) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                ) + fadeIn()
+                slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeIn()
             },
             popExitTransition = {
-                slideOutOfContainer(
-                    towards =
-                    if (Destination.Home.route == navController.currentDestination?.route) {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    }
-                ) + fadeOut()
+                slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeOut()
             },
         ) {
             Box(
@@ -310,6 +282,63 @@ fun NavigationView(
                 }
             }
         }
+
+        composable(Destination.Loading.route) {
+            LoadingView(
+                context = context,
+                healthConnectManager = healthConnectManager,
+                viewModel = viewModel,
+                onLoadingComplete = {
+                    navController.navigate(Destination.Sync.route) {
+                        popUpTo(Destination.Loading.route) {
+                            inclusive = true
+                        }
+                    }
+                })
+        }
+        composable(Destination.Sync.route, enterTransition = {
+            fadeIn(
+                animationSpec = tween(
+                    300, easing = LinearEasing
+                )
+            )
+        }, exitTransition = {
+            fadeOut()
+        }) {
+            SyncView(
+                context = context,
+                viewModel = viewModel,
+                onSyncComplete = {
+                    navController.navigate(Destination.Calendar.route) {
+                        popUpTo(Destination.Sync.route) {
+                            inclusive = true
+                        }
+
+                        anim { }
+                    }
+
+                    viewModel.uiState.value = UiState.SCROLLING
+                }
+            )
+        }
+
+        composable(
+            Destination.Settings.route,
+            enterTransition = {
+                slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeIn()
+            },
+            exitTransition = {
+                slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeOut()
+            },
+            popEnterTransition = {
+                slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) + fadeIn()
+            },
+            popExitTransition = {
+                slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeOut()
+            },
+        ) {
+            SettingsScreen(navController)
+        }
     }
 }
 
@@ -341,7 +370,7 @@ private val DownExitTransition: ExitTransition = fadeOut(
 fun LoadingView(
     context: Context,
     healthConnectManager: HealthConnectManager,
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     onLoadingComplete: () -> Unit
 ) {
     fun setChangeToken() {
@@ -413,7 +442,7 @@ fun LoadingView(
 @Composable
 fun SyncView(
     context: Context,
-    viewModel: SwimmingViewModel,
+    viewModel: CalendarViewModel,
     onSyncComplete: () -> Unit
 ) {
     LaunchedEffect(Unit) {
