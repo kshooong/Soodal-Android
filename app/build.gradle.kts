@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.devtools.ksp)
+    id("com.google.android.gms.oss-licenses-plugin")
 }
 
 android {
@@ -14,7 +15,7 @@ android {
         minSdk = 29
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,19 +75,24 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.connect.client)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat) // OSS 타이틀 변경 시 필요
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.play.services.oss.licenses)
+
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
