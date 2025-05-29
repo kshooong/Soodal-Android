@@ -20,6 +20,8 @@ import kr.ilf.soodal.MainActivity
 import kr.ilf.soodal.R
 import kr.ilf.soodal.SharedPrefConst.AppSync
 import kr.ilf.soodal.SharedPrefConst.LastCheckTime
+import kr.ilf.soodal.SoodalApplication
+import kr.ilf.soodal.repository.SettingsRepositoryImpl
 import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.util.NotificationUtil
 import java.time.Instant
@@ -31,6 +33,13 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
     private val healthConnectManager = HealthConnectManager(context)
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val notificationEnabled =
+            ((context.applicationContext as SoodalApplication).settingsRepository as SettingsRepositoryImpl).getNotificationsEnabledOnce()
+
+        if (!notificationEnabled) {
+            return@withContext Result.success()
+        }
+
         try {
             // 헬스 커넥트 읽기 권한 체크
             val requiredPermissions =
