@@ -1,4 +1,4 @@
-package kr.ilf.soodal
+package kr.ilf.soodal.util
 
 import android.content.Context
 import android.content.Intent

@@ -65,8 +65,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
-import kr.ilf.soodal.HealthConnectManager
+import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.R
+import kr.ilf.soodal.SharedPrefConst
 import kr.ilf.soodal.ui.theme.ColorCalBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.ui.theme.ColorTextDefault
@@ -374,8 +375,8 @@ fun LoadingView(
     onLoadingComplete: () -> Unit
 ) {
     fun setChangeToken() {
-        val sharedPreferences = context.getSharedPreferences("changeToken", MODE_PRIVATE)
-        viewModel.setChangeToken(sharedPreferences.getString("changeToken", null))
+        val sharedPreferences = context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
+        viewModel.setChangeToken(sharedPreferences.getString(SharedPrefConst.AppSync.KEY_CHANE_TOKEN, null))
         onLoadingComplete()
     }
 

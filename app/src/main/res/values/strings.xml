@@ -30,11 +30,8 @@
     <string name="label_butterfly">Butterfly</string>
     <string name="label_mixed">Mixed</string>
     <string name="label_kickboard">Kickboard</string>
-
     <string name="message_synchronizing">Synchronizing</string>
-
     <string name="description_logo">Logo</string>
-    <!--    modify stroke-->
     <string name="description_modify_stroke_button">Modify stroke button</string>
     <string name="description_decrease_distance_button">Decrease distance button</string>
     <string name="description_increase_distance_button">Increase distance button</string>
@@ -66,5 +63,9 @@
     <string name="settings_label_open_source_licences">Open Source Licences</string>
     <string name="settings_label_app_version">App Version</string>
 
-
+    <!-- Notification -->
+    <string name="channel_name_new_sessions">New Swim Record Notification</string>
+    <string name="channel_description_new_sessions">Sends a notification if a new swim record is detected.</string>
+    <string name="notification_title_new_sessions">Swim Record Found!</string>
+    <string name="notification_message_new_sessions">We found a new swim record for you! Take a look in Soodal.</string>
 </resources>

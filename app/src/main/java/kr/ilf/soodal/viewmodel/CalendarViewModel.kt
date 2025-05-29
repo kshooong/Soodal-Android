@@ -3,6 +3,7 @@ package kr.ilf.soodal.viewmodel
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.edit
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
@@ -22,7 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.ilf.soodal.HealthConnectManager
+import kr.ilf.soodal.util.HealthConnectManager
+import kr.ilf.soodal.SharedPrefConst.AppSync
 import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
@@ -100,7 +102,8 @@ class CalendarViewModel(
 
     // 선택한 날짜의 데이터 종합
     private val _totalDetailRecordWithHR = MutableStateFlow<DetailRecordWithHR?>(null)
-    val totalDetailRecordWithHR: StateFlow<DetailRecordWithHR?> = _totalDetailRecordWithHR.asStateFlow()
+    val totalDetailRecordWithHR: StateFlow<DetailRecordWithHR?> =
+        _totalDetailRecordWithHR.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -214,9 +217,10 @@ class CalendarViewModel(
                 nextChangeToken = changeResponse.nextChangesToken
             }
 
-            val edit = application.getSharedPreferences("changeToken", MODE_PRIVATE).edit()
-            edit.putString("changeToken", nextChangeToken)
-            edit.apply()
+            application.getSharedPreferences(AppSync.NAME, MODE_PRIVATE).edit {
+                putString(AppSync.KEY_CHANE_TOKEN, nextChangeToken)
+                putLong(AppSync.KEY_LAST_SYNC_TIME, Instant.now().toEpochMilli())
+            }
 
             changeToken.value = nextChangeToken
             _dailyRecords.value = withContext(Dispatchers.IO) {
