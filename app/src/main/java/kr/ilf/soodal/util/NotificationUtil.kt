@@ -49,7 +49,7 @@ class NotificationUtil private constructor(private val application: Application)
      * @param title 알림 제목
      * @param message 알림 내용
      * @param pendingIntent 알림 클릭 시 전송될 인텐트
-     * @param priority 중요도(NotificationCompat.PRIORITY_*)
+     * @param priority 우선 순위(NotificationCompat.PRIORITY_*)
      * @return 알림 전송 여부 Boolean
      */
     fun sendNotification(
