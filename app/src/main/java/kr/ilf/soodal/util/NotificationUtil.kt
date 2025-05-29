@@ -77,6 +77,7 @@ class NotificationUtil private constructor(private val application: Application)
                 .setContentText(message)
                 .setPriority(priority)
                 .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(application)) {
             notify(
