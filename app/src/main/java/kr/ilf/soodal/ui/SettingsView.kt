@@ -77,7 +77,12 @@ fun SettingsScreen(
                 SwitchSettingItem(
                     title = "Enable Notifications",
                     checked = notificationsEnabled,
-                    onCheckedChanged = { viewModel.onNotificationSettingChanged(!notificationsEnabled) }
+                    onCheckedChanged = {
+                        // 권한 확인
+                        // 없으면
+                        //  권한 요청
+                        // 있으면
+                        viewModel.onNotificationSettingChanged(!notificationsEnabled) }
                 )
             }
 
