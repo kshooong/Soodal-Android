@@ -1,7 +1,15 @@
 package kr.ilf.soodal.ui
 
+import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,15 +82,41 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
+                val permissionLauncher =
+                    rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                        viewModel.onNotificationSettingChanged(granted)
+                    }
+
                 SwitchSettingItem(
-                    title = "Enable Notifications",
+                    title = "새 수영 기록 알림",
                     checked = notificationsEnabled,
-                    onCheckedChanged = {
-                        // 권한 확인
-                        // 없으면
-                        //  권한 요청
-                        // 있으면
-                        viewModel.onNotificationSettingChanged(!notificationsEnabled) }
+                    onClick = { _ ->
+                        // 알림 설정 열기
+                        context.startActivity(getAppNotificationSettingIntent(context))
+                    },
+                    onCheckedChanged = onCheckedChanged@{ checked ->
+                        // 안드로이드 13 이상에서 알림 런타임 권한요청  필요
+                        if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val permission = Manifest.permission.POST_NOTIFICATIONS
+                            val permissionGranted =
+                                context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+
+                            if (!permissionGranted) {
+                                // 이미 다시 묻지 않음 상태인 경우 설정창 이동 후 return
+                                if (!context.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                                    context.startActivity(getAppNotificationSettingIntent(context))
+
+                                    return@onCheckedChanged
+                                }
+
+                                permissionLauncher.launch(permission)
+
+                                return@onCheckedChanged
+                            }
+                        }
+
+                        viewModel.onNotificationSettingChanged(checked)
+                    }
                 )
             }
 
@@ -122,12 +156,25 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * 스위치를 포함한 설정
+ *
+ * @param title 설정 이름
+ * @param checked 설정 상태
+ * @param onClick 설정 클릭 시 실행할 콜백
+ * @param onCheckedChanged 스위치 상태 변경 시 실행할 콜백
+ */
 @Composable
-fun SwitchSettingItem(title: String, checked: Boolean, onCheckedChanged: (Boolean) -> Unit) {
+fun SwitchSettingItem(
+    title: String,
+    checked: Boolean,
+    onClick: (Boolean) -> Unit,
+    onCheckedChanged: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChanged(!checked) }
+            .clickable { onClick(checked) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -150,5 +197,31 @@ fun TextSettingItem(title: String, subtitle: String, onClick: () -> Unit) {
             Text(title)
             Text(subtitle, style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+/**
+ * 앱의 설정 화면으로 이동하는 Intent 생성
+ * 사용자가 "다시 묻지 않음"을 선택한 후 권한을 허용하도록 유도할 때 사용합니다.
+ *
+ * @param context Context
+ * @return 앱 설정 화면으로 가는 Intent
+ */
+private fun getAppSettingsIntent(context: Context): Intent {
+    return Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", context.packageName, null)
+    )
+}
+
+/**
+ * 앱의 알림 설정 화면으로 이동하는 Intent 생성
+ *
+ * @param context Context
+ * @return 앱 알림 설정 화면으로 가는 Intent
+ */
+private fun getAppNotificationSettingIntent(context: Context): Intent {
+    return Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
     }
 }
