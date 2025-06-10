@@ -23,13 +23,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.SharedPrefConst.AppSync
 import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
+import kr.ilf.soodal.util.HealthConnectManager
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -107,7 +107,9 @@ class CalendarViewModel(
 
     init {
         viewModelScope.launch {
-            hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)
+            if (healthConnectManager.availability.value) {
+                hasAllPermissions.value = healthConnectManager.checkPermissions(healthPermissions)
+            }
         }
     }
 

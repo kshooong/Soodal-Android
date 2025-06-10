@@ -7,9 +7,12 @@
     <string name="popup_label_remaining_distance">잔여 거리</string>
     <string name="popup_message_no_remaining_distance_guidance">잔여 거리가 없다면\n다른 영법의 거리를 조정한 후 시도해 주세요</string>
 
+    <string name="dialog_message_health_connect_required">Health Connect 앱 설치/업데이트가 필요합니다.</string>
+
     <!--  common  -->
     <string name="label_close">닫기</string>
     <string name="label_cancel">취소</string>
+    <string name="label_confirm">확인</string>
     <string name="label_save">저장</string>
     <plurals name="label_slash_laps_format">
         <item quantity="other">/%d 구간</item>

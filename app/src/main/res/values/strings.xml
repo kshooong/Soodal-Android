@@ -12,9 +12,12 @@
     <string name="popup_label_remaining_distance">Remaining distance</string>
     <string name="popup_message_no_remaining_distance_guidance">No remaining distance\nPlease adjust other stroke distances</string>
 
+    <string name="dialog_message_health_connect_required">Health Connect app install/update required.</string>
+
     <!--  common  -->
     <string name="label_close">Close</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_confirm">Confirm</string>
     <string name="label_save">Save</string>
     <plurals name="label_slash_laps_format">
         <item quantity="one">/%d lap</item>
@@ -68,4 +71,5 @@
     <string name="channel_description_new_sessions">Sends a notification if a new swim record is detected.</string>
     <string name="notification_title_new_sessions">Swim Record Found!</string>
     <string name="notification_message_new_sessions">We found a new swim record for you! Take a look in Soodal.</string>
+
 </resources>
