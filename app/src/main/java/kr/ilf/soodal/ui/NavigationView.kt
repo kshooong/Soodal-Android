@@ -3,6 +3,10 @@ package kr.ilf.soodal.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -32,9 +36,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -65,12 +71,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
-import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.R
 import kr.ilf.soodal.SharedPrefConst
 import kr.ilf.soodal.ui.theme.ColorCalBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.ui.theme.ColorTextDefault
+import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -374,10 +380,17 @@ fun LoadingView(
     viewModel: CalendarViewModel,
     onLoadingComplete: () -> Unit
 ) {
-    fun setChangeToken() {
-        val sharedPreferences = context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
-        viewModel.setChangeToken(sharedPreferences.getString(SharedPrefConst.AppSync.KEY_CHANE_TOKEN, null))
-        onLoadingComplete()
+    val setChangeToken = remember(context,viewModel) {
+        {
+            val sharedPreferences =
+                context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
+            viewModel.setChangeToken(
+                sharedPreferences.getString(
+                    SharedPrefConst.AppSync.KEY_CHANE_TOKEN,
+                    null
+                )
+            )
+        }
     }
 
     val availability by healthConnectManager.availability
@@ -388,8 +401,9 @@ fun LoadingView(
                 // Handle permission result/
                 if (viewModel.checkPermissions()) {
                     setChangeToken()
+                    onLoadingComplete()
                 } else {
-                    (context as Activity).finishAndRemoveTask()
+                    (context as Activity).finish()
                 }
             }
 
@@ -401,9 +415,10 @@ fun LoadingView(
         LaunchedEffect(Unit) {
             delay(500)
             setChangeToken()
+            onLoadingComplete()
         }
     } else {
-        (context as Activity).finishAndRemoveTask()
+        HealthConnectRequiredDialog(context)
     }
 
     Box(
@@ -496,4 +511,60 @@ fun SyncView(
             color = ColorTextDefault
         )
     }
+}
+
+@Composable
+private fun HealthConnectRequiredDialog(context: Context) {
+    val onDismissRequest = { (context as Activity).finishAndRemoveTask() }
+    val onConfirm = {
+        val providerPackageName = HealthConnectManager.PROVIDER_PACKAGE_NAME
+        val uriString =
+            "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
+        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
+            setPackage("com.android.vending")
+            setFlags(FLAG_ACTIVITY_NEW_TASK)
+            putExtra("overlay", true)
+            putExtra("callerId", context.packageName)
+        }
+
+        context.packageManager.resolveActivity(marketIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.let {
+                context.startActivity(marketIntent)
+            } ?: {
+            context.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$providerPackageName")
+                )
+            )
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(text = stringResource(R.string.app_name))
+        },
+        text = {
+            Text(text = stringResource(R.string.dialog_message_health_connect_required))
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirm()
+                }
+            ) {
+                Text(stringResource(R.string.label_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text(stringResource(R.string.popup_label_exit))
+            }
+        }
+    )
 }

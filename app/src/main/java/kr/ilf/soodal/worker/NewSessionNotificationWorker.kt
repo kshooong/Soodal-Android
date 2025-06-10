@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Build
+import androidx.compose.runtime.getValue
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.health.connect.client.permission.HealthPermission
@@ -35,8 +36,13 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val notificationEnabled =
             ((context.applicationContext as SoodalApplication).settingsRepository as SettingsRepositoryImpl).getNotificationsEnabledOnce()
+        val healthConnectAvailability by healthConnectManager.availability
 
         if (!notificationEnabled) {
+            return@withContext Result.success()
+        }
+
+        if (!healthConnectAvailability) {
             return@withContext Result.success()
         }
 
