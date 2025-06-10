@@ -32,7 +32,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             }
         }
         .map { preferences ->
-            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true
+            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: false
         }
 
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
