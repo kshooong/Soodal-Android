@@ -37,7 +37,7 @@
         tools:targetApi="34" >
         <activity
             android:name="kr.ilf.soodal.PermissionsRationaleActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_permissions_rationale"
             android:theme="@style/Theme.Soodal" >
             <intent-filter>

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
@@ -131,7 +132,8 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun checkPermissions(permissions: Set<String>): Boolean {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        return granted.containsAll(permissions)
+        // 33이하에서? 실제 권한을 동의해서 getGrantedPermissions에서 PERMISSION_READ_HEALTH_DATA_HISTORY 권한은 반환되지않고 필수 권한도 아니므로 빼고 확인
+        return granted.containsAll(permissions.minus(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY))
     }
 
 
