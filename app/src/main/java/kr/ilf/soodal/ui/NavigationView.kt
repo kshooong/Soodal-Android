@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -380,7 +379,7 @@ fun LoadingView(
     viewModel: CalendarViewModel,
     onLoadingComplete: () -> Unit
 ) {
-    val setChangeToken = remember(context,viewModel) {
+    val setChangeToken = remember(context, viewModel) {
         {
             val sharedPreferences =
                 context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
@@ -418,7 +417,35 @@ fun LoadingView(
             onLoadingComplete()
         }
     } else {
-        HealthConnectRequiredDialog(context)
+        HealthConnectRequiredDialog(onDismissRequest = { (context as Activity).finishAndRemoveTask() },
+            onConfirm = onConfirm@{
+                val providerPackageName = HealthConnectManager.PROVIDER_PACKAGE_NAME
+                val uriString =
+                    "market://details?id=$providerPackageName"
+                val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
+                    setPackage("com.android.vending")
+                    putExtra("overlay", true)
+                    putExtra("callerId", context.packageName)
+                }
+
+                if (context.packageManager.resolveActivity(
+                        marketIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    ) == null
+                ) {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=$providerPackageName")
+                        )
+                    )
+
+                    return@onConfirm
+                }
+
+                context.startActivity(marketIntent)
+
+            })
     }
 
     Box(
@@ -514,32 +541,7 @@ fun SyncView(
 }
 
 @Composable
-private fun HealthConnectRequiredDialog(context: Context) {
-    val onDismissRequest = { (context as Activity).finishAndRemoveTask() }
-    val onConfirm = {
-        val providerPackageName = HealthConnectManager.PROVIDER_PACKAGE_NAME
-        val uriString =
-            "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
-        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
-            setPackage("com.android.vending")
-            setFlags(FLAG_ACTIVITY_NEW_TASK)
-            putExtra("overlay", true)
-            putExtra("callerId", context.packageName)
-        }
-
-        context.packageManager.resolveActivity(marketIntent, PackageManager.MATCH_DEFAULT_ONLY)
-            ?.let {
-                context.startActivity(marketIntent)
-            } ?: {
-            context.startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://play.google.com/store/apps/details?id=$providerPackageName")
-                )
-            )
-        }
-    }
-
+private fun HealthConnectRequiredDialog(onDismissRequest: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
