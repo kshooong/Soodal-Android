@@ -88,7 +88,7 @@ fun SettingsScreen(
                     }
 
                 SwitchSettingItem(
-                    title = "새 수영 기록 알림",
+                    title = stringResource(R.string.settings_label_new_session_notification),
                     checked = notificationsEnabled,
                     onClick = { _ ->
                         // 알림 설정 열기
