@@ -1,7 +1,6 @@
 package kr.ilf.soodal.util
 
 import android.Manifest
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -13,7 +12,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kr.ilf.soodal.R
 
-class NotificationUtil private constructor(private val application: Application) {
+object NotificationUtil {
+
+    // 알림 채널 ID
+    const val CHANNEL_ID_NEW_SESSIONS = "channel_new_sessions"
+
+    // 알림 ID
+    const val NOTIFICATION_ID_NEW_SESSIONS = 1002
+
 
     /**
      * NotificationChannel 생성
@@ -24,6 +30,7 @@ class NotificationUtil private constructor(private val application: Application)
      * @param channelDescription 사용자에서 보여지는 알림 설명
      */
     fun createNotificationChannel(
+        context: Context,
         channelId: String,
         channelName: CharSequence,
         channelImportance: Int,
@@ -38,7 +45,7 @@ class NotificationUtil private constructor(private val application: Application)
         }
 
         val manager =
-            application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
     }
 
@@ -53,6 +60,7 @@ class NotificationUtil private constructor(private val application: Application)
      * @return 알림 전송 여부 Boolean
      */
     fun sendNotification(
+        context: Context,
         channelId: String,
         title: String,
         message: String,
@@ -62,7 +70,7 @@ class NotificationUtil private constructor(private val application: Application)
         // 알림 표시 권한 확인
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(
-                    application,
+                    context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
@@ -71,7 +79,7 @@ class NotificationUtil private constructor(private val application: Application)
         }
 
         val builder =
-            NotificationCompat.Builder(application, channelId)
+            NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_soodal)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -79,7 +87,7 @@ class NotificationUtil private constructor(private val application: Application)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
 
-        with(NotificationManagerCompat.from(application)) {
+        with(NotificationManagerCompat.from(context)) {
             notify(
                 NOTIFICATION_ID_NEW_SESSIONS,
                 builder.build()
@@ -87,22 +95,5 @@ class NotificationUtil private constructor(private val application: Application)
         }
 
         return true
-    }
-
-    companion object {
-        @Volatile
-        private var INSTANCE: NotificationUtil? = null
-
-        fun getInstance(application: Application): NotificationUtil {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: NotificationUtil(application).also { INSTANCE = it }
-            }
-        }
-
-        // 알림 채널 ID
-        const val CHANNEL_ID_NEW_SESSIONS = "channel_new_sessions"
-
-        // 알림 ID
-        const val NOTIFICATION_ID_NEW_SESSIONS = 1002
     }
 }

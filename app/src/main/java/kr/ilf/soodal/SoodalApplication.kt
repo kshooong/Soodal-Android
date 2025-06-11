@@ -25,9 +25,8 @@ class SoodalApplication : Application() {
     }
 
     private fun createNotificationChannels() {
-        val notificationUtil = NotificationUtil.getInstance(this)
-
-        notificationUtil.createNotificationChannel(
+         NotificationUtil.createNotificationChannel(
+             this,
             NotificationUtil.CHANNEL_ID_NEW_SESSIONS,
             resources.getString(R.string.channel_name_new_sessions),
             NotificationManager.IMPORTANCE_DEFAULT,
