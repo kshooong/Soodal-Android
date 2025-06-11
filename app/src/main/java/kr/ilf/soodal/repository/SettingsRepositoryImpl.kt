@@ -36,8 +36,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
 
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
+        try {
+            context.settingsDataStore.edit { preferences ->
+                preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
