@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 /**
  * 공통 Dialog
  *
+ * @param isVisible Dialog 표시 여부
  * @param title Dialog 제목
  * @param text Dialog 내용
  * @param confirmText confirm 버튼 텍스트
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
  */
 @Composable
 fun SoodalDialog(
+    isVisible: Boolean = false,
     title: String,
     text: String,
     dismissText: String,
@@ -24,31 +26,33 @@ fun SoodalDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm()
+    if (isVisible) {
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirm()
+                    }
+                ) {
+                    Text(confirmText)
                 }
-            ) {
-                Text(confirmText)
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                    }
+                ) {
+                    Text(dismissText)
                 }
-            ) {
-                Text(dismissText)
+            },
+            title = {
+                Text(text = title)
+            },
+            text = {
+                Text(text = text)
             }
-        },
-        title = {
-            Text(text = title)
-        },
-        text = {
-            Text(text = text)
-        }
-    )
+        )
+    }
 }

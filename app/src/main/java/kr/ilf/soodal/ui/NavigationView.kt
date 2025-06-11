@@ -416,6 +416,7 @@ fun LoadingView(
         }
     } else {
         SoodalDialog(
+            isVisible = true,
             title = stringResource(R.string.app_name),
             text = stringResource(R.string.dialog_message_health_connect_required),
             dismissText = stringResource(R.string.popup_label_exit),
