@@ -35,11 +35,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -343,7 +341,7 @@ fun NavigationView(
                 slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeOut()
             },
         ) {
-            SettingsScreen(navController)
+            SettingsView(navController)
         }
     }
 }
@@ -417,7 +415,12 @@ fun LoadingView(
             onLoadingComplete()
         }
     } else {
-        HealthConnectRequiredDialog(onDismissRequest = { (context as Activity).finishAndRemoveTask() },
+        SoodalDialog(
+            title = stringResource(R.string.app_name),
+            text = stringResource(R.string.dialog_message_health_connect_required),
+            dismissText = stringResource(R.string.popup_label_exit),
+            confirmText = stringResource(R.string.label_confirm),
+            onDismissRequest = { (context as Activity).finishAndRemoveTask() },
             onConfirm = onConfirm@{
                 val providerPackageName = HealthConnectManager.PROVIDER_PACKAGE_NAME
                 val uriString =
@@ -444,7 +447,6 @@ fun LoadingView(
                 }
 
                 context.startActivity(marketIntent)
-
             })
     }
 
@@ -538,35 +540,4 @@ fun SyncView(
             color = ColorTextDefault
         )
     }
-}
-
-@Composable
-private fun HealthConnectRequiredDialog(onDismissRequest: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(R.string.app_name))
-        },
-        text = {
-            Text(text = stringResource(R.string.dialog_message_health_connect_required))
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm()
-                }
-            ) {
-                Text(stringResource(R.string.label_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text(stringResource(R.string.popup_label_exit))
-            }
-        }
-    )
 }
