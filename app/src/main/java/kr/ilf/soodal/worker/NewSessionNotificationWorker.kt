@@ -1,6 +1,5 @@
 package kr.ilf.soodal.worker
 
-import android.app.Application
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -110,12 +109,9 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
      * @return 알림 전송 여부 Boolean
      */
     private fun sendNotification(): Boolean {
-        // NotificationUtil 객체
-        val notificationUtil =
-            NotificationUtil.getInstance(context.applicationContext as Application)
-
-        // 채널 생성이 안된 경우를 대비해 한번 더 생성(있다면 중복 안됨)
-        notificationUtil.createNotificationChannel(
+         // 채널 생성이 안된 경우를 대비해 한번 더 생성(있다면 중복 안됨)
+        NotificationUtil.createNotificationChannel(
+            context,
             NotificationUtil.CHANNEL_ID_NEW_SESSIONS,
             context.resources.getString(R.string.channel_name_new_sessions),
             NotificationManager.IMPORTANCE_DEFAULT,
@@ -140,7 +136,8 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
         )
 
         // 알림 전송 및 결과 반환
-        return notificationUtil.sendNotification(
+        return NotificationUtil.sendNotification(
+            context,
             NotificationUtil.CHANNEL_ID_NEW_SESSIONS,
             title,
             message,
