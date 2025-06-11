@@ -110,6 +110,7 @@ fun PopupView(viewModel: CalendarViewModel, navController: NavHostController) {
     val context = LocalContext.current
     var popupUiState by viewModel.popupUiState
 
+    // msms onClick-- -> on--Click 으로 통일
     NewSessionsPopup(
         modifier = Modifier
             .fillMaxSize()

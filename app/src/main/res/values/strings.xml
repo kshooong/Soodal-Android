@@ -12,12 +12,14 @@
     <string name="popup_label_remaining_distance">Remaining distance</string>
     <string name="popup_message_no_remaining_distance_guidance">No remaining distance\nPlease adjust other stroke distances</string>
 
+    <!--  Loading -->
     <string name="dialog_message_health_connect_required">Health Connect app install/update required.</string>
 
     <!--  common  -->
     <string name="label_close">Close</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_confirm">Confirm</string>
+    <string name="label_setting">Setting</string>
     <string name="label_save">Save</string>
     <plurals name="label_slash_laps_format">
         <item quantity="one">/%d lap</item>
@@ -63,9 +65,12 @@
 
     <!--  settings  -->
     <string name="settings_label_settings">Settings</string>
+    <string name="settings_label_notification">Notification</string>
     <string name="settings_label_new_session_notification">New Swim Record Notification</string>
     <string name="settings_label_open_source_licences">Open Source Licences</string>
     <string name="settings_label_app_version">App Version</string>
+
+    <string name="dialog_message_notifications_permission_required">"Permission is needed to receive notifications.\nPlease allow notification permission in the app settings."</string>
 
     <!-- Notification -->
     <string name="channel_name_new_sessions">New Swim Record Notification</string>

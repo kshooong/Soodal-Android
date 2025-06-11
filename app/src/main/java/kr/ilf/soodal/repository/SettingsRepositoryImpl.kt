@@ -19,24 +19,21 @@ val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
+    // 알림
     override val notificationsEnabled: Flow<Boolean> =
         getPreferenceFlow(PreferencesKeys.NOTIFICATIONS_ENABLED, false)
-
     override suspend fun setNotificationsEnabled(enabled: Boolean) =
         setPreferenceValue(PreferencesKeys.NOTIFICATIONS_ENABLED, enabled)
 
-
+    // 새 기록 알림
     override val newSessionNotificationsEnabled: Flow<Boolean> =
         getPreferenceFlow(PreferencesKeys.NEW_SESSION_NOTIFICATIONS_ENABLED, false)
-
     override suspend fun setNewSessionNotificationsEnabled(enabled: Boolean) =
         setPreferenceValue(PreferencesKeys.NEW_SESSION_NOTIFICATIONS_ENABLED, enabled)
 
-
-    // Worker에서 사용할 수 있도록 단일 값을 가져오는 함수
-    suspend fun getNotificationsEnabledOnce(): Boolean =  notificationsEnabled.first()
-    suspend fun getNewSessionNotificationsEnabledOnce(): Boolean =  newSessionNotificationsEnabled.first()
-
+    // Worker용 단일 값 getter
+    override suspend fun getNotificationsEnabledOnce(): Boolean =  notificationsEnabled.first()
+    override suspend fun getNewSessionNotificationsEnabledOnce(): Boolean =  newSessionNotificationsEnabled.first()
 
     private fun <T> getPreferenceFlow(key: Preferences.Key<T>, defaultValue: T): Flow<T> {
         return context.settingsDataStore.data
