@@ -8,4 +8,7 @@ interface SettingsRepository {
 
     val newSessionNotificationsEnabled: Flow<Boolean>
     suspend fun setNewSessionNotificationsEnabled(enabled: Boolean)
+
+    suspend fun getNotificationsEnabledOnce(): Boolean
+    suspend fun getNewSessionNotificationsEnabledOnce(): Boolean
 }

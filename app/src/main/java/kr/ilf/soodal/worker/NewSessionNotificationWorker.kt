@@ -21,7 +21,6 @@ import kr.ilf.soodal.R
 import kr.ilf.soodal.SharedPrefConst.AppSync
 import kr.ilf.soodal.SharedPrefConst.LastCheckTime
 import kr.ilf.soodal.SoodalApplication
-import kr.ilf.soodal.repository.SettingsRepositoryImpl
 import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.util.NotificationUtil
 import java.time.Instant
@@ -31,17 +30,16 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
     CoroutineWorker(context, params) {
 
     private val healthConnectManager = HealthConnectManager(context)
+    private val settingsRepository =
+        (context.applicationContext as SoodalApplication).settingsRepository
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val notificationEnabled =
-            ((context.applicationContext as SoodalApplication).settingsRepository as SettingsRepositoryImpl).getNotificationsEnabledOnce()
+        val notificationEnabled = settingsRepository.getNotificationsEnabledOnce()
+        val newSessionNotificationEnabled =
+            settingsRepository.getNewSessionNotificationsEnabledOnce()
         val healthConnectAvailability by healthConnectManager.availability
 
-        if (!notificationEnabled) {
-            return@withContext Result.success()
-        }
-
-        if (!healthConnectAvailability) {
+        if (!(notificationEnabled && newSessionNotificationEnabled && healthConnectAvailability)) {
             return@withContext Result.success()
         }
 
@@ -109,7 +107,7 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
      * @return 알림 전송 여부 Boolean
      */
     private fun sendNotification(): Boolean {
-         // 채널 생성이 안된 경우를 대비해 한번 더 생성(있다면 중복 안됨)
+        // 채널 생성이 안된 경우를 대비해 한번 더 생성(있다면 중복 안됨)
         NotificationUtil.createNotificationChannel(
             context,
             NotificationUtil.CHANNEL_ID_NEW_SESSIONS,

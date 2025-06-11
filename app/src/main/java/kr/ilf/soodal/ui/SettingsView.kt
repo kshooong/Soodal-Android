@@ -1,7 +1,6 @@
 package kr.ilf.soodal.ui
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -33,6 +32,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +50,7 @@ import kr.ilf.soodal.viewmodel.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
+fun SettingsView(
     navController: NavController,
     viewModel: SettingsViewModel = viewModel(
         factory = SettingsViewModelFactory(
@@ -58,11 +58,15 @@ fun SettingsScreen(
         )
     )
 ) {
+    val context = LocalContext.current
+    val notificationPermissionDialogVisible by viewModel.notificationPermissionDialogVisible
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_label_settings)) },
                 navigationIcon = {
+                    // msms onClickBack 파라미터로 변경
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -70,56 +74,81 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        val context = LocalContext.current as Activity
         val openSourceLicensesStr = stringResource(R.string.settings_label_open_source_licences)
 
         OssLicensesMenuActivity.setActivityTitle(openSourceLicensesStr)
 
         val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+        val newSessionNotificationsEnabled by viewModel.newSessionNotificationsEnabled.collectAsState()
 
         LazyColumn(
             modifier = Modifier.padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 알림
             item {
                 val permissionLauncher =
                     rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-                        viewModel.onNotificationSettingChanged(granted)
+                        if (granted) {
+                            viewModel.setNotificationEnabled(true)
+                        } else {
+                            viewModel.setNotificationPermissionDialogVisible(true)
+                        }
                     }
 
-                SwitchSettingItem(
-                    title = stringResource(R.string.settings_label_new_session_notification),
-                    checked = notificationsEnabled,
-                    onClick = { _ ->
-                        // 알림 설정 열기
-                        context.startActivity(getAppNotificationSettingIntent(context))
-                    },
-                    onCheckedChanged = onCheckedChanged@{ checked ->
-                        // 안드로이드 13 이상에서 알림 런타임 권한요청  필요
+                val onCheckedChanged = remember {
+                    onCheckedChanged@{ checked: Boolean ->
                         if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val permission = Manifest.permission.POST_NOTIFICATIONS
                             val permissionGranted =
                                 context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
                             if (!permissionGranted) {
-                                // 이미 다시 묻지 않음 상태인 경우 설정창 이동 후 return
-                                if (!context.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
-                                    context.startActivity(getAppNotificationSettingIntent(context))
-
-                                    return@onCheckedChanged
-                                }
-
                                 permissionLauncher.launch(permission)
 
                                 return@onCheckedChanged
                             }
                         }
 
-                        viewModel.onNotificationSettingChanged(checked)
+                        viewModel.setNotificationEnabled(checked)
                     }
+                }
+
+                SwitchSettingItem(
+                    title = stringResource(R.string.settings_label_notification),
+                    checked = notificationsEnabled,
+                    onClick = { checked -> onCheckedChanged(!checked) },
+                    onCheckedChanged = onCheckedChanged
                 )
             }
 
+            // 새 기록 알림
+            item {
+                val onCheckedChanged = remember {
+                   { checked: Boolean ->
+                        viewModel.setNewSessionNotificationsEnabled(checked)
+                    }
+                }
+
+                Spacer(
+                    Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(Color.Gray)
+                )
+
+                SwitchSettingItem(
+                    title = stringResource(R.string.settings_label_new_session_notification),
+                    checked = newSessionNotificationsEnabled,
+                    onClick = { checked ->
+                        onCheckedChanged(!checked)
+                    },
+                    onCheckedChanged = onCheckedChanged
+                )
+            }
+
+            // 앱 버전
             item {
                 Spacer(
                     Modifier
@@ -135,6 +164,8 @@ fun SettingsScreen(
                     onClick = { }
                 )
             }
+
+            // 오픈소스 라이선스
             item {
                 Spacer(
                     Modifier
@@ -154,6 +185,18 @@ fun SettingsScreen(
             }
         }
     }
+
+    SoodalDialog(
+        isVisible = notificationPermissionDialogVisible,
+        title = stringResource(R.string.app_name),
+        text = stringResource(R.string.dialog_message_notifications_permission_required),
+        confirmText = stringResource(R.string.label_setting),
+        dismissText = stringResource(R.string.label_cancel),
+        onDismissRequest = { viewModel.setNotificationPermissionDialogVisible(false) }
+    ) {
+        context.startActivity(getAppNotificationSettingIntent(context))
+        viewModel.setNotificationPermissionDialogVisible(false)
+    }
 }
 
 /**
@@ -162,7 +205,7 @@ fun SettingsScreen(
  * @param title 설정 이름
  * @param checked 설정 상태
  * @param onClick 설정 클릭 시 실행할 콜백
- * @param onCheckedChanged 스위치 상태 변경 시 실행할 콜백
+ * @param onCheckedChanged 스위치 상태 변경(스위치 클릭) 시 실행할 콜백
  */
 @Composable
 fun SwitchSettingItem(
@@ -174,7 +217,7 @@ fun SwitchSettingItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(checked) }
+            .clickable { onClick(checked) } // 클릭 시 현재 상태 이용 가능성을 위해 not() 하지않음
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
