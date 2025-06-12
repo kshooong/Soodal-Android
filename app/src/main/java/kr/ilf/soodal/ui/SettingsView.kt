@@ -9,19 +9,19 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,12 +29,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -45,9 +47,12 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kr.ilf.soodal.BuildConfig
 import kr.ilf.soodal.R
 import kr.ilf.soodal.SoodalApplication
+import kr.ilf.soodal.ui.theme.ColorGroupDivider
+import kr.ilf.soodal.ui.theme.ColorItemDivider
 import kr.ilf.soodal.viewmodel.SettingsViewModel
 import kr.ilf.soodal.viewmodel.SettingsViewModelFactory
 
+// msms lazy필요?, setting 클래스 만들어서 forEach로 변경?, 알림 권한 확인 후 알림 비활성화 로직 추가
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
@@ -70,9 +75,11 @@ fun SettingsView(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
-        }
+        },
+        containerColor = Color.White
     ) { paddingValues ->
         val openSourceLicensesStr = stringResource(R.string.settings_label_open_source_licences)
 
@@ -125,20 +132,15 @@ fun SettingsView(
             // 새 기록 알림
             item {
                 val onCheckedChanged = remember {
-                   { checked: Boolean ->
+                    { checked: Boolean ->
                         viewModel.setNewSessionNotificationsEnabled(checked)
                     }
                 }
 
-                Spacer(
-                    Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(0.5.dp)
-                        .background(Color.Gray)
-                )
+                ItemDivider()
 
                 SwitchSettingItem(
+                    enabled = notificationsEnabled,
                     title = stringResource(R.string.settings_label_new_session_notification),
                     checked = newSessionNotificationsEnabled,
                     onClick = { checked ->
@@ -150,34 +152,20 @@ fun SettingsView(
 
             // 앱 버전
             item {
-                Spacer(
-                    Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(0.5.dp)
-                        .background(Color.Gray)
-                )
+                GroupDivider()
 
                 TextSettingItem(
                     title = stringResource(R.string.settings_label_app_version),
                     subtitle = BuildConfig.VERSION_NAME,
-                    onClick = { }
                 )
             }
 
             // 오픈소스 라이선스
             item {
-                Spacer(
-                    Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(0.5.dp)
-                        .background(Color.Gray)
-                )
+                ItemDivider()
 
                 TextSettingItem(
                     title = openSourceLicensesStr,
-                    subtitle = "",
                     onClick = {
                         context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
                     }
@@ -202,13 +190,15 @@ fun SettingsView(
 /**
  * 스위치를 포함한 설정
  *
+ * @param enabled 설정 활성화 여부
  * @param title 설정 이름
  * @param checked 설정 상태
  * @param onClick 설정 클릭 시 실행할 콜백
  * @param onCheckedChanged 스위치 상태 변경(스위치 클릭) 시 실행할 콜백
  */
 @Composable
-fun SwitchSettingItem(
+private fun SwitchSettingItem(
+    enabled: Boolean = true,
     title: String,
     checked: Boolean,
     onClick: (Boolean) -> Unit,
@@ -217,35 +207,76 @@ fun SwitchSettingItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(checked) } // 클릭 시 현재 상태 이용 가능성을 위해 not() 하지않음
-            .padding(16.dp),
+            .heightIn(min = 60.dp)
+            .clickable(enabled = enabled) { onClick(checked) } // 클릭 시 현재 상태 이용 가능성을 위해 not() 하지않음
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(title)
-        Switch(checked = checked, onCheckedChange = onCheckedChanged)
+        val alpha = if (enabled) 1f else 0.38f
+
+        Text(text = title, modifier = Modifier.alpha(alpha))
+        Switch(
+            checked = checked,
+            enabled = enabled,
+            onCheckedChange = onCheckedChanged,
+            modifier = Modifier.height(60.dp)
+        )
     }
 }
 
 @Composable
-fun TextSettingItem(title: String, subtitle: String, onClick: () -> Unit) {
+private fun TextSettingItem(
+    enabled: Boolean = true,
+    title: String,
+    subtitle: String? = null,
+    onClick: (() -> Unit)? = null
+) {
+    val alpha = if (enabled) 1f else 0.38f
+    val clickable = enabled && onClick != null
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
+            .heightIn(min = 60.dp)
+            .clickable(enabled = clickable, onClick = onClick ?: {})
+            .padding(horizontal = 16.dp)
+            .alpha(alpha),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
             Text(title)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall)
+            subtitle?.let {
+                Text(
+                    subtitle,
+                    modifier = Modifier.padding(start = 1.dp),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
 
+@Composable
+private fun ItemDivider() {
+    HorizontalDivider(
+        Modifier
+            .padding(horizontal = 16.dp),
+        thickness = 0.5.dp,
+        color = ColorItemDivider
+    )
+}
+
+@Composable
+private fun GroupDivider() {
+    HorizontalDivider(
+        thickness = 0.5.dp,
+        color = ColorGroupDivider
+    )
+}
+
 /**
  * 앱의 설정 화면으로 이동하는 Intent 생성
- * 사용자가 "다시 묻지 않음"을 선택한 후 권한을 허용하도록 유도할 때 사용합니다.
  *
  * @param context Context
  * @return 앱 설정 화면으로 가는 Intent
