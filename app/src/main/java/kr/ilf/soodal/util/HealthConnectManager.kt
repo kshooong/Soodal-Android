@@ -1,13 +1,12 @@
-package kr.ilf.soodal
+package kr.ilf.soodal.util
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
@@ -133,7 +132,8 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun checkPermissions(permissions: Set<String>): Boolean {
         val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        return granted.containsAll(permissions)
+        // 33이하에서? 실제 권한을 동의해서 getGrantedPermissions에서 PERMISSION_READ_HEALTH_DATA_HISTORY 권한은 반환되지않고 필수 권한도 아니므로 빼고 확인
+        return granted.containsAll(permissions.minus(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY))
     }
 
 
@@ -142,25 +142,13 @@ class HealthConnectManager(private val context: Context) {
     }
 
     private fun checkHealthConnectClient(): Boolean {
-        val providerPackageName = "google.android.apps.healthdata"
-        val availabilityStatus = HealthConnectClient.getSdkStatus(context, providerPackageName)
+        val availabilityStatus = HealthConnectClient.getSdkStatus(context, PROVIDER_PACKAGE_NAME)
 
         if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE) {
-            return false // early return as there is no viable integration
+            return false
         }
 
         if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
-            // Optionally redirect to package installer to find a provider, for example:
-            val uriString =
-                "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW).apply {
-                    setPackage("com.android.vending")
-                    data = Uri.parse(uriString)
-                    putExtra("overlay", true)
-                    putExtra("callerId", context.packageName)
-                }
-            )
             return false
         }
 
@@ -180,21 +168,7 @@ class HealthConnectManager(private val context: Context) {
         return healthConnectClient.readRecords(request).records
     }
 
-//    suspend inline fun <reified T : Record> readRecords(
-//        timeRangeFilter: TimeRangeFilter
-//    ): List<T> {
-//        val request = ReadRecordsRequest(
-//            recordType = T::class,
-//            timeRangeFilter = timeRangeFilter,
-//            ascendingOrder = true // 시간 순으로 정렬
-//        )
-//
-//        return healthConnectClient.readRecords(request).records
-//    }
-//
-//    private suspend inline fun <reified T : Record> readRecord(uid: String): ReadRecordResponse<T> {
-//        val response = healthConnectClient.readRecord(T::class, uid)
-//
-//        return response
-//    }
+    companion object {
+        const val PROVIDER_PACKAGE_NAME = "com.google.android.apps.healthdata"
+    }
 }

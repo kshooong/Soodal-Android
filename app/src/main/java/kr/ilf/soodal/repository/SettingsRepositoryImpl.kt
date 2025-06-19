@@ -10,33 +10,58 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-
+// msms 정리 및 공부 필요
 // DataStore 인스턴스를 위한 Context 확장 프로퍼티
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
-    private object PreferencesKeys {
-        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+    // 알림
+    override val notificationsEnabled: Flow<Boolean> =
+        getPreferenceFlow(PreferencesKeys.NOTIFICATIONS_ENABLED, false)
+    override suspend fun setNotificationsEnabled(enabled: Boolean) =
+        setPreferenceValue(PreferencesKeys.NOTIFICATIONS_ENABLED, enabled)
+
+    // 새 기록 알림
+    override val newSessionNotificationsEnabled: Flow<Boolean> =
+        getPreferenceFlow(PreferencesKeys.NEW_SESSION_NOTIFICATIONS_ENABLED, false)
+    override suspend fun setNewSessionNotificationsEnabled(enabled: Boolean) =
+        setPreferenceValue(PreferencesKeys.NEW_SESSION_NOTIFICATIONS_ENABLED, enabled)
+
+    // Worker용 단일 값 getter
+    override suspend fun getNotificationsEnabledOnce(): Boolean =  notificationsEnabled.first()
+    override suspend fun getNewSessionNotificationsEnabledOnce(): Boolean =  newSessionNotificationsEnabled.first()
+
+    private fun <T> getPreferenceFlow(key: Preferences.Key<T>, defaultValue: T): Flow<T> {
+        return context.settingsDataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }
+            .map { preferences ->
+                preferences[key] ?: defaultValue
+            }
     }
 
-    override val notificationsEnabled: Flow<Boolean> = context.settingsDataStore.data
-        .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
+    private suspend fun <T> setPreferenceValue(key: Preferences.Key<T>, value: T) {
+        try {
+            context.settingsDataStore.edit { preferences ->
+                preferences[key] = value
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        .map { preferences ->
-            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true
-        }
+    }
 
-    override suspend fun setNotificationsEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
-        }
+    private object PreferencesKeys {
+        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val NEW_SESSION_NOTIFICATIONS_ENABLED =
+            booleanPreferencesKey("new_session_notifications_enabled")
     }
 }

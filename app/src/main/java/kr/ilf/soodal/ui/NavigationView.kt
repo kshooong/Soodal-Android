@@ -3,6 +3,9 @@ package kr.ilf.soodal.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -65,11 +68,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kr.ilf.soodal.Destination
-import kr.ilf.soodal.HealthConnectManager
 import kr.ilf.soodal.R
+import kr.ilf.soodal.SharedPrefConst
 import kr.ilf.soodal.ui.theme.ColorCalBgEnd
 import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.ui.theme.ColorTextDefault
+import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
 import kr.ilf.soodal.viewmodel.UiState
@@ -337,7 +341,7 @@ fun NavigationView(
                 slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End) + fadeOut()
             },
         ) {
-            SettingsScreen(navController)
+            SettingsView(navController)
         }
     }
 }
@@ -373,10 +377,17 @@ fun LoadingView(
     viewModel: CalendarViewModel,
     onLoadingComplete: () -> Unit
 ) {
-    fun setChangeToken() {
-        val sharedPreferences = context.getSharedPreferences("changeToken", MODE_PRIVATE)
-        viewModel.setChangeToken(sharedPreferences.getString("changeToken", null))
-        onLoadingComplete()
+    val setChangeToken = remember(context, viewModel) {
+        {
+            val sharedPreferences =
+                context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
+            viewModel.setChangeToken(
+                sharedPreferences.getString(
+                    SharedPrefConst.AppSync.KEY_CHANE_TOKEN,
+                    null
+                )
+            )
+        }
     }
 
     val availability by healthConnectManager.availability
@@ -387,8 +398,9 @@ fun LoadingView(
                 // Handle permission result/
                 if (viewModel.checkPermissions()) {
                     setChangeToken()
+                    onLoadingComplete()
                 } else {
-                    (context as Activity).finishAndRemoveTask()
+                    (context as Activity).finish()
                 }
             }
 
@@ -400,9 +412,43 @@ fun LoadingView(
         LaunchedEffect(Unit) {
             delay(500)
             setChangeToken()
+            onLoadingComplete()
         }
     } else {
-        (context as Activity).finishAndRemoveTask()
+        SoodalDialog(
+            isVisible = true,
+            title = stringResource(R.string.app_name),
+            text = stringResource(R.string.dialog_message_health_connect_required),
+            dismissText = stringResource(R.string.popup_label_exit),
+            confirmText = stringResource(R.string.label_confirm),
+            onDismissRequest = { (context as Activity).finishAndRemoveTask() },
+            onConfirm = onConfirm@{
+                val providerPackageName = HealthConnectManager.PROVIDER_PACKAGE_NAME
+                val uriString =
+                    "market://details?id=$providerPackageName"
+                val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
+                    setPackage("com.android.vending")
+                    putExtra("overlay", true)
+                    putExtra("callerId", context.packageName)
+                }
+
+                if (context.packageManager.resolveActivity(
+                        marketIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    ) == null
+                ) {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=$providerPackageName")
+                        )
+                    )
+
+                    return@onConfirm
+                }
+
+                context.startActivity(marketIntent)
+            })
     }
 
     Box(

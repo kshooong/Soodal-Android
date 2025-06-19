@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- For check if Health Connect is installed -->
     <queries>
@@ -36,7 +37,7 @@
         tools:targetApi="34" >
         <activity
             android:name="kr.ilf.soodal.PermissionsRationaleActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_permissions_rationale"
             android:theme="@style/Theme.Soodal" >
             <intent-filter>
