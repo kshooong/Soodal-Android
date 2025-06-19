@@ -4,6 +4,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     val notificationsEnabled: Flow<Boolean>
-
     suspend fun setNotificationsEnabled(enabled: Boolean)
+
+    val newSessionNotificationsEnabled: Flow<Boolean>
+    suspend fun setNewSessionNotificationsEnabled(enabled: Boolean)
+
+    suspend fun getNotificationsEnabledOnce(): Boolean
+    suspend fun getNewSessionNotificationsEnabledOnce(): Boolean
 }

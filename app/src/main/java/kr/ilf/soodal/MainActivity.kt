@@ -42,14 +42,16 @@ import kr.ilf.soodal.ui.PopupView
 import kr.ilf.soodal.ui.theme.ColorBottomBar
 import kr.ilf.soodal.ui.theme.ColorBottomBarDivider
 import kr.ilf.soodal.ui.theme.SoodalTheme
-import kr.ilf.soodal.viewmodel.PopupUiState
+import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.viewmodel.CalendarViewModel
 import kr.ilf.soodal.viewmodel.CalendarViewModelFactory
+import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.UiState
 
 class MainActivity : ComponentActivity() {
 
     private val healthConnectManager by lazy { HealthConnectManager(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
