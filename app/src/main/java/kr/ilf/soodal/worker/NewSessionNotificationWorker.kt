@@ -88,7 +88,7 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
             }
 
             // 조회 시간 저장
-            prefsLastCheckTime.edit {
+            prefsLastCheckTime.edit(true) {
                 putLong(LastCheckTime.KEY_LAST_CHECK_TIME, endTime.toEpochMilli())
                 // edit 블럭이 종료된 후 자동 실행(commit: Boolean 파라미터를 통해 apply, commit 선택 가능. 기본값 apply)
             }

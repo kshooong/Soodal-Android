@@ -43,7 +43,7 @@ class SoodalApplication : Application() {
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             NewSessionNotificationWorker.NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             newSessionNotificationWorkRequest
         )
     }
