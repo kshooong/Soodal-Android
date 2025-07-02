@@ -83,7 +83,7 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
 
             // 알림 전송 로직
             val isSent = sendNotification()
-            if (isSent) {
+            if (!isSent) {
                 return@withContext Result.failure()
             }
 

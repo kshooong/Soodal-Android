@@ -220,7 +220,7 @@ class CalendarViewModel(
             }
 
             application.getSharedPreferences(AppSync.NAME, MODE_PRIVATE).edit {
-                putString(AppSync.KEY_CHANE_TOKEN, nextChangeToken)
+                putString(AppSync.KEY_CHANGE_TOKEN, nextChangeToken)
                 putLong(AppSync.KEY_LAST_SYNC_TIME, Instant.now().toEpochMilli())
             }
 

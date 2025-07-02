@@ -383,7 +383,7 @@ fun LoadingView(
                 context.getSharedPreferences(SharedPrefConst.AppSync.NAME, MODE_PRIVATE)
             viewModel.setChangeToken(
                 sharedPreferences.getString(
-                    SharedPrefConst.AppSync.KEY_CHANE_TOKEN,
+                    SharedPrefConst.AppSync.KEY_CHANGE_TOKEN,
                     null
                 )
             )
