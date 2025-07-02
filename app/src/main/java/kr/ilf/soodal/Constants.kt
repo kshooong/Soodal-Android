@@ -7,8 +7,9 @@ object SharedPrefConst {
         const val KEY_CHANGE_TOKEN = "change_token"
     }
 
-    object LastCheckTime {
-        const val NAME = "prefs_last_check_time"
+    object NewSessionCheck {
+        const val NAME = "prefs_new_session_check"
         const val KEY_LAST_CHECK_TIME = "last_check_time"
+        const val KEY_CHANGE_TOKEN = "change_token"
     }
 }

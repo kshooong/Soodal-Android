@@ -9,22 +9,20 @@ import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
+import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
-import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kr.ilf.soodal.MainActivity
 import kr.ilf.soodal.R
-import kr.ilf.soodal.SharedPrefConst.AppSync
-import kr.ilf.soodal.SharedPrefConst.LastCheckTime
+import kr.ilf.soodal.SharedPrefConst.NewSessionCheck
 import kr.ilf.soodal.SoodalApplication
 import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.util.NotificationUtil
 import java.time.Instant
-import kotlin.math.max
 
 class NewSessionNotificationWorker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
@@ -53,30 +51,22 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
                 return@withContext Result.failure()
             }
 
-            // 조회 시간 확인
-            val prefsAppSync = context.getSharedPreferences(AppSync.NAME, MODE_PRIVATE)
-            val prefsLastCheckTime = context.getSharedPreferences(LastCheckTime.NAME, MODE_PRIVATE)
-
-            val lastAppSyncTimeMills = prefsAppSync.getLong(AppSync.KEY_LAST_SYNC_TIME, 0L)
-            val lastCheckTimeMills =
-                prefsLastCheckTime.getLong(LastCheckTime.KEY_LAST_CHECK_TIME, 0L)
-
-            if (lastAppSyncTimeMills == 0L) {
-                // 최초 싱크를 하지 않은 경우 종료
-                return@withContext Result.success()
-            }
-
-            val startTimeMills = max(lastAppSyncTimeMills, lastCheckTimeMills)
-            val startTime = Instant.ofEpochMilli(startTimeMills)
-            val endTime = Instant.now()
+            // NewSessionCheck change_token 확인, 없으면 종료(최초 데이터 동기화를 하지 않은 상태)
+            val sharedPreferences = context.getSharedPreferences(NewSessionCheck.NAME, MODE_PRIVATE)
+            val changeToken = sharedPreferences.getString(NewSessionCheck.KEY_CHANGE_TOKEN, null)
+                ?: return@withContext Result.success()
 
             // 새로운 수영 기록 조회
-            val timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
-            val newExerciseSessions = healthConnectManager.readExerciseSessions(timeRangeFilter)
-            val hasNewSwimmingExerciseSession =
-                newExerciseSessions.any { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL }
+            val changeResponse = healthConnectManager.getChanges(changeToken)
+            var hasNewSession = false
 
-            if (!hasNewSwimmingExerciseSession) {
+            do {
+                hasNewSession = changeResponse.changes.any { change ->
+                    change is UpsertionChange && change.record is ExerciseSessionRecord && (change.record as ExerciseSessionRecord).exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL
+                }
+            } while (changeResponse.hasMore && !hasNewSession)
+
+            if (!hasNewSession) {
                 // 새로운 수영 기록이 없는 경우 종료
                 return@withContext Result.success()
             }
@@ -87,10 +77,10 @@ class NewSessionNotificationWorker(private val context: Context, params: WorkerP
                 return@withContext Result.failure()
             }
 
-            // 조회 시간 저장
-            prefsLastCheckTime.edit(true) {
-                putLong(LastCheckTime.KEY_LAST_CHECK_TIME, endTime.toEpochMilli())
-                // edit 블럭이 종료된 후 자동 실행(commit: Boolean 파라미터를 통해 apply, commit 선택 가능. 기본값 apply)
+            // NewSessionCheck change_token 저장
+            sharedPreferences.edit(true) {
+                putLong(NewSessionCheck.KEY_LAST_CHECK_TIME, Instant.now().toEpochMilli())
+                putString(NewSessionCheck.KEY_CHANGE_TOKEN, changeResponse.nextChangesToken)
             }
 
             return@withContext Result.success()

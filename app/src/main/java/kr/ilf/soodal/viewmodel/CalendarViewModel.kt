@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.soodal.SharedPrefConst.AppSync
+import kr.ilf.soodal.SharedPrefConst.NewSessionCheck
 import kr.ilf.soodal.database.database.SwimmingRecordDatabase
 import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
@@ -116,12 +117,13 @@ class CalendarViewModel(
     fun initSwimmingData(onSyncComplete: () -> Unit) {
         viewModelScope.launch {
             val dao = SwimmingRecordDatabase.getInstance(context = application)?.dailyRecordDao()
+            val currentTime = Instant.now()
             var nextChangeToken: String? = null
 
             if (changeToken.value == null) {
-                val startOfDay = ZonedDateTime.now().minusDays(365L).truncatedTo(ChronoUnit.DAYS)
-                val now = Instant.now()
-                val timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), now)
+                val startOfDay = currentTime.atZone(ZoneId.systemDefault()).minusDays(365L)
+                    .truncatedTo(ChronoUnit.DAYS)
+                val timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), currentTime)
 
                 val exerciseSessions = healthConnectManager.readExerciseSessions(timeRangeFilter)
 
@@ -159,8 +161,8 @@ class CalendarViewModel(
                     changeResponse.changes.forEach {
                         when (it) {
                             is UpsertionChange -> {
-                                val record = it.record as ExerciseSessionRecord
-                                if (record.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL)
+                                val record = it.record
+                                if (record is ExerciseSessionRecord && record.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL)
                                     changeList.add(record)
                             }
 
@@ -219,9 +221,16 @@ class CalendarViewModel(
                 nextChangeToken = changeResponse.nextChangesToken
             }
 
+            // AppSync change_token 저장
             application.getSharedPreferences(AppSync.NAME, MODE_PRIVATE).edit {
                 putString(AppSync.KEY_CHANGE_TOKEN, nextChangeToken)
-                putLong(AppSync.KEY_LAST_SYNC_TIME, Instant.now().toEpochMilli())
+                putLong(AppSync.KEY_LAST_SYNC_TIME, currentTime.toEpochMilli())
+            }
+
+            // NewSessionCheck change_token 저장
+            application.getSharedPreferences(NewSessionCheck.NAME, MODE_PRIVATE).edit {
+                putString(NewSessionCheck.KEY_CHANGE_TOKEN, nextChangeToken)
+                putLong(NewSessionCheck.KEY_LAST_CHECK_TIME, currentTime.toEpochMilli())
             }
 
             changeToken.value = nextChangeToken
