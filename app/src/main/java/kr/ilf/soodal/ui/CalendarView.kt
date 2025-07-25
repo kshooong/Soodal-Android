@@ -107,6 +107,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.soodal.R
+import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
@@ -136,13 +137,14 @@ import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
-import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
+import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
@@ -1680,17 +1682,65 @@ fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
 @Preview
 @Composable
 fun DetailViewPreview() {
-//    Box(){
-//    CalendarDetailView(
-//        modifier = Modifier.align(Alignment.BottomCenter),
-//        viewModel = PreviewViewmodel(),
-//        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
-//        initialHeight = 230
-//    )}
+    Box(){
+    CalendarDetailView(
+        modifier = Modifier.align(Alignment.BottomCenter),
+        viewModel = PreviewViewmodel(),
+
+    )}
 }
 
-class PreviewViewmodel {
-    val popupUiState = mutableStateOf(PopupUiState.NONE)
+class PreviewViewmodel:CalendarViewModel {
+    override val uiState: MutableState<UiState>
+        get() = TODO("Not yet implemented")
+    override val calendarUiState: MutableState<CalendarUiState>
+        get() = TODO("Not yet implemented")
+    override val popupUiState = mutableStateOf(PopupUiState.NONE)
+    override val healthPermissions: Set<String>
+        get() = TODO("Not yet implemented")
+    override val hasAllPermissions: MutableState<Boolean>
+        get() = TODO("Not yet implemented")
+    override val currentMonth: MutableState<LocalDate>
+        get() = TODO("Not yet implemented")
+    override val currentWeek: MutableState<LocalDate>
+        get() = TODO("Not yet implemented")
+    override val currentMonthTotal: StateFlow<DailyRecord>
+        get() = TODO("Not yet implemented")
+    override val dailyRecords: StateFlow<MutableMap<ZonedDateTime, DailyRecord>>
+        get() = TODO("Not yet implemented")
+    override val currentDetailRecords: StateFlow<List<DetailRecordWithHR>>
+        get() = TODO("Not yet implemented")
+    override val currentModifyRecord: StateFlow<DetailRecord?>
+        get() = TODO("Not yet implemented")
+    override val newRecords: StateFlow<MutableMap<String, DetailRecord>>
+        get() = TODO("Not yet implemented")
+    override val totalDetailRecordWithHR: StateFlow<DetailRecordWithHR?>
+        get() = TODO("Not yet implemented")
+
+    override fun initSwimmingData(onSyncComplete: () -> Unit) {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateDailyRecords(month: LocalDate) {
+        TODO("Not yet implemented")
+    }
+
+    override fun findDetailRecord(date: Instant) {
+        TODO("Not yet implemented")
+    }
+
+    override fun calculateTotalDetailRecord(detailRecords: List<DetailRecordWithHR>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkAndShowNewRecordPopup() {
+        TODO("Not yet implemented")
+    }
+
+    override fun resetDetailRecord() {
+        TODO("Not yet implemented")
+    }
+
     val currentDetailRecord: StateFlow<List<DetailRecordWithHR?>> =
         MutableStateFlow(
             listOf(
@@ -1720,8 +1770,28 @@ class PreviewViewmodel {
     private val _currentModifyRecord =
         MutableStateFlow<DetailRecord?>(null)
 
-    fun setModifyRecord(record: DetailRecord?) {
+    override fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
+    }
+
+    override fun modifyDetailRecord(record: DetailRecord) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun removeNewRecord(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkPermissions(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun setChangeToken(token: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun testNewSessionPopup() {
+        TODO("Not yet implemented")
     }
 }
 
