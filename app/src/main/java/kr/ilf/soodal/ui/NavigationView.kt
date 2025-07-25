@@ -75,7 +75,7 @@ import kr.ilf.soodal.ui.theme.ColorCalBgStart
 import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.util.HealthConnectManager
 import kr.ilf.soodal.viewmodel.CalendarUiState
-import kr.ilf.soodal.viewmodel.CalendarViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModelImpl
 import kr.ilf.soodal.viewmodel.UiState
 
 @Composable
@@ -83,7 +83,7 @@ fun NavigationView(
     modifier: Modifier,
     navController: NavHostController,
     healthConnectManager: HealthConnectManager,
-    viewModel: CalendarViewModel
+    viewModel: CalendarViewModelImpl
 ) {
     val context = LocalContext.current
 
@@ -374,7 +374,7 @@ private val DownExitTransition: ExitTransition = fadeOut(
 fun LoadingView(
     context: Context,
     healthConnectManager: HealthConnectManager,
-    viewModel: CalendarViewModel,
+    viewModel: CalendarViewModelImpl,
     onLoadingComplete: () -> Unit
 ) {
     val setChangeToken = remember(context, viewModel) {
@@ -488,7 +488,7 @@ fun LoadingView(
 @Composable
 fun SyncView(
     context: Context,
-    viewModel: CalendarViewModel,
+    viewModel: CalendarViewModelImpl,
     onSyncComplete: () -> Unit
 ) {
     LaunchedEffect(Unit) {
