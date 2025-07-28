@@ -1682,15 +1682,19 @@ fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
 @Preview
 @Composable
 fun DetailViewPreview() {
-    Box(){
-    CalendarDetailView(
-        modifier = Modifier.align(Alignment.BottomCenter),
-        viewModel = PreviewViewmodel(),
-
-    )}
+//    Box(){
+//    CalendarDetailView(
+//        modifier = Modifier.align(Alignment.BottomCenter),
+//        viewModel = PreviewViewmodel(),
+//
+//    )}
 }
 
-class PreviewViewmodel:CalendarViewModel {
+class PreviewViewmodel() :CalendarViewModel {
+    override val testState: MutableState<Int>
+        get() {
+            TODO()
+        }
     override val uiState: MutableState<UiState>
         get() = TODO("Not yet implemented")
     override val calendarUiState: MutableState<CalendarUiState>
