@@ -93,6 +93,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.play.services.oss.licenses)
 
+    implementation(libs.mpandroidchart)
+
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.androidx.room.runtime)
