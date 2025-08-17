@@ -43,7 +43,7 @@ import kr.ilf.soodal.ui.theme.ColorBottomBar
 import kr.ilf.soodal.ui.theme.ColorBottomBarDivider
 import kr.ilf.soodal.ui.theme.SoodalTheme
 import kr.ilf.soodal.util.HealthConnectManager
-import kr.ilf.soodal.viewmodel.CalendarViewModel
+import kr.ilf.soodal.viewmodel.CalendarViewModelImpl
 import kr.ilf.soodal.viewmodel.CalendarViewModelFactory
 import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.UiState
@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SoodalTheme {
-                val viewModel: CalendarViewModel =
+                val viewModel: CalendarViewModelImpl =
                     viewModel(factory = CalendarViewModelFactory(application, healthConnectManager))
                 val navController = rememberNavController()
                 var popupUiState by viewModel.popupUiState
