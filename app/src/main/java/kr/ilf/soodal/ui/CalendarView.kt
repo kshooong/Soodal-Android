@@ -107,6 +107,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.ilf.soodal.R
+import kr.ilf.soodal.database.entity.DailyRecord
 import kr.ilf.soodal.database.entity.DetailRecord
 import kr.ilf.soodal.database.entity.DetailRecordWithHR
 import kr.ilf.soodal.database.entity.HeartRateSample
@@ -136,13 +137,14 @@ import kr.ilf.soodal.ui.theme.ColorTextDefault
 import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
-import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
+import kr.ilf.soodal.viewmodel.PopupUiState
 import kr.ilf.soodal.viewmodel.UiState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
@@ -1197,174 +1199,6 @@ fun DetailModeContent(
     DetailDataView(detailRecordWithHR)
 }
 
-@Composable
-private fun DetailDataView(
-    detailRecordWithHR: DetailRecordWithHR,
-    isDetail: Boolean = false
-) {
-    val detailRecord = detailRecordWithHR.detailRecord
-
-    val activeTime = detailRecord.activeTime?.let { Duration.parse(it) } ?: Duration.ZERO
-    val calories = detailRecord.energyBurned?.toDouble() ?: 0.0
-    val maxHR = detailRecord.maxHeartRate?.toInt() ?: 0
-    val minHR = detailRecord.minHeartRate?.toInt() ?: 0
-
-    val animationSpec = spring(
-        visibilityThreshold = Int.VisibilityThreshold, stiffness = Spring.StiffnessLow
-    )
-    val animatedCrawl by animateIntAsState(detailRecord.crawl, animationSpec)
-    val animatedBackStroke by animateIntAsState(detailRecord.backStroke, animationSpec)
-    val animatedBreastStroke by animateIntAsState(detailRecord.breastStroke, animationSpec)
-    val animatedButterfly by animateIntAsState(detailRecord.butterfly, animationSpec)
-    val animatedKickBoard by animateIntAsState(detailRecord.kickBoard, animationSpec)
-    val animatedMixed by animateIntAsState(detailRecord.mixed, animationSpec)
-
-    val distanceList = listOf(
-        Triple(detailRecord.crawl, animatedCrawl, SolidColor(ColorCrawl)),
-        Triple(detailRecord.backStroke, animatedBackStroke, SolidColor(ColorBackStroke)),
-        Triple(
-            detailRecord.breastStroke,
-            animatedBreastStroke,
-            SolidColor(ColorBreastStroke)
-        ),
-        Triple(detailRecord.butterfly, animatedButterfly, SolidColor(ColorButterfly)),
-        Triple(
-            detailRecord.mixed, animatedMixed, Brush.verticalGradient(
-                Pair(0f, ColorMixStart),
-                Pair(1f, ColorMixEnd)
-            )
-        ),
-        Triple(detailRecord.kickBoard, animatedKickBoard, SolidColor(ColorKickBoard))
-    )
-
-    Column {
-        Row(
-            modifier = Modifier
-                .padding(top = 5.dp)
-                .fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    stringResource(R.string.calendar_label_duration),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-                Text(activeTime.toCustomTimeString(), color = ColorTextDefault)
-            }
-
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    stringResource(R.string.calendar_label_max_heart_rate),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-                Text(maxHR.toString() + "bpm", color = ColorTextDefault)
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .padding(top = 5.dp)
-                .fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    stringResource(R.string.calendar_label_calories),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-                Text(calories.toInt().toString() + "kcal", color = ColorTextDefault)
-            }
-
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    stringResource(R.string.calendar_label_min_heart_rate),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-                Text(minHR.toString() + "bpm", color = ColorTextDefault)
-            }
-        }
-    }
-
-    Column(
-        Modifier
-            .padding(top = 5.dp)
-            .fillMaxWidth()
-            .background(
-                SkyBlue6, shape = RoundedCornerShape(15.dp)
-            )
-            .padding(8.dp)
-    ) {
-        var refValue by remember { mutableIntStateOf(1000) }
-        val animatedRefVal by animateIntAsState(
-            refValue, spring(
-                visibilityThreshold = Int.VisibilityThreshold,
-                stiffness = 200f
-            )
-        )
-
-        distanceList.filter {
-            it.first != 0
-        }.sortedByDescending {
-            it.first
-        }.forEachIndexed { i, it ->
-            if (i == 0) refValue = max(1000, it.first)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .height(30.dp)
-                        .fillMaxWidth(it.second / animatedRefVal.toFloat())
-                        .background(
-                            it.third,
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .padding(end = 7.dp),
-                    contentAlignment = Alignment.CenterEnd,
-                ) {
-                    if (it.first >= 75) Text(
-                        it.second.toString(),
-                        lineHeight = 14.dp.toSp,
-                        fontSize = 14.dp.toSp,
-                        color = ColorTextDefault
-                    )
-                }
-
-                if (it.first < 75) Text(
-                    it.second.toString(),
-                    lineHeight = 14.dp.toSp,
-                    fontSize = 14.dp.toSp,
-                    color = ColorTextDefault
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun ResizeBar(
@@ -1684,13 +1518,65 @@ fun DetailViewPreview() {
 //    CalendarDetailView(
 //        modifier = Modifier.align(Alignment.BottomCenter),
 //        viewModel = PreviewViewmodel(),
-//        currentDate = Instant.now().truncatedTo(ChronoUnit.DAYS),
-//        initialHeight = 230
+//
 //    )}
 }
 
-class PreviewViewmodel {
-    val popupUiState = mutableStateOf(PopupUiState.NONE)
+class PreviewViewmodel() :CalendarViewModel {
+    override val testState: MutableState<Int>
+        get() {
+            TODO()
+        }
+    override val uiState: MutableState<UiState>
+        get() = TODO("Not yet implemented")
+    override val calendarUiState: MutableState<CalendarUiState>
+        get() = TODO("Not yet implemented")
+    override val popupUiState = mutableStateOf(PopupUiState.NONE)
+    override val healthPermissions: Set<String>
+        get() = TODO("Not yet implemented")
+    override val hasAllPermissions: MutableState<Boolean>
+        get() = TODO("Not yet implemented")
+    override val currentMonth: MutableState<LocalDate>
+        get() = TODO("Not yet implemented")
+    override val currentWeek: MutableState<LocalDate>
+        get() = TODO("Not yet implemented")
+    override val currentMonthTotal: StateFlow<DailyRecord>
+        get() = TODO("Not yet implemented")
+    override val dailyRecords: StateFlow<MutableMap<ZonedDateTime, DailyRecord>>
+        get() = TODO("Not yet implemented")
+    override val currentDetailRecords: StateFlow<List<DetailRecordWithHR>>
+        get() = TODO("Not yet implemented")
+    override val currentModifyRecord: StateFlow<DetailRecord?>
+        get() = TODO("Not yet implemented")
+    override val newRecords: StateFlow<MutableMap<String, DetailRecord>>
+        get() = TODO("Not yet implemented")
+    override val totalDetailRecordWithHR: StateFlow<DetailRecordWithHR?>
+        get() = TODO("Not yet implemented")
+
+    override fun initSwimmingData(onSyncComplete: () -> Unit) {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateDailyRecords(month: LocalDate) {
+        TODO("Not yet implemented")
+    }
+
+    override fun findDetailRecord(date: Instant) {
+        TODO("Not yet implemented")
+    }
+
+    override fun calculateTotalDetailRecord(detailRecords: List<DetailRecordWithHR>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkAndShowNewRecordPopup() {
+        TODO("Not yet implemented")
+    }
+
+    override fun resetDetailRecord() {
+        TODO("Not yet implemented")
+    }
+
     val currentDetailRecord: StateFlow<List<DetailRecordWithHR?>> =
         MutableStateFlow(
             listOf(
@@ -1720,8 +1606,28 @@ class PreviewViewmodel {
     private val _currentModifyRecord =
         MutableStateFlow<DetailRecord?>(null)
 
-    fun setModifyRecord(record: DetailRecord?) {
+    override fun setModifyRecord(record: DetailRecord?) {
         _currentModifyRecord.value = record
+    }
+
+    override fun modifyDetailRecord(record: DetailRecord) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun removeNewRecord(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkPermissions(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun setChangeToken(token: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun testNewSessionPopup() {
+        TODO("Not yet implemented")
     }
 }
 
