@@ -11,7 +11,6 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -89,7 +88,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -134,7 +132,6 @@ import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.ColorTextDefault
-import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
@@ -148,7 +145,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
-import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -157,7 +153,8 @@ import kotlin.random.Random
 import kotlin.time.Duration
 
 val selectedMonthSaver =
-    mapSaver(save = { mapOf("selectedMonth" to it) },
+    mapSaver(
+        save = { mapOf("selectedMonth" to it) },
         restore = { it["selectedMonth"] as LocalDate })
 
 @Composable
@@ -1126,7 +1123,7 @@ fun CalendarDetailView(
 @Composable
 fun MonthModeContent(
     totalDetailRecordWithHR: DetailRecordWithHR,
-    onDetailClick: () -> Unit = {},
+    onExpandClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1144,8 +1141,8 @@ fun MonthModeContent(
             modifier = Modifier.height(24.dp),
             shape = RoundedCornerShape(10.dp),
             contentPadding = PaddingValues(),
-            onClick = onDetailClick
-        ) { Text("detail") }
+            onClick = onExpandClick
+        ) { Text("Expand") }
     }
 
     DetailDataView(totalDetailRecordWithHR)
@@ -1196,7 +1193,7 @@ fun DetailModeContent(
         }
     }
 
-    DetailDataView(detailRecordWithHR)
+    DetailDataView(detailRecordWithHR, true)
 }
 
 
@@ -1522,7 +1519,7 @@ fun DetailViewPreview() {
 //    )}
 }
 
-class PreviewViewmodel() :CalendarViewModel {
+class PreviewViewmodel() : CalendarViewModel {
     override val testState: MutableState<Int>
         get() {
             TODO()

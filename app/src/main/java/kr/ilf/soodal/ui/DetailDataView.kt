@@ -226,11 +226,13 @@ fun DetailDataView(
         }
     }
 
-    HeartRateGraphView(
-        detailRecordWithHR.detailRecord.startTime,
-        detailRecordWithHR.detailRecord.endTime,
-        detailRecordWithHR.heartRateSamples
-    )
+    if (isDetail) {
+        HeartRateGraphView(
+            detailRecordWithHR.detailRecord.startTime,
+            detailRecordWithHR.detailRecord.endTime,
+            detailRecordWithHR.heartRateSamples
+        )
+    }
 }
 
 /*@Composable
@@ -328,7 +330,7 @@ private fun aggregateToMinuteBuckets(
     samples: List<HeartRateSample>
 ): List<MinuteBucket> {
     return samples
-        .groupBy { ChronoUnit.MINUTES.between(startTime, it.time)}
+        .groupBy { ChronoUnit.MINUTES.between(startTime, it.time) }
         .map { (minute, list) ->
             val min = list.minOf { it.beatsPerMinute }
             val max = list.maxOf { it.beatsPerMinute }
@@ -352,12 +354,16 @@ class HRMarkerView(context: Context, private val buckets: List<MinuteBucket>) :
     MarkerView(context, android.R.layout.simple_list_item_1) {
     private val tv: TextView = findViewById(android.R.id.text1)
 
-    override fun refreshContent(e: Entry?, highlight: com.github.mikephil.charting.highlight.Highlight?) {
+    override fun refreshContent(
+        e: Entry?,
+        highlight: com.github.mikephil.charting.highlight.Highlight?
+    ) {
         e?.let {
             val minute = it.x.toLong()
             val bucket = buckets.find { b -> b.minute == minute }
             if (bucket != null) {
-                tv.text = "Time: ${minute}m\nMin: ${bucket.minHR}\nMax: ${bucket.maxHR}\nAvg: ${bucket.avgHR}"
+                tv.text =
+                    "Time: ${minute}m\nMin: ${bucket.minHR}\nMax: ${bucket.maxHR}\nAvg: ${bucket.avgHR}"
             }
         }
         super.refreshContent(e, highlight)
@@ -414,7 +420,7 @@ fun HeartRateGraphView(
         setDrawCircles(false)
         setDrawValues(false)
         setDrawFilled(true)
-        cubicIntensity = 0.15f
+        cubicIntensity = 0.10f
         fillColor = Color.White.toArgb()
         fillAlpha = 255
     }
