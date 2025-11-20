@@ -181,7 +181,7 @@ fun DetailDataView(
             )
             .padding(8.dp)
     ) {
-        var refValue = remember(distanceList) {
+        val refValue = remember(distanceList) {
             val maxValue = distanceList
                 .filter { it.first != 0 }
                 .maxOfOrNull { it.first } ?: 1000
