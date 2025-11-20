@@ -130,8 +130,6 @@ class MainActivity : ComponentActivity() {
 
                         BottomBarView(
                             modifier = Modifier
-                                .navigationBarsPadding()
-                                .height(60.dp)
                                 .fillMaxWidth()
                                 .align(Alignment.BottomCenter)
                                 .background(ColorBottomBar)
