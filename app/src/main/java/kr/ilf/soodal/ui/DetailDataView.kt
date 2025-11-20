@@ -181,7 +181,13 @@ fun DetailDataView(
             )
             .padding(8.dp)
     ) {
-        var refValue by remember { mutableIntStateOf(1000) }
+        var refValue = remember(distanceList) {
+            val maxValue = distanceList
+                .filter { it.first != 0 }
+                .maxOfOrNull { it.first } ?: 1000
+            max(1000, maxValue)
+        }
+
         val animatedRefVal by animateIntAsState(
             refValue, spring(
                 visibilityThreshold = Int.VisibilityThreshold,
@@ -194,7 +200,6 @@ fun DetailDataView(
         }.sortedByDescending {
             it.first
         }.forEachIndexed { i, it ->
-            if (i == 0) refValue = max(1000, it.first)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
