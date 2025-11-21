@@ -135,7 +135,6 @@ fun PopupView(viewModel: CalendarViewModelImpl, navController: NavHostController
 
     ModifyRecordPopup(
         modifier = Modifier
-            .navigationBarsPadding()
             .statusBarsPadding()
             .padding(top = 5.dp)
             .shadow(
@@ -150,7 +149,8 @@ fun PopupView(viewModel: CalendarViewModelImpl, navController: NavHostController
                     bottomStart = CornerSize(0.0.dp),
                     bottomEnd = CornerSize(0.0.dp)
                 )
-            ),
+            )
+            .navigationBarsPadding(),
         visible = popupUiState in setOf(
             PopupUiState.MODIFY,
             PopupUiState.NEW_RECORD_MODIFY
@@ -186,8 +186,7 @@ fun PopupView(viewModel: CalendarViewModelImpl, navController: NavHostController
 
     AppFinishPopup(
         modifier = Modifier
-            .fillMaxSize()
-            .navigationBarsPadding(),
+            .fillMaxSize(),
         visible = popupUiState == PopupUiState.APP_FINISH,
         onClickDone = { (context as Activity).finishAndRemoveTask() },
         onClickCancel = { popupUiState = PopupUiState.NONE }
@@ -786,7 +785,8 @@ fun AppFinishPopup(
                             bottomEnd = 0.dp
                         )
                     )
-                    .padding(20.dp),
+                    .padding(20.dp)
+                    .navigationBarsPadding(),
             ) {
                 Box(
                     modifier = Modifier
