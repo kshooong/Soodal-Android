@@ -231,7 +231,7 @@ fun DetailDataView(
         }
     }
 
-    if (isDetail) {
+    if (isDetail && detailRecordWithHR.heartRateSamples.size > 1) {
         HeartRateGraphView(
             detailRecordWithHR.detailRecord.startTime,
             detailRecordWithHR.detailRecord.endTime,
