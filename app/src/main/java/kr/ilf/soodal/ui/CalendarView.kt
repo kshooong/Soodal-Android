@@ -73,6 +73,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
@@ -80,6 +81,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
@@ -88,6 +90,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -1138,11 +1141,18 @@ fun MonthModeContent(
         )
 
         Button(
-            modifier = Modifier.height(24.dp),
+            modifier = Modifier.size(30.dp),
             shape = RoundedCornerShape(10.dp),
             contentPadding = PaddingValues(),
             onClick = onExpandClick
-        ) { Text("Expand") }
+        ) {
+            Image(
+                ImageBitmap.imageResource(R.drawable.ic_detail),
+                contentDescription = "상세 보기",
+                Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(Color.White)
+            )
+        }
     }
 
     DetailDataView(totalDetailRecordWithHR)
@@ -1172,24 +1182,39 @@ fun DetailModeContent(
             style = MaterialTheme.typography.bodySmall,
             color = ColorTextDefault
         )
-        // 임시 수정버튼
-        Button(
-            modifier = Modifier.height(24.dp),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(),
-            onClick = onModifyClick
-        ) {
-            Text(text = "영법 수정", fontSize = 12.sp)
-        }
 
-        // 임시 닫기버튼
-        Button(
-            modifier = Modifier.height(24.dp),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(),
-            onClick = onCloseClick
-        ) {
-            Text(text = "닫기 ", fontSize = 12.sp)
+        Box(modifier = Modifier.size(70.dp, 30.dp)) {
+            // 수정버튼
+            Button(
+                modifier = Modifier.size(30.dp).align(Alignment.CenterStart),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(),
+                onClick = onModifyClick
+            ) {
+                Image(
+                    ImageBitmap.imageResource(R.drawable.ic_pencil),
+                    contentDescription = "영법 수정",
+                    Modifier
+                        .size(24.dp)
+                        .padding(3.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
+
+            // 닫기버튼
+            Button(
+                modifier = Modifier.size(30.dp).align(Alignment.CenterEnd),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(),
+                onClick = onCloseClick
+            ) {
+                Image(
+                    ImageVector.vectorResource(R.drawable.ic_close),
+                    contentDescription = "닫기",
+                    Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
         }
     }
 
