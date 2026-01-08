@@ -25,13 +25,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CornerSize
@@ -56,6 +60,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -167,8 +172,15 @@ fun NavigationView(
                 val spacing = 5.dp
                 val weekModeOffset = remember { headerHeight + weekHeight + spacing + 5.dp }
                 var calendarHeight by remember { mutableFloatStateOf(0f) }
-                val configuration = LocalConfiguration.current
                 val density = LocalDensity.current
+                val localWindowInfo = LocalWindowInfo.current
+                val statusBarHeight =
+                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                val navBarHeight =
+                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+                val containerHeight =
+                    with(density) { localWindowInfo.containerSize.height.toDp() } - statusBarHeight - navBarHeight
 
                 CalendarView(
                     modifier = Modifier
@@ -188,7 +200,7 @@ fun NavigationView(
                 Box(
                     Modifier
                         .padding(bottom = 60.dp)
-                        .height(configuration.screenHeightDp.dp - 60.dp - calendarHeight.dp)
+                        .height(containerHeight - 60.dp - calendarHeight.dp)
                         .padding(bottom = 5.dp)
                         .align(Alignment.BottomCenter)
                 ) {
@@ -214,7 +226,7 @@ fun NavigationView(
 //                        restore = { it.getFloat("detailHeight").dp }
 //                    )
 //
-                    val initHeight = configuration.screenHeightDp.dp - 60.dp
+                    val initHeight = containerHeight - 60.dp
                     val detailHeight = remember { mutableStateOf(initHeight) }
                     val animatableOffset = remember {
                         Animatable(

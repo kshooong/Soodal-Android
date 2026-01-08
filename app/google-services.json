@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "468060294932",
+    "project_id": "soodal-a6c4a",
+    "storage_bucket": "soodal-a6c4a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:468060294932:android:284b7d6760223b363cbc01",
+        "android_client_info": {
+          "package_name": "kr.ilf.soodal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZ0QsvqXzc3jfQFJSPzDdBE-hNSs5agTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

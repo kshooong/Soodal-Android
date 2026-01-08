@@ -1,6 +1,7 @@
 [versions]
 agp = "8.6.0"
 connectClient = "1.1.0-alpha11"
+firebaseBom = "34.6.0"
 kotlin = "2.1.0"
 ksp = "2.1.0-1.0.29"
 coreKtx = "1.10.1"
@@ -12,6 +13,7 @@ lifecycleRuntimeKtx = "2.6.1"
 lifecycleViewmodelCompose = "2.8.3"
 activityCompose = "1.8.0"
 composeBom = "2025.05.00"
+mpandroidchart = "v3.1.0"
 ossLicensesPlugin = "0.10.6"
 playServicesOssLicenses = "17.1.0"
 roomRersion = "2.6.1"
@@ -21,6 +23,8 @@ datastore = "1.1.7"
 work_version = "2.10.1"
 
 [libraries]
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 oss-licenses-plugin = { module = "com.google.android.gms:oss-licenses-plugin", version.ref = "ossLicensesPlugin" }
 
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }

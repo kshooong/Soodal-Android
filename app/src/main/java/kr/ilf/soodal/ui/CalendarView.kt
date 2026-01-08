@@ -11,7 +11,6 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -74,6 +73,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
@@ -81,6 +81,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
@@ -89,7 +90,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -134,7 +135,6 @@ import kr.ilf.soodal.ui.theme.ColorMixEndSecondary
 import kr.ilf.soodal.ui.theme.ColorMixStart
 import kr.ilf.soodal.ui.theme.ColorMixStartSecondary
 import kr.ilf.soodal.ui.theme.ColorTextDefault
-import kr.ilf.soodal.ui.theme.SkyBlue6
 import kr.ilf.soodal.ui.theme.notoSansKr
 import kr.ilf.soodal.viewmodel.CalendarUiState
 import kr.ilf.soodal.viewmodel.CalendarViewModel
@@ -148,7 +148,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.cos
-import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -157,7 +156,8 @@ import kotlin.random.Random
 import kotlin.time.Duration
 
 val selectedMonthSaver =
-    mapSaver(save = { mapOf("selectedMonth" to it) },
+    mapSaver(
+        save = { mapOf("selectedMonth" to it) },
         restore = { it["selectedMonth"] as LocalDate })
 
 @Composable
@@ -1126,7 +1126,7 @@ fun CalendarDetailView(
 @Composable
 fun MonthModeContent(
     totalDetailRecordWithHR: DetailRecordWithHR,
-    onDetailClick: () -> Unit = {},
+    onExpandClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1141,11 +1141,18 @@ fun MonthModeContent(
         )
 
         Button(
-            modifier = Modifier.height(24.dp),
+            modifier = Modifier.size(30.dp),
             shape = RoundedCornerShape(10.dp),
             contentPadding = PaddingValues(),
-            onClick = onDetailClick
-        ) { Text("detail") }
+            onClick = onExpandClick
+        ) {
+            Image(
+                ImageBitmap.imageResource(R.drawable.ic_detail),
+                contentDescription = "상세 보기",
+                Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(Color.White)
+            )
+        }
     }
 
     DetailDataView(totalDetailRecordWithHR)
@@ -1175,28 +1182,43 @@ fun DetailModeContent(
             style = MaterialTheme.typography.bodySmall,
             color = ColorTextDefault
         )
-        // 임시 수정버튼
-        Button(
-            modifier = Modifier.height(24.dp),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(),
-            onClick = onModifyClick
-        ) {
-            Text(text = "영법 수정", fontSize = 12.sp)
-        }
 
-        // 임시 닫기버튼
-        Button(
-            modifier = Modifier.height(24.dp),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(),
-            onClick = onCloseClick
-        ) {
-            Text(text = "닫기 ", fontSize = 12.sp)
+        Box(modifier = Modifier.size(70.dp, 30.dp)) {
+            // 수정버튼
+            Button(
+                modifier = Modifier.size(30.dp).align(Alignment.CenterStart),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(),
+                onClick = onModifyClick
+            ) {
+                Image(
+                    ImageBitmap.imageResource(R.drawable.ic_pencil),
+                    contentDescription = "영법 수정",
+                    Modifier
+                        .size(24.dp)
+                        .padding(3.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
+
+            // 닫기버튼
+            Button(
+                modifier = Modifier.size(30.dp).align(Alignment.CenterEnd),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(),
+                onClick = onCloseClick
+            ) {
+                Image(
+                    ImageVector.vectorResource(R.drawable.ic_close),
+                    contentDescription = "닫기",
+                    Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
         }
     }
 
-    DetailDataView(detailRecordWithHR)
+    DetailDataView(detailRecordWithHR, true)
 }
 
 
@@ -1522,7 +1544,7 @@ fun DetailViewPreview() {
 //    )}
 }
 
-class PreviewViewmodel() :CalendarViewModel {
+class PreviewViewmodel() : CalendarViewModel {
     override val testState: MutableState<Int>
         get() {
             TODO()

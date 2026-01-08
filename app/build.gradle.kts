@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.devtools.ksp)
     id("com.google.android.gms.oss-licenses-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -13,9 +14,9 @@ android {
     defaultConfig {
         applicationId = "kr.ilf.soodal"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+        targetSdk = 35
+        versionCode = 5
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -81,6 +82,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.work.runtime.ktx)
 
+    implementation(platform(libs.firebase.bom))
+
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.navigation.compose)
@@ -92,6 +95,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.play.services.oss.licenses)
+
+    implementation(libs.mpandroidchart)
 
     implementation(libs.androidx.datastore.preferences)
 
